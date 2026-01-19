@@ -1,11 +1,12 @@
 services:
-  # Python Template Server
-  python-template-server:
-    image: ${IMAGE:-ghcr.io/javidahmed64592/python-template-server:latest}
+  # Pi Dashboard
+  pi-dashboard:
+    # TODO: Uncomment after first push to GHCR
+    # image: ${IMAGE:-ghcr.io/javidahmed64592/pi-dashboard:latest}
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: python-template-server
+    container_name: pi-dashboard
     ports:
       - "${PORT:-443}:${PORT:-443}"
     environment:

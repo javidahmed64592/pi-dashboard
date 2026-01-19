@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "python-template-server"
-version = "0.1.1"
-description = "A template FastAPI server with production-ready configuration."
+name = "pi-dashboard"
+version = "0.1.0"
+description = "A FastAPI-based Raspberry Pi dashboard."
 readme = "README.md"
 requires-python = ">=3.13"
 license = { file = "LICENSE" }
@@ -18,36 +18,26 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 dependencies = [
-    "cryptography>=46.0.3",
-    "fastapi>=0.128.0",
-    "httpx>=0.28.1",
-    "pydantic>=2.12.5",
-    "pyhere>=1.0.3",
-    "python-dotenv>=1.2.1",
-    "python-multipart>=0.0.21",
-    "slowapi>=0.1.9",
-    "uvicorn[standard]>=0.40.0",
+    "python-template-server @ git+https://github.com/javidahmed64592/python-template-server.git",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "template-python[dev] @ git+https://github.com/javidahmed64592/template-python.git",
-    "pytest-asyncio>=1.2.0",
+    "python-template-server[dev] @ git+https://github.com/javidahmed64592/python-template-server.git",
 ]
 
 [project.urls]
-repository = "https://github.com/javidahmed64592/python-template-server"
+repository = "https://github.com/javidahmed64592/pi-dashboard"
 
 [project.scripts]
-python-template-server = "python_template_server.main:run"
-generate-new-token = "python_template_server.authentication_handler:generate_new_token"
+pi-dashboard = "pi_dashboard.main:run"
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.hatch.build]
 include = [
-  "python_template_server/**",
+  "pi_dashboard/**",
   ".here",
   "LICENSE",
   "README.md",
@@ -63,7 +53,7 @@ addopts = [
 
 [tool.coverage.run]
 branch = true
-source = ["python_template_server", "tests"]
+source = ["pi_dashboard", "tests"]
 
 [tool.coverage.report]
 fail_under = 80
