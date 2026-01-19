@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  PACKAGE_NAME: python_template_server
+  PACKAGE_NAME: pi_dashboard
 
 jobs:
   build-wheel:

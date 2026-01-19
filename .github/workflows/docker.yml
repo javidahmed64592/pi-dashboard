@@ -10,11 +10,11 @@ on:
   workflow_dispatch:
 
 env:
-  PACKAGE_NAME: python_template_server
-  INSTALLER_NAME: install_template_server.sh
-  SERVICE_NAME: python-template-server.service
-  UNINSTALLER_NAME: uninstall_template_server.sh
-  CONTAINER_NAME: python-template-server
+  PACKAGE_NAME: pi_dashboard
+  INSTALLER_NAME: install_pi_dashboard.sh
+  SERVICE_NAME: pi-dashboard.service
+  UNINSTALLER_NAME: uninstall_pi_dashboard.sh
+  CONTAINER_NAME: pi-dashboard
 
 jobs:
   build-docker:
