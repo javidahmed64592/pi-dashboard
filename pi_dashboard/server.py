@@ -1,4 +1,4 @@
-"""Template FastAPI server module."""
+"""Pi Dashboard server module."""
 
 from python_template_server.template_server import TemplateServer
 
