@@ -57,6 +57,14 @@ docker-compose.yml
 # Tests
 tests/
 
+# Frontend build artifacts
+pi-dashboard-frontend/node_modules/
+pi-dashboard-frontend/.next/
+pi-dashboard-frontend/out/
+
+# Static files (built in Docker)
+static/
+
 # Miscellaneous
 .DS_Store
 *.bak
