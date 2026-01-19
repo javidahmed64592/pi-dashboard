@@ -4,13 +4,13 @@ set -eu
 TERMINAL_WIDTH=$(tput cols 2>/dev/null || echo 80)
 SEPARATOR=$(printf '=%.0s' $(seq 1 $TERMINAL_WIDTH))
 
-PACKAGE_NAME="python_template_server"
+PACKAGE_NAME="pi_dashboard"
 WD=$(pwd)
-LOG_FILE="python-template-server.log"
-SERVICE_FILE="python-template-server.service"
+LOG_FILE="pi-dashboard.log"
+SERVICE_FILE="pi-dashboard.service"
 START_SERVICE_FILE="start_service.sh"
 STOP_SERVICE_FILE="stop_service.sh"
-UNINSTALL_FILE="uninstall_template_server.sh"
+UNINSTALL_FILE="uninstall_pi_dashboard.sh"
 
 LOG_PATH="${WD}/${LOG_FILE}"
 SERVICE_PATH="${WD}/${SERVICE_FILE}"
@@ -30,7 +30,7 @@ fi
 echo "Creating service..."
 cat > "${SERVICE_PATH}" << EOF
 [Unit]
-Description=Python Template Server
+Description=Pi Dashboard
 Requires=docker.service
 After=docker.service
 
@@ -126,9 +126,9 @@ EOF
 chmod +x "${UNINSTALL_PATH}"
 
 echo "${SEPARATOR}"
-echo "Python Template Server has been installed successfully."
+echo "Pi Dashboard has been installed successfully."
 echo
-echo "To create a start-up service for the Python Template Server, run: './${START_SERVICE_FILE}'"
+echo "To create a start-up service for the Pi Dashboard, run: './${START_SERVICE_FILE}'"
 echo "To stop the service, run: './${STOP_SERVICE_FILE}'"
 echo "To change the port, edit the service file and then run the start service script: ${SERVICE_PATH}"
 echo "To view the logs: 'cat ${LOG_FILE}'"
