@@ -1,21 +1,20 @@
 # Multi-stage Dockerfile for Pi Dashboard
 # Stage 1: Frontend build stage - build Next.js static export
-# TODO: Uncomment when frontend is ready
-# FROM node:22-alpine AS frontend-builder
+FROM node:22-alpine AS frontend-builder
 
-# WORKDIR /frontend
+WORKDIR /frontend
 
-# # Copy frontend package files
-# COPY pi-dashboard-frontend/package*.json ./
+# Copy frontend package files
+COPY pi-dashboard-frontend/package*.json ./
 
-# # Install dependencies
-# RUN npm ci
+# Install dependencies
+RUN npm ci
 
-# # Copy frontend source
-# COPY pi-dashboard-frontend/ ./
+# Copy frontend source
+COPY pi-dashboard-frontend/ ./
 
-# # Build static export
-# RUN npm run build
+# Build static export
+RUN npm run build
 
 # Stage 2: Backend build stage - build wheel using uv
 FROM python:3.13-slim AS backend-builder
@@ -33,7 +32,7 @@ COPY pi_dashboard/ ./pi_dashboard/
 COPY pyproject.toml .here LICENSE README.md ./
 
 # Copy built frontend from previous stage
-# COPY --from=frontend-builder /frontend/out ./static/
+COPY --from=frontend-builder /frontend/out ./static/
 
 # Build the wheel
 RUN uv build --wheel
@@ -64,7 +63,7 @@ RUN mkdir -p /app/logs
 
 # Copy included files from installed wheel to app directory
 RUN SITE_PACKAGES_DIR=$(find /usr/local/lib -name "site-packages" -type d | head -1) && \
-    # cp -r "${SITE_PACKAGES_DIR}/static" /app/ && \
+    cp -r "${SITE_PACKAGES_DIR}/static" /app/ && \
     cp "${SITE_PACKAGES_DIR}/.here" /app/.here && \
     cp "${SITE_PACKAGES_DIR}/LICENSE" /app/LICENSE && \
     cp "${SITE_PACKAGES_DIR}/README.md" /app/README.md
