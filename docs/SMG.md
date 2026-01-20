@@ -1,17 +1,23 @@
 <!-- omit from toc -->
 # Software Maintenance Guide
 
-This document outlines how to configure and setup a development environment to work on the Python Template Server application.
+This document outlines how to configure and setup a development environment to work on the Pi Dashboard application.
 
 <!-- omit from toc -->
 ## Table of Contents
 - [Backend (Python)](#backend-python)
   - [Directory Structure](#directory-structure)
-  - [Architecture Overview](#architecture-overview)
   - [Installing Dependencies](#installing-dependencies)
   - [Setting Up Authentication](#setting-up-authentication)
   - [Running the Backend](#running-the-backend)
   - [Testing, Linting, and Type Checking](#testing-linting-and-type-checking)
+- [Frontend (TypeScript)](#frontend-typescript)
+  - [Directory Structure](#directory-structure-1)
+  - [Installing Dependencies](#installing-dependencies-1)
+  - [Running the Frontend](#running-the-frontend)
+  - [Testing, Linting, and Type Checking](#testing-linting-and-type-checking-1)
+- [Creating a New Release Version](#creating-a-new-release-version)
+  - [Steps to Update Version](#steps-to-update-version)
 
 ## Backend (Python)
 
@@ -23,36 +29,11 @@ This document outlines how to configure and setup a development environment to w
 ### Directory Structure
 
 ```
-python_template_server/
-├── middleware/
-│   ├── request_logging_middleware.py  # Request logging
-│   └── security_headers_middleware.py # Security headers
-├── authentication_handler.py          # Authentication (token generation/verification)
-├── certificate_handler.py             # SSL certificate generator
-├── constants.py                       # Server constants
-├── logging_setup.py                   # Logging configuration
-├── main.py                            # Application entry point with ExampleServer
-├── models.py                          # Pydantic models (config + API responses)
-└── template_server.py                 # TemplateServer base class (reusable foundation)
+pi_dashboard/
+├── main.py               # Application entry point
+├── models.py             # Pydantic models (config + API request/response)
+└── server.py             # PiDashboardServer class (extends TemplateServer)
 ```
-
-### Architecture Overview
-
-The Python Template Server uses a **`TemplateServer` base class** that provides reusable infrastructure for building FastAPI applications:
-
-**TemplateServer Responsibilities:**
-- **Middleware Setup**: Request logging, security headers, and optional CORS
-- **Authentication**: API key verification with SHA-256 hashing
-- **Rate Limiting**: Configurable request throttling per endpoint
-- **Static File Serving**: FastAPI's StaticFiles mounting with custom 404.html support
-- **Configuration**: JSON-based config loading and validation
-
-**Application-Specific Servers** (like `ExampleServer` in `main.py`) extend `TemplateServer` to:
-- Define custom API endpoints via `setup_routes()`
-- Implement domain-specific business logic
-- Validate custom configuration models via `validate_config()`
-
-This separation ensures that cross-cutting concerns (security, logging etc.) are handled by the base class, while application developers focus on building their API functionality.
 
 ### Installing Dependencies
 
@@ -122,3 +103,116 @@ curl -k -H "X-API-Key: your-token-here" https://localhost:443/api/login
 - **Run tests:** `uv run pytest`
 - **Security scan:** `uv run bandit -r python_template_server/`
 - **Audit dependencies:** `uv run pip-audit`
+
+## Frontend (TypeScript)
+
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![ESLint](https://img.shields.io/badge/ESLint-9-4B32C3?style=flat-square&logo=eslint&logoColor=white)](https://eslint.org/)
+[![Prettier](https://img.shields.io/badge/Prettier-3-F7B93E?style=flat-square&logo=prettier&logoColor=black)](https://prettier.io/)
+
+### Directory Structure
+
+```
+pi-dashboard-frontend/
+├── src/
+│   ├── app/
+│   │   ├── login/                # Login page for API key authentication
+│   │   ├── globals.css           # UI style configuration
+│   │   ├── layout.tsx            # Root layout with AuthProvider and navigation
+│   │   ├── not-found.tsx         # Not found page
+│   │   └── page.tsx              # Homepage
+│   ├── components/
+│   │   ├── Footer.tsx            # App footer with version info
+│   │   ├── HealthIndicator.tsx   # Server health status indicator
+│   │   └── Navigation.tsx        # Main navigation bar with logout
+│   ├── contexts/
+│   │   └── AuthContext.tsx       # Authentication context and route protection
+│   ├── lib/
+│   │   ├── api.ts                # API client with authentication interceptors
+│   │   ├── auth.ts               # localStorage API key management
+│   │   └── types.ts              # TypeScript type definitions (matches backend models)
+├── jest.config.js                # Jest configuration for testing
+├── jest.setup.js                 # Jest setup for mocking and environment
+├── next.config.ts                # Next.js configuration
+├── package.json                  # Dependencies and scripts
+└── postcss.config.mjs            # Tailwind CSS configuration
+```
+
+### Installing Dependencies
+
+Install the required dependencies:
+
+```bash
+npm install
+```
+
+### Running the Frontend
+
+**Prerequisites:**
+Ensure the backend server is running (see [Running the Backend](#running-the-backend))
+
+**Start the development server:**
+```bash
+cd pi-dashboard-frontend
+npm run dev
+```
+
+The frontend will be available at `http://localhost:3000`.
+
+**Authentication in Development:**
+- The development server proxies `/api` requests to the HTTPS backend (`https://localhost:443`)
+- On first visit, you'll be redirected to `/login/`
+- Enter the API token generated via `uv run generate-new-token`
+- The token is stored in localStorage and included in all API requests via the `X-API-KEY` header
+
+**Building for Production:**
+```bash
+npm run build        # Standard Next.js build
+```
+
+### Testing, Linting, and Type Checking
+
+- **Run tests:** `npm run test`
+- **Run all quality checks:** `npm run quality`
+- **Fix all quality issues:** `npm run quality:fix`
+- **Type check:** `npm run type-check`
+- **Lint code:** `npm run lint`
+- **Fix lint issues:** `npm run lint:fix`
+- **Check formatting:** `npm run format`
+- **Format code:** `npm run format:fix`
+
+## Creating a New Release Version
+
+When preparing a new release, you must update version numbers across multiple files to maintain consistency. The CI pipeline enforces version alignment between backend and frontend.
+
+### Steps to Update Version
+
+1. **Update `pyproject.toml`** (backend version):
+   ```toml
+   [project]
+   name = "pi-dashboard"
+   version = "X.Y.Z"  # Update this line
+   ```
+
+2. **Update `pi-dashboard-frontend/package.json`** (frontend version):
+   ```json
+   {
+     "name": "pi-dashboard-frontend",
+     "version": "X.Y.Z"  // Update this line to match backend
+   }
+   ```
+
+3. **Synchronize `uv.lock`** (from project root):
+   ```sh
+   uv lock
+   ```
+
+4. **Synchronize `package-lock.json`** (from `pi-dashboard-frontend` directory):
+   ```sh
+   cd pi-dashboard-frontend
+   npm install --package-lock-only
+   ```
