@@ -82,6 +82,9 @@ RUN echo '#!/bin/sh\n\
     exec pi-dashboard --port $PORT' > /app/start.sh && \
     chmod +x /app/start.sh
 
+# Set default environment variable for host root path
+ENV HOST_ROOT=/host
+
 # Expose server port
 EXPOSE $PORT
 
