@@ -20,6 +20,8 @@ class SystemInfo(BaseModel):
     release: str = Field(..., description="System release")
     version: str = Field(..., description="System version")
     machine: str = Field(..., description="System machine type")
+    memory_total: float = Field(..., description="Total memory in GB")
+    disk_total: float = Field(..., description="Total disk space in GB")
 
 
 class SystemMetrics(BaseModel):
@@ -27,9 +29,7 @@ class SystemMetrics(BaseModel):
 
     cpu_usage: float = Field(..., ge=0, le=100, description="CPU usage percentage")
     memory_usage: float = Field(..., ge=0, le=100, description="Memory usage percentage")
-    memory_total: int = Field(..., description="Total memory in MB")
     disk_usage: float = Field(..., ge=0, le=100, description="Disk usage percentage")
-    disk_total: int = Field(..., description="Total disk space in GB")
     uptime: int = Field(..., description="System uptime in seconds")
     temperature: float = Field(..., description="System temperature in Celsius")
 

@@ -5,6 +5,7 @@ even when running inside a Docker container. It uses psutil and direct file
 reading from mounted host directories.
 """
 
+import logging
 import os
 import platform
 from pathlib import Path
@@ -12,6 +13,16 @@ from pathlib import Path
 import psutil
 
 from pi_dashboard.models import SystemInfo, SystemMetrics
+
+logger = logging.getLogger(__name__)
+
+
+def get_host_root() -> str:
+    """Get the host root path for metrics collection.
+
+    :return str: The host root path
+    """
+    return os.getenv("HOST_ROOT", "/")
 
 
 def get_host_path(relative_path: str) -> Path:
@@ -23,11 +34,24 @@ def get_host_path(relative_path: str) -> Path:
     :param str relative_path: The relative path (e.g., "proc/uptime")
     :return Path: The full path to the file
     """
-    # Check if we're in Docker with host mounts
-    host_root = os.getenv("HOST_ROOT", "")
-    if host_root and Path(host_root).exists():
-        return Path(host_root) / relative_path
-    return Path("/") / relative_path
+    return Path(get_host_root()) / relative_path
+
+
+def get_hostname() -> str:
+    """Get the system hostname, attempting to read from host filesystem if in Docker.
+
+    :return str: The system hostname
+    """
+    hostname = platform.node()
+    try:
+        hostname_file = get_host_path("etc/hostname")
+        if hostname_file.exists():
+            hostname = hostname_file.read_text().strip()
+    except PermissionError:
+        logger.warning("Could not read hostname from host filesystem", exc_info=True)
+    except Exception:
+        logger.exception("Unexpected error reading hostname from host filesystem")
+    return hostname
 
 
 def read_cpu_temperature() -> float:
@@ -41,7 +65,9 @@ def read_cpu_temperature() -> float:
             temp_millidegrees = int(thermal_file.read_text().strip())
             return temp_millidegrees / 1000.0
     except (FileNotFoundError, ValueError, PermissionError):
-        pass
+        logger.warning("Could not read CPU temperature from file", exc_info=True)
+    except Exception:
+        logger.exception("Unexpected error reading CPU temperature")
     return 0.0
 
 
@@ -56,7 +82,9 @@ def read_uptime() -> int:
             uptime_str = uptime_file.read_text().strip().split()[0]
             return int(float(uptime_str))
     except (FileNotFoundError, ValueError, IndexError, PermissionError):
-        pass
+        logger.warning("Could not read system uptime from file", exc_info=True)
+    except Exception:
+        logger.exception("Unexpected error reading system uptime")
     return 0
 
 
@@ -69,22 +97,14 @@ def get_system_info() -> SystemInfo:
     """
     uname = platform.uname()
 
-    # Try to get host's hostname when running in Docker
-    try:
-        hostname_file = get_host_path("etc/hostname")
-        if hostname_file.exists():
-            hostname = hostname_file.read_text().strip()
-        else:
-            hostname = uname.node
-    except (FileNotFoundError, PermissionError):
-        hostname = uname.node
-
     return SystemInfo(
-        hostname=hostname,
+        hostname=get_hostname(),
         system=uname.system,
         release=uname.release,
         version=uname.version,
         machine=uname.machine,
+        memory_total=psutil.virtual_memory().total / (1024 * 1024 * 1024),  # Convert to GB
+        disk_total=psutil.disk_usage(get_host_root()).total / (1024 * 1024 * 1024),  # Convert to GB
     )
 
 
@@ -96,32 +116,10 @@ def get_system_metrics() -> SystemMetrics:
 
     :return SystemMetrics: System metrics data
     """
-    # CPU usage (as percentage)
-    cpu_usage = psutil.cpu_percent(interval=0.1)
-
-    # Memory usage
-    memory = psutil.virtual_memory()
-    memory_usage = memory.percent
-    memory_total = memory.total // (1024 * 1024)  # Convert to MB
-
-    # Disk usage - use host root if available
-    host_root = os.getenv("HOST_ROOT", "/")
-    disk = psutil.disk_usage(host_root)
-    disk_usage = disk.percent
-    disk_total = disk.total // (1024 * 1024 * 1024)  # Convert to GB
-
-    # Uptime
-    uptime = read_uptime()
-
-    # CPU temperature
-    temperature = read_cpu_temperature()
-
     return SystemMetrics(
-        cpu_usage=cpu_usage,
-        memory_usage=memory_usage,
-        memory_total=memory_total,
-        disk_usage=disk_usage,
-        disk_total=disk_total,
-        uptime=uptime,
-        temperature=temperature,
+        cpu_usage=psutil.cpu_percent(interval=0.1),
+        memory_usage=psutil.virtual_memory().percent,
+        disk_usage=psutil.disk_usage(get_host_root()).percent,
+        uptime=read_uptime(),
+        temperature=read_cpu_temperature(),
     )
