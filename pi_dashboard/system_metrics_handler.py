@@ -8,6 +8,7 @@ reading from mounted host directories.
 import logging
 import os
 import platform
+from functools import cache, lru_cache
 from pathlib import Path
 
 import psutil
@@ -17,6 +18,7 @@ from pi_dashboard.models import SystemInfo, SystemMetrics
 logger = logging.getLogger(__name__)
 
 
+@cache
 def get_host_root() -> str:
     """Get the host root path for metrics collection.
 
@@ -25,6 +27,7 @@ def get_host_root() -> str:
     return os.getenv("HOST_ROOT", "/")
 
 
+@lru_cache(maxsize=128)
 def get_host_path(relative_path: str) -> Path:
     """Get the path to a host system file from within Docker container.
 
@@ -37,6 +40,7 @@ def get_host_path(relative_path: str) -> Path:
     return Path(get_host_root()) / relative_path
 
 
+@cache
 def get_hostname() -> str:
     """Get the system hostname, attempting to read from host filesystem if in Docker.
 
@@ -88,6 +92,7 @@ def read_uptime() -> int:
     return 0
 
 
+@cache
 def get_system_info() -> SystemInfo:
     """Get system information using platform module.
 
