@@ -1,6 +1,7 @@
 """Pydantic models for the server."""
 
-from python_template_server.models import TemplateServerConfig
+from pydantic import BaseModel, Field
+from python_template_server.models import BaseResponse, TemplateServerConfig
 
 
 # Pi Dashboard server configuration
@@ -8,3 +9,39 @@ class PiDashboardConfig(TemplateServerConfig):
     """Configuration model for the Pi Dashboard server."""
 
     pass
+
+
+# Response models
+class SystemInfo(BaseModel):
+    """Model representing system information."""
+
+    hostname: str = Field(..., description="System hostname")
+    node: str = Field(..., description="System node name")
+    system: str = Field(..., description="System type")
+    release: str = Field(..., description="System release")
+    version: str = Field(..., description="System version")
+    machine: str = Field(..., description="System machine type")
+
+
+class SystemMetrics(BaseModel):
+    """Model representing system metrics."""
+
+    cpu_usage: float = Field(..., ge=0, le=100, description="CPU usage percentage")
+    memory_usage: float = Field(..., ge=0, le=100, description="Memory usage percentage")
+    memory_total: int = Field(..., description="Total memory in MB")
+    disk_usage: float = Field(..., ge=0, le=100, description="Disk usage percentage")
+    disk_total: int = Field(..., description="Total disk space in GB")
+    uptime: int = Field(..., description="System uptime in seconds")
+    temperature: float = Field(..., description="System temperature in Celsius")
+
+
+class GetSystemInfoResponse(BaseResponse):
+    """Response model for system information."""
+
+    info: SystemInfo = Field(..., description="System information data")
+
+
+class GetSystemMetricsResponse(BaseResponse):
+    """Response model for system metrics."""
+
+    metrics: SystemMetrics = Field(..., description="System metrics data")
