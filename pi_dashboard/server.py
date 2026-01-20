@@ -7,8 +7,10 @@ from pi_dashboard.models import (
     GetSystemInfoResponse,
     GetSystemMetricsResponse,
     PiDashboardConfig,
-    SystemInfo,
-    SystemMetrics,
+)
+from pi_dashboard.system_metrics_handler import (
+    get_system_info,
+    get_system_metrics,
 )
 
 
@@ -58,18 +60,12 @@ class PiDashboardServer(TemplateServer):
 
         :return GetSystemInfoResponse: The system information response model
         """
+        info = get_system_info()
         return GetSystemInfoResponse(
             code=ResponseCode.OK,
             message="Retrieved system info successfully",
             timestamp=GetSystemInfoResponse.current_timestamp(),
-            info=SystemInfo(
-                hostname="",
-                node="",
-                system="",
-                release="",
-                version="",
-                machine="",
-            ),
+            info=info,
         )
 
     async def get_system_metrics(self) -> GetSystemMetricsResponse:
@@ -77,17 +73,10 @@ class PiDashboardServer(TemplateServer):
 
         :return GetSystemMetricsResponse: The system metrics response model
         """
+        metrics = get_system_metrics()
         return GetSystemMetricsResponse(
             code=ResponseCode.OK,
             message="Retrieved system metrics successfully",
             timestamp=GetSystemMetricsResponse.current_timestamp(),
-            metrics=SystemMetrics(
-                cpu_usage=0.0,
-                memory_usage=0.0,
-                memory_total=0,
-                disk_usage=0.0,
-                disk_total=0,
-                uptime=0,
-                temperature=0.0,
-            ),
+            metrics=metrics,
         )

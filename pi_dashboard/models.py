@@ -16,7 +16,6 @@ class SystemInfo(BaseModel):
     """Model representing system information."""
 
     hostname: str = Field(..., description="System hostname")
-    node: str = Field(..., description="System node name")
     system: str = Field(..., description="System type")
     release: str = Field(..., description="System release")
     version: str = Field(..., description="System version")
