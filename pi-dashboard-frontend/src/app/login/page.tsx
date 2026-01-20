@@ -39,9 +39,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-6 p-8">
         {/* Header */}
         <div className="space-y-2 text-center">
-          <h1 className="text-4xl font-bold text-text-primary">
-            Pi Dashboard
-          </h1>
+          <h1 className="text-4xl font-bold text-text-primary">Pi Dashboard</h1>
           <p className="text-text-muted">FastAPI-based dashboard.</p>
         </div>
 

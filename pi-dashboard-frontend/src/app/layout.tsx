@@ -8,13 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 export const metadata: Metadata = {
   title: "Pi Dashboard",
   description: "FastAPI-based dashboard server.",
-  keywords: [
-    "fastapi",
-    "python",
-    "raspberry pi",
-    "dashboard",
-    "monitoring",
-  ],
+  keywords: ["fastapi", "python", "raspberry pi", "dashboard", "monitoring"],
   formatDetection: {
     email: false,
     address: false,

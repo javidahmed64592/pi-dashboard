@@ -12,9 +12,7 @@ export default function NotFound() {
           height={64}
           priority
         /> */}
-        <div className="text-2xl font-bold text-text-primary">
-          Pi Dashboard
-        </div>
+        <div className="text-2xl font-bold text-text-primary">Pi Dashboard</div>
       </div>
 
       {/* Error Message */}
