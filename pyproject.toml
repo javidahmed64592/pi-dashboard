@@ -38,10 +38,14 @@ allow-direct-references = true
 [tool.hatch.build]
 include = [
   "pi_dashboard/**",
+  "static/**",
   ".here",
   "LICENSE",
   "README.md",
 ]
+
+[tool.hatch.build.force-include]
+"static" = "static"
 
 [tool.pytest.ini_options]
 addopts = [
