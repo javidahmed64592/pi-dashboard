@@ -9,4 +9,4 @@ from pi_dashboard.models import PiDashboardConfig
 @pytest.fixture
 def mock_pi_dashboard_config() -> PiDashboardConfig:
     """Provide a PiDashboardConfig instance for testing."""
-    return PiDashboardConfig.model_validate({})
+    return PiDashboardConfig.model_validate({})  # type: ignore[no-any-return]

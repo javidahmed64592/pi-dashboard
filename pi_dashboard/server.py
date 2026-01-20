@@ -26,7 +26,7 @@ class PiDashboardServer(TemplateServer):
         :return PiDashboardConfig: The validated configuration model
         :raise ValidationError: If the configuration data is invalid
         """
-        return PiDashboardConfig.model_validate(config_data)
+        return PiDashboardConfig.model_validate(config_data)  # type: ignore[no-any-return]
 
     def setup_routes(self) -> None:
         """Set up API routes."""
