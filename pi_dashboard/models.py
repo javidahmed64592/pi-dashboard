@@ -22,7 +22,7 @@ class PiDashboardConfig(TemplateServerConfig):
     metrics: MetricsConfig = Field(default_factory=MetricsConfig, description="System metrics collection configuration")
 
 
-# Response models
+# General models
 class SystemInfo(BaseModel):
     """Model representing system information."""
 
@@ -86,6 +86,7 @@ class SystemMetricsHistory(BaseModel):
         return [entry for entry in self.history if entry.timestamp >= cutoff_time]
 
 
+# Response models
 class GetSystemInfoResponse(BaseResponse):
     """Response model for system information."""
 
