@@ -11,7 +11,7 @@ import platform
 from functools import cache, lru_cache
 from pathlib import Path
 
-import psutil
+from psutil import cpu_percent, virtual_memory, disk_usage
 
 from pi_dashboard.models import SystemInfo, SystemMetrics
 
@@ -108,8 +108,8 @@ def get_system_info() -> SystemInfo:
         release=uname.release,
         version=uname.version,
         machine=uname.machine,
-        memory_total=psutil.virtual_memory().total / (1024 * 1024 * 1024),  # Convert to GB
-        disk_total=psutil.disk_usage(get_host_root()).total / (1024 * 1024 * 1024),  # Convert to GB
+        memory_total=virtual_memory().total / (1024 * 1024 * 1024),  # Convert to GB
+        disk_total=disk_usage(get_host_root()).total / (1024 * 1024 * 1024),  # Convert to GB
     )
 
 
@@ -122,9 +122,9 @@ def get_system_metrics() -> SystemMetrics:
     :return SystemMetrics: System metrics data
     """
     return SystemMetrics(
-        cpu_usage=psutil.cpu_percent(interval=0.1),
-        memory_usage=psutil.virtual_memory().percent,
-        disk_usage=psutil.disk_usage(get_host_root()).percent,
+        cpu_usage=cpu_percent(interval=0.1),
+        memory_usage=virtual_memory().percent,
+        disk_usage=disk_usage(get_host_root()).percent,
         uptime=read_uptime(),
         temperature=read_cpu_temperature(),
     )
