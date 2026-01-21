@@ -5,6 +5,7 @@ import pytest
 from pi_dashboard.models import (
     MetricsConfig,
     PiDashboardConfig,
+    SystemInfo,
     SystemMetrics,
     SystemMetricsHistory,
     SystemMetricsHistoryEntry,
@@ -25,6 +26,22 @@ def mock_pi_dashboard_config(mock_metrics_config: MetricsConfig) -> PiDashboardC
 
 
 # General model fixtures
+@pytest.fixture
+def mock_system_info() -> SystemInfo:
+    """Provide a SystemInfo instance for testing."""
+    return SystemInfo.model_validate(
+        {
+            "hostname": "test-host",
+            "system": "test-system",
+            "release": "1.2.3",
+            "version": "test-version",
+            "machine": "test-machine",
+            "memory_total": 8.0,
+            "disk_total": 256.0,
+        }
+    )
+
+
 @pytest.fixture
 def mock_system_metrics() -> SystemMetrics:
     """Provide a SystemMetrics instance for testing."""

@@ -11,7 +11,7 @@ import platform
 from functools import cache, lru_cache
 from pathlib import Path
 
-from psutil import cpu_percent, virtual_memory, disk_usage
+from psutil import cpu_percent, disk_usage, virtual_memory
 
 from pi_dashboard.models import SystemInfo, SystemMetrics
 
