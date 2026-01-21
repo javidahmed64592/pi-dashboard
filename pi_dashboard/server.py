@@ -180,7 +180,7 @@ class PiDashboardServer(TemplateServer):
         """
         metrics_request = GetSystemMetricsHistoryRequest.model_validate(await request.json())
         entries = self.metrics_history.get_entries_since(
-            metrics_request.last_n_seconds,
+            min(metrics_request.last_n_seconds, self.config.metrics.max_history_duration),
             PiDashboardServer._current_timestamp_int(),
         )
         return GetSystemMetricsHistoryResponse(
