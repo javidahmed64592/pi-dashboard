@@ -16,7 +16,8 @@ interface ChartData {
 }
 
 export default function SystemPage() {
-  const { currentMetrics, metricsHistory, refreshHistory } = useSystem();
+  const { currentMetrics, metricsHistory, systemInfo, refreshHistory } =
+    useSystem();
   const [selectedRange, setSelectedRange] = useState<TimeRange>(60);
 
   // Poll history based on selected time range
@@ -108,7 +109,7 @@ export default function SystemPage() {
         />
 
         <MetricsGraph
-          title="Memory Usage"
+          title={`Memory Usage${systemInfo ? ` (Total: ${systemInfo.memory_total.toFixed(1)}GB)` : ""}`}
           data={memoryData}
           color="#bf00ff"
           chartType="area"
@@ -120,7 +121,7 @@ export default function SystemPage() {
         />
 
         <MetricsGraph
-          title="Disk Usage"
+          title={`Disk Usage${systemInfo ? ` (Total: ${systemInfo.disk_total.toFixed(1)}GB)` : ""}`}
           data={diskData}
           color="#00ff41"
           chartType="line"
