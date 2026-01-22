@@ -5,13 +5,14 @@ TERMINAL_WIDTH=$(tput cols 2>/dev/null || echo 80)
 SEPARATOR=$(printf '=%.0s' $(seq 1 $TERMINAL_WIDTH))
 
 PACKAGE_NAME="pi_dashboard"
+CONTAINER_NAME="pi-dashboard"
 WD=$(pwd)
-LOG_FILE="pi-dashboard.log"
-SERVICE_FILE="pi-dashboard.service"
+LOG_FILE="${CONTAINER_NAME}.log"
+SERVICE_FILE="${CONTAINER_NAME}.service"
 START_SERVICE_FILE="start_service.sh"
 STOP_SERVICE_FILE="stop_service.sh"
 UPDATE_SERVICE_FILE="update_service.sh"
-UNINSTALL_FILE="uninstall_pi_dashboard.sh"
+UNINSTALL_FILE="uninstall_${PACKAGE_NAME}.sh"
 
 LOG_PATH="${WD}/${LOG_FILE}"
 SERVICE_PATH="${WD}/${SERVICE_FILE}"
@@ -130,7 +131,7 @@ else
 fi
 
 echo "Update complete. Checking logs..."
-docker compose logs --tail=50 ${PACKAGE_NAME}
+docker compose logs --tail=50 ${CONTAINER_NAME}
 EOF
 chmod +x "${UPDATE_SERVICE_PATH}"
 
