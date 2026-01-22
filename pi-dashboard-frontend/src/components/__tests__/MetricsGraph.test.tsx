@@ -22,6 +22,7 @@ describe("MetricsGraph", () => {
         chartType="area"
         yAxisLabel="%"
         hasData={true}
+        graphId="test"
       />
     );
 
@@ -37,6 +38,7 @@ describe("MetricsGraph", () => {
         chartType="area"
         yAxisLabel="%"
         hasData={false}
+        graphId="test"
       />
     );
 
@@ -56,6 +58,7 @@ describe("MetricsGraph", () => {
         hasData={true}
         currentValue={25}
         thresholds={{ low: 30, medium: 60 }}
+        graphId="test"
       />
     );
 
@@ -73,6 +76,7 @@ describe("MetricsGraph", () => {
         hasData={true}
         currentValue={45}
         thresholds={{ low: 30, medium: 60 }}
+        graphId="test"
       />
     );
 
@@ -90,6 +94,7 @@ describe("MetricsGraph", () => {
         hasData={true}
         currentValue={75}
         thresholds={{ low: 30, medium: 60 }}
+        graphId="test"
       />
     );
 
@@ -106,6 +111,7 @@ describe("MetricsGraph", () => {
         yAxisLabel="%"
         hasData={true}
         thresholds={{ low: 30, medium: 60 }}
+        graphId="test"
       />
     );
 
@@ -124,6 +130,7 @@ describe("MetricsGraph", () => {
         yAxisLabel="%"
         hasData={true}
         currentValue={45}
+        graphId="test"
       />
     );
 
@@ -142,6 +149,7 @@ describe("MetricsGraph", () => {
         yAxisLabel="%"
         hasData={true}
         className="custom-class"
+        graphId="test"
       />
     );
 
@@ -157,6 +165,7 @@ describe("MetricsGraph", () => {
         chartType="line"
         yAxisLabel="°C"
         hasData={true}
+        graphId="test"
       />
     );
 
@@ -172,6 +181,7 @@ describe("MetricsGraph", () => {
         chartType="area"
         yAxisLabel="%"
         hasData={true}
+        graphId="test"
       />
     );
 

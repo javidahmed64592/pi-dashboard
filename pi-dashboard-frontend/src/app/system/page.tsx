@@ -89,6 +89,7 @@ export default function SystemPage() {
           hasData={hasData}
           currentValue={currentMetrics?.cpu_usage}
           thresholds={{ low: 30, medium: 60 }}
+          graphId="cpuLoad"
         />
 
         <MetricsGraph
@@ -106,6 +107,7 @@ export default function SystemPage() {
               ? "animate-pulse"
               : ""
           }
+          graphId="cpuTemp"
         />
 
         <MetricsGraph
@@ -118,6 +120,7 @@ export default function SystemPage() {
           hasData={hasData}
           currentValue={currentMetrics?.memory_usage}
           thresholds={{ low: 30, medium: 60 }}
+          graphId="memory"
         />
 
         <MetricsGraph
@@ -130,6 +133,7 @@ export default function SystemPage() {
           hasData={hasData}
           currentValue={currentMetrics?.disk_usage}
           thresholds={{ low: 30, medium: 60 }}
+          graphId="disk"
         />
       </div>
     </div>
