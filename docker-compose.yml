@@ -1,8 +1,7 @@
 services:
   # Pi Dashboard
   pi-dashboard:
-    # TODO: Uncomment after first push to GHCR
-    # image: ${IMAGE:-ghcr.io/javidahmed64592/pi-dashboard:latest}
+    image: ${IMAGE:-ghcr.io/javidahmed64592/pi-dashboard:latest}
     build:
       context: .
       dockerfile: Dockerfile
