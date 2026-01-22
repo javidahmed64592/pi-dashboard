@@ -86,7 +86,7 @@ describe("SystemContext", () => {
     expect(api.getSystemInfo).toHaveBeenCalledTimes(1);
   });
 
-  it("polls current metrics every 5 seconds", async () => {
+  it("polls current metrics every 1 second", async () => {
     jest.useFakeTimers();
 
     (api.getSystemInfo as jest.Mock).mockResolvedValue({
@@ -118,8 +118,8 @@ describe("SystemContext", () => {
       expect(api.getSystemMetrics).toHaveBeenCalledTimes(1);
     });
 
-    // Fast-forward 5 seconds
-    jest.advanceTimersByTime(5000);
+    // Fast-forward 1 second
+    jest.advanceTimersByTime(1000);
 
     await waitFor(() => {
       expect(api.getSystemMetrics).toHaveBeenCalledTimes(2);
