@@ -140,8 +140,8 @@ jobs:
             exit 1
           fi
 
-          files=("docker-compose.yml" "README.md" "${{ env.SERVICE_NAME }}" "start_service.sh" "stop_service.sh" "${{ env.UNINSTALLER_NAME }}")
-          scripts=("start_service.sh" "stop_service.sh" "${{ env.UNINSTALLER_NAME }}")
+          files=("docker-compose.yml" "README.md" "${{ env.SERVICE_NAME }}" "start_service.sh" "stop_service.sh" "update_service.sh" "${{ env.UNINSTALLER_NAME }}")
+          scripts=("start_service.sh" "stop_service.sh" "update_service.sh" "${{ env.UNINSTALLER_NAME }}")
 
           for file in "${files[@]}"; do
             if [ ! -f "$file" ]; then

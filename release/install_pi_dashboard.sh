@@ -10,12 +10,14 @@ LOG_FILE="pi-dashboard.log"
 SERVICE_FILE="pi-dashboard.service"
 START_SERVICE_FILE="start_service.sh"
 STOP_SERVICE_FILE="stop_service.sh"
+UPDATE_SERVICE_FILE="update_service.sh"
 UNINSTALL_FILE="uninstall_pi_dashboard.sh"
 
 LOG_PATH="${WD}/${LOG_FILE}"
 SERVICE_PATH="${WD}/${SERVICE_FILE}"
 START_SERVICE_PATH="${WD}/${START_SERVICE_FILE}"
 STOP_SERVICE_PATH="${WD}/${STOP_SERVICE_FILE}"
+UPDATE_SERVICE_PATH="${WD}/${UPDATE_SERVICE_FILE}"
 UNINSTALL_PATH="${WD}/${UNINSTALL_FILE}"
 
 echo ${SEPARATOR}
@@ -109,6 +111,29 @@ fi
 EOF
 chmod +x "${STOP_SERVICE_PATH}"
 
+echo "Creating service update script..."
+cat > "${UPDATE_SERVICE_PATH}" << EOF
+#!/bin/bash
+set -eu
+
+echo "Pulling latest image from GitHub Container Registry..."
+docker compose pull
+
+if systemctl is-active --quiet ${SERVICE_FILE}; then
+    echo "Restarting service..."
+    sudo systemctl restart ${SERVICE_FILE}
+    echo "Service restarted successfully."
+    sudo systemctl status ${SERVICE_FILE}
+else
+    echo "Service is not running. Start it with './${START_SERVICE_FILE}'"
+    exit 1
+fi
+
+echo "Update complete. Checking logs..."
+docker compose logs --tail=50 ${PACKAGE_NAME}
+EOF
+chmod +x "${UPDATE_SERVICE_PATH}"
+
 echo "Creating uninstall script..."
 cat > "${UNINSTALL_PATH}" << EOF
 #!/bin/bash
@@ -135,6 +160,7 @@ echo "Pi Dashboard has been installed successfully."
 echo
 echo "To create a start-up service for the Pi Dashboard, run: './${START_SERVICE_FILE}'"
 echo "To stop the service, run: './${STOP_SERVICE_FILE}'"
+echo "To update to the latest version, run: './${UPDATE_SERVICE_FILE}'"
 echo "To change the port or API token, edit the service file and then run the start service script: ${SERVICE_PATH}"
 echo "To view the logs: 'cat ${LOG_FILE}'"
 echo "To uninstall, run: './${UNINSTALL_FILE}'"
