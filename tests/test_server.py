@@ -1,16 +1,23 @@
 """Unit tests for the pi_dashboard.server module."""
 
+import asyncio
 from collections.abc import Generator
 from importlib.metadata import PackageMetadata
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi import Security
+from fastapi import Request, Security
 from fastapi.routing import APIRoute
 from fastapi.security import APIKeyHeader
+from fastapi.testclient import TestClient
+from python_template_server.models import ResponseCode
 
 from pi_dashboard.models import (
+    GetSystemMetricsHistoryRequest,
     PiDashboardConfig,
+    SystemInfo,
+    SystemMetrics,
+    SystemMetricsHistory,
 )
 from pi_dashboard.server import PiDashboardServer
 
@@ -31,8 +38,29 @@ def mock_package_metadata() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_get_system_info(
+    mock_system_info: SystemInfo,
+) -> Generator[MagicMock]:
+    """Mock the get_system_info function."""
+    with patch("pi_dashboard.server.get_system_info") as mock_info:
+        mock_info.return_value = mock_system_info
+        yield mock_info
+
+
+@pytest.fixture
+def mock_get_system_metrics(mock_system_metrics: SystemMetrics) -> Generator[MagicMock]:
+    """Mock the get_system_metrics function."""
+    with patch("pi_dashboard.server.get_system_metrics") as mock_metrics:
+        mock_metrics.return_value = mock_system_metrics
+        yield mock_metrics
+
+
+@pytest.fixture
 def mock_server(
     mock_pi_dashboard_config: PiDashboardConfig,
+    mock_get_system_info: MagicMock,
+    mock_get_system_metrics: MagicMock,
+    mock_system_metrics_history: SystemMetricsHistory,
 ) -> Generator[PiDashboardServer]:
     """Provide a PiDashboardServer instance for testing."""
 
@@ -45,6 +73,7 @@ def mock_server(
     with (
         patch.object(PiDashboardServer, "_verify_api_key", new=fake_verify_api_key),
         patch("pi_dashboard.server.PiDashboardConfig.save_to_file"),
+        patch("pi_dashboard.server.SystemMetricsHistory", return_value=mock_system_metrics_history),
     ):
         server = PiDashboardServer(config=mock_pi_dashboard_config)
         yield server
@@ -53,9 +82,14 @@ def mock_server(
 class TestPiDashboardServer:
     """Unit tests for the PiDashboardServer class."""
 
-    def test_init(self, mock_server: PiDashboardServer) -> None:
+    def test_init(self, mock_server: PiDashboardServer, mock_system_metrics_history: SystemMetricsHistory) -> None:
         """Test PiDashboardServer initialization."""
         assert isinstance(mock_server.config, PiDashboardConfig)
+        assert mock_server.metrics_history == mock_system_metrics_history
+
+    def test_current_timestamp_int(self, mock_server: PiDashboardServer) -> None:
+        """Test current timestamp integer retrieval."""
+        assert isinstance(mock_server._current_timestamp_int(), int)
 
     def test_validate_config(self, mock_server: PiDashboardServer, mock_pi_dashboard_config: PiDashboardConfig) -> None:
         """Test configuration validation."""
@@ -80,6 +114,126 @@ class TestPiDashboardServerRoutes:
         expected_endpoints = [
             "/health",
             "/login",
+            "/system/info",
+            "/system/metrics",
+            "/system/metrics/history",
         ]
         for endpoint in expected_endpoints:
             assert endpoint in routes, f"Expected endpoint {endpoint} not found in routes"
+
+
+class TestGetSystemInfoEndpoint:
+    """Integration and unit tests for the /system/info endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock Request object with JSON data."""
+        return MagicMock(spec=Request)
+
+    def test_get_system_info(
+        self, mock_server: PiDashboardServer, mock_request_object: MagicMock, mock_system_info: SystemInfo
+    ) -> None:
+        """Test the /system/info method handles valid JSON and returns a model reply."""
+        response = asyncio.run(mock_server.get_system_info(mock_request_object))
+
+        assert response.code == ResponseCode.OK
+        assert response.message == "Retrieved system info successfully"
+        assert isinstance(response.timestamp, str)
+        assert response.info == mock_system_info
+
+    def test_get_system_info_endpoint(self, mock_server: PiDashboardServer, mock_system_info: SystemInfo) -> None:
+        """Test /system/info endpoint returns 200 and includes system info."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        response = client.get("/system/info")
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert response_body["message"] == "Retrieved system info successfully"
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["info"] == mock_system_info.model_dump()
+
+
+class TestGetSystemMetricsEndpoint:
+    """Integration and unit tests for the /system/metrics endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock Request object with JSON data."""
+        return MagicMock(spec=Request)
+
+    def test_get_system_metrics(
+        self, mock_server: PiDashboardServer, mock_request_object: MagicMock, mock_system_metrics: SystemMetrics
+    ) -> None:
+        """Test the /system/metrics method handles valid JSON and returns a model reply."""
+        response = asyncio.run(mock_server.get_system_metrics(mock_request_object))
+        assert response.code == ResponseCode.OK
+        assert response.message == "Retrieved system metrics successfully"
+        assert isinstance(response.timestamp, str)
+        assert response.metrics == mock_system_metrics
+
+    def test_get_system_metrics_endpoint(
+        self, mock_server: PiDashboardServer, mock_system_metrics: SystemMetrics
+    ) -> None:
+        """Test /system/metrics endpoint returns 200 and includes system metrics."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        response = client.get("/system/metrics")
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert response_body["message"] == "Retrieved system metrics successfully"
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["metrics"] == mock_system_metrics.model_dump()
+
+
+class TestGetSystemMetricsHistoryEndpoint:
+    """Integration and unit tests for the /system/metrics/history endpoint."""
+
+    @pytest.fixture
+    def mock_request_body(self) -> GetSystemMetricsHistoryRequest:
+        """Provide a mock request body for system metrics history."""
+        return GetSystemMetricsHistoryRequest(last_n_seconds=300)
+
+    @pytest.fixture
+    def mock_request_object(self, mock_request_body: GetSystemMetricsHistoryRequest) -> MagicMock:
+        """Provide a mock Request object with JSON data."""
+        request = MagicMock(spec=Request)
+        request.json = AsyncMock(return_value=mock_request_body.model_dump())
+        return request
+
+    def test_get_system_metrics_history(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+        mock_system_metrics_history: SystemMetricsHistory,
+    ) -> None:
+        """Test the /system/metrics/history method handles valid JSON and returns a model reply."""
+        response = asyncio.run(mock_server.get_system_metrics_history(mock_request_object))
+        assert response.code == ResponseCode.OK
+        assert response.message == "Retrieved system metrics history successfully"
+        assert isinstance(response.timestamp, str)
+        assert response.history == mock_system_metrics_history
+
+    def test_get_system_metrics_history_endpoint(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_body: GetSystemMetricsHistoryRequest,
+        mock_system_metrics_history: SystemMetricsHistory,
+    ) -> None:
+        """Test /system/metrics/history endpoint returns 200 and includes system metrics history."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        response = client.post("/system/metrics/history", json=mock_request_body.model_dump())
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert response_body["message"] == "Retrieved system metrics history successfully"
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["history"] == mock_system_metrics_history.model_dump()

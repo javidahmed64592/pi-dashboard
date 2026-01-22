@@ -19,6 +19,7 @@ classifiers = [
 ]
 dependencies = [
     "python-template-server @ git+https://github.com/javidahmed64592/python-template-server.git",
+    "psutil>=6.1.1",
 ]
 
 [project.optional-dependencies]
@@ -166,6 +167,7 @@ pretty = true
 
 [[tool.mypy.overrides]]
 module = [
+    "psutil.*",
     "python_template_server.*",
 ]
 ignore_missing_imports = true

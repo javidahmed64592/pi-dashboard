@@ -8,8 +8,6 @@ export interface BaseResponse {
 }
 
 // Authentication types
-export interface LoginResponse extends BaseResponse {}
-
 export interface AuthContextType {
   apiKey: string | null;
   isAuthenticated: boolean;
@@ -17,7 +15,54 @@ export interface AuthContextType {
   logout: () => void;
 }
 
+// System types
+export interface SystemInfo {
+  hostname: string;
+  system: string;
+  release: string;
+  version: string;
+  machine: string;
+  memory_total: number;
+  disk_total: number;
+}
+
+export interface SystemMetrics {
+  cpu_usage: number;
+  memory_usage: number;
+  disk_usage: number;
+  uptime: number;
+  temperature: number;
+}
+
+export interface SystemMetricsHistoryEntry {
+  metrics: SystemMetrics;
+  timestamp: number;
+}
+
+export interface SystemMetricsHistory {
+  history: SystemMetricsHistoryEntry[];
+}
+
 // Response types
 export interface HealthResponse extends BaseResponse {
   status: string;
+}
+
+export interface LoginResponse extends BaseResponse {}
+
+export interface GetSystemInfoResponse extends BaseResponse {
+  info: SystemInfo;
+}
+
+export interface GetSystemMetricsResponse extends BaseResponse {
+  metrics: SystemMetrics;
+}
+
+export interface GetSystemMetricsHistoryResponse extends BaseResponse {
+  history: SystemMetricsHistory;
+}
+
+// Request types
+export interface GetSystemMetricsHistoryRequest {
+  last_n_seconds: number;
 }

@@ -13,9 +13,15 @@ services:
       # Load API token hash from .env file (optional - will be generated if missing)
       - API_TOKEN_HASH=${API_TOKEN_HASH:-}
       - PORT=${PORT:-443}
+      # Point to host filesystem for metrics collection
+      - HOST_ROOT=/host
     volumes:
       - certs:/app/certs
       - logs:/app/logs
+      # Mount host directories for system metrics collection
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host:ro
     restart: unless-stopped
     healthcheck:
       test:

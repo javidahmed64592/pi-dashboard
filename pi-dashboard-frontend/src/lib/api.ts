@@ -2,7 +2,14 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 
 import { getApiKey } from "@/lib/auth";
-import type { HealthResponse, LoginResponse } from "@/lib/types";
+import type {
+  HealthResponse,
+  LoginResponse,
+  GetSystemInfoResponse,
+  GetSystemMetricsResponse,
+  GetSystemMetricsHistoryRequest,
+  GetSystemMetricsHistoryResponse,
+} from "@/lib/types";
 
 // Determine the base URL based on environment
 const getBaseURL = () => {
@@ -99,6 +106,39 @@ export const login = async (apiKey: string): Promise<LoginResponse> => {
     }
 
     return data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+// System API functions
+export const getSystemInfo = async (): Promise<GetSystemInfoResponse> => {
+  try {
+    const response = await api.get<GetSystemInfoResponse>("/system/info");
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const getSystemMetrics = async (): Promise<GetSystemMetricsResponse> => {
+  try {
+    const response = await api.get<GetSystemMetricsResponse>("/system/metrics");
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const getSystemMetricsHistory = async (
+  request: GetSystemMetricsHistoryRequest
+): Promise<GetSystemMetricsHistoryResponse> => {
+  try {
+    const response = await api.post<GetSystemMetricsHistoryResponse>(
+      "/system/metrics/history",
+      request
+    );
+    return response.data;
   } catch (error) {
     throw new Error(extractErrorMessage(error));
   }
