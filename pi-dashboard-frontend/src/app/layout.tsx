@@ -4,6 +4,7 @@ import "./globals.css";
 import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SystemProvider } from "@/contexts/SystemContext";
 
 export const metadata: Metadata = {
   title: "Pi Dashboard",
@@ -40,13 +41,15 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <div className="min-h-screen bg-background">
-            <Navigation />
-            <main className="container mx-auto px-4 py-8 max-w-6xl pb-20">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <SystemProvider>
+            <div className="min-h-screen bg-background">
+              <Navigation />
+              <main className="container mx-auto px-4 py-4 max-w-7xl pb-16">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </SystemProvider>
         </AuthProvider>
       </body>
     </html>
