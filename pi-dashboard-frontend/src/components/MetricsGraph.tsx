@@ -17,15 +17,24 @@ interface ChartData {
 
 type ChartType = "area" | "line";
 
+type ThresholdLevel = "LOW" | "MEDIUM" | "HIGH";
+
+interface ThresholdConfig {
+  low: number;
+  medium: number;
+}
+
 interface MetricsGraphProps {
   title: string;
   data: ChartData[];
   color: string;
   chartType: ChartType;
   yAxisLabel: string;
-  yAxisDomain?: [number, number];
+  yAxisDomain?: [number, number] | undefined;
   hasData: boolean;
   className?: string;
+  currentValue?: number | undefined;
+  thresholds?: ThresholdConfig | undefined;
 }
 
 export default function MetricsGraph({
@@ -37,17 +46,55 @@ export default function MetricsGraph({
   yAxisDomain,
   hasData,
   className = "",
+  currentValue,
+  thresholds,
 }: MetricsGraphProps) {
   const gradientId = `${title.replace(/\s+/g, "")}Gradient`;
+
+  const getThresholdLevel = (): ThresholdLevel | null => {
+    if (currentValue === undefined || !thresholds) return null;
+    if (currentValue < thresholds.low) return "LOW";
+    if (currentValue < thresholds.medium) return "MEDIUM";
+    return "HIGH";
+  };
+
+  const getThresholdColor = (level: ThresholdLevel | null): string => {
+    switch (level) {
+      case "LOW":
+        return "#00ff41";
+      case "MEDIUM":
+        return "#ffaa00";
+      case "HIGH":
+        return "#ff0040";
+      default:
+        return "#888888";
+    }
+  };
+
+  const thresholdLevel = getThresholdLevel();
+  const thresholdColor = getThresholdColor(thresholdLevel);
 
   return (
     <div
       className={`bg-background-secondary border rounded-lg p-3 hover:shadow-neon transition-shadow ${className}`}
       style={{ borderColor: color }}
     >
-      <h2 className="text-lg font-bold mb-3 font-mono" style={{ color }}>
-        {title}
-      </h2>
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-lg font-bold font-mono" style={{ color }}>
+          {title}
+        </h2>
+        {thresholdLevel && (
+          <span
+            className="text-xs font-bold font-mono px-2 py-1 rounded"
+            style={{
+              color: thresholdColor,
+              border: `1px solid ${thresholdColor}`,
+            }}
+          >
+            {thresholdLevel}
+          </span>
+        )}
+      </div>
       {!hasData ? (
         <div className="h-60 flex items-center justify-center text-text-muted opacity-50">
           No data available for the selected time range.
