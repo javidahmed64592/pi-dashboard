@@ -124,7 +124,7 @@ export default function SystemPage() {
           title={`Disk Usage${systemInfo ? ` (Total: ${systemInfo.disk_total.toFixed(1)}GB)` : ""}`}
           data={diskData}
           color="#00ff41"
-          chartType="line"
+          chartType="area"
           yAxisLabel="%"
           yAxisDomain={[0, 100]}
           hasData={hasData}
