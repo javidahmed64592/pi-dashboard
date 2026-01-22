@@ -35,6 +35,7 @@ interface MetricsGraphProps {
   className?: string;
   currentValue?: number | undefined;
   thresholds?: ThresholdConfig | undefined;
+  graphId: string;
 }
 
 export default function MetricsGraph({
@@ -48,8 +49,9 @@ export default function MetricsGraph({
   className = "",
   currentValue,
   thresholds,
+  graphId,
 }: MetricsGraphProps) {
-  const gradientId = `${title.replace(/\s+/g, "")}Gradient`;
+  const gradientId = `${graphId}Gradient`;
 
   const getThresholdLevel = (): ThresholdLevel | null => {
     if (currentValue === undefined || !thresholds) return null;
