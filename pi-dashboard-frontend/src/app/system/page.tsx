@@ -96,6 +96,7 @@ export default function SystemPage() {
           color="#ff0040"
           chartType="line"
           yAxisLabel="°C"
+          yAxisDomain={[0, 70]}
           hasData={hasData}
           currentValue={currentMetrics?.temperature}
           thresholds={{ low: 35, medium: 50 }}
