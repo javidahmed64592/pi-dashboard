@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import MetricsGraph from "@/components/MetricsGraph";
+import MetricsGraph from "@/components/system/MetricsGraph";
 import TimeRangeSelector, {
   type TimeRange,
-} from "@/components/TimeRangeSelector";
-import UptimeDisplay from "@/components/UptimeDisplay";
+} from "@/components/system/TimeRangeSelector";
+import UptimeDisplay from "@/components/system/UptimeDisplay";
 import { useSystem } from "@/contexts/SystemContext";
 import type { SystemMetricsHistoryEntry } from "@/lib/types";
 
