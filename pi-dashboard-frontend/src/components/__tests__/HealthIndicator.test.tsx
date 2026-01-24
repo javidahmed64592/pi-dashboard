@@ -26,6 +26,7 @@ describe("HealthIndicator", () => {
     expect(indicator).toBeInTheDocument();
     expect(indicator).toHaveClass("bg-neon-green");
     expect(indicator).toHaveClass("shadow-[0_0_4px_currentColor]");
+    expect(indicator).toHaveClass("animate-pulse");
     expect(indicator).toHaveAttribute("title", "Server: ONLINE");
   });
 
@@ -38,6 +39,7 @@ describe("HealthIndicator", () => {
     expect(indicator).toBeInTheDocument();
     expect(indicator).toHaveClass("bg-neon-red");
     expect(indicator).toHaveClass("shadow-[0_0_4px_currentColor]");
+    expect(indicator).toHaveClass("animate-pulse");
     expect(indicator).toHaveAttribute("title", "Server: OFFLINE");
   });
 

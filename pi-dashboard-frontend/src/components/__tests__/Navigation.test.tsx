@@ -38,6 +38,11 @@ jest.mock("../../lib/api", () => ({
   useHealthStatus: jest.fn(),
 }));
 
+// Mock the SystemContext
+jest.mock("../../contexts/SystemContext", () => ({
+  useSystem: jest.fn(),
+}));
+
 // Helper function to render components with AuthProvider
 const renderWithAuth = (ui: React.ReactElement) => {
   return render(<AuthProvider>{ui}</AuthProvider>);
@@ -49,17 +54,67 @@ const mockUseHealthStatus = useHealthStatus as jest.MockedFunction<
 
 const mockUsePathname = usePathname as jest.MockedFunction<typeof usePathname>;
 
+const mockUseSystem = jest.requireMock("../../contexts/SystemContext")
+  .useSystem as jest.MockedFunction<() => unknown>;
+
 describe("Navigation", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseHealthStatus.mockReturnValue("online");
     mockUsePathname.mockReturnValue("/");
+    mockUseSystem.mockReturnValue({
+      systemInfo: null,
+      currentMetrics: null,
+      metricsHistory: null,
+      isLoading: false,
+      error: null,
+      refreshHistory: jest.fn(),
+    });
     // Mock localStorage
     Storage.prototype.getItem = jest.fn(() => "test-api-key");
   });
   it("renders the Pi Dashboard logo", () => {
     renderWithAuth(<Navigation />);
     expect(screen.getByText("Pi Dashboard")).toBeInTheDocument();
+  });
+
+  it("displays hostname when systemInfo is available", () => {
+    mockUseSystem.mockReturnValue({
+      systemInfo: {
+        hostname: "raspberrypi",
+        os: "Linux",
+        os_version: "6.1.0",
+        architecture: "aarch64",
+        cpu_model: "ARM Cortex-A72",
+        cpu_cores: 4,
+        memory_total: 8.0,
+        disk_total: 128.0,
+      },
+      currentMetrics: null,
+      metricsHistory: null,
+      isLoading: false,
+      error: null,
+      refreshHistory: jest.fn(),
+    });
+
+    renderWithAuth(<Navigation />);
+    expect(screen.getByText("Pi Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("- raspberrypi")).toBeInTheDocument();
+  });
+
+  it("does not display hostname when systemInfo is null", () => {
+    mockUseSystem.mockReturnValue({
+      systemInfo: null,
+      currentMetrics: null,
+      metricsHistory: null,
+      isLoading: false,
+      error: null,
+      refreshHistory: jest.fn(),
+    });
+
+    renderWithAuth(<Navigation />);
+    expect(screen.getByText("Pi Dashboard")).toBeInTheDocument();
+    expect(screen.queryByText(/- /)).not.toBeInTheDocument();
   });
 
   it("renders all navigation items", () => {

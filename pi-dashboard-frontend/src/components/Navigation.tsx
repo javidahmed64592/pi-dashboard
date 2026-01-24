@@ -7,11 +7,13 @@ import { useState } from "react";
 
 import HealthIndicator from "@/components/HealthIndicator";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSystem } from "@/contexts/SystemContext";
 
 const Navigation = () => {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { logout, isAuthenticated } = useAuth();
+  const { systemInfo } = useSystem();
 
   const navItems = [
     {
@@ -52,6 +54,12 @@ const Navigation = () => {
               <div className="flex flex-col">
                 <div className="nav-logo-text text-xl font-bold text-text-primary sm:text-xl">
                   Pi Dashboard
+                  {systemInfo && (
+                    <span className="text-neon-green">
+                      {" "}
+                      - {systemInfo.hostname}
+                    </span>
+                  )}
                 </div>
               </div>
             </Link>
