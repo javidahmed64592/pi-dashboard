@@ -20,16 +20,29 @@ export default function ServiceCard({
       <div className="flex justify-between gap-4">
         <div className="flex-1 min-w-0 flex flex-col justify-between">
           <div>
-            <a
-              href={`http://localhost:${port}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group"
-            >
-              <h3 className="text-lg font-bold text-text-primary font-mono group-hover:text-neon-green transition-colors">
+            <h3 className="text-lg font-bold text-text-primary font-mono">
+              <a
+                href={`http://localhost:${port}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 group hover:text-neon-green transition-colors"
+              >
                 {description}
-              </h3>
-            </a>
+                <svg
+                  className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </a>
+            </h3>
             <p className="text-xs text-text-muted font-mono mt-1">{name}</p>
           </div>
           <div className="text-xs text-text-muted font-mono truncate">
