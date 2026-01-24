@@ -17,49 +17,122 @@ export default function ServiceCard({
 
   return (
     <div className="bg-background-secondary border border-border rounded-lg p-4 shadow-neon hover:border-neon-green transition-all">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h3 className="text-lg font-bold text-text-primary font-mono">
-            {description}
-          </h3>
-          <p className="text-xs text-text-muted font-mono mt-1">{name}</p>
+      <div className="flex justify-between gap-4">
+        <div className="flex-1 min-w-0 flex flex-col justify-between">
+          <div>
+            <a
+              href={`http://localhost:${port}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group"
+            >
+              <h3 className="text-lg font-bold text-text-primary font-mono group-hover:text-neon-green transition-colors">
+                {description}
+              </h3>
+            </a>
+            <p className="text-xs text-text-muted font-mono mt-1">{name}</p>
+          </div>
+          <div className="text-xs text-text-muted font-mono truncate">
+            {path}
+          </div>
         </div>
-        <div
-          className="w-3 h-3 rounded-full animate-pulse"
-          style={{
-            backgroundColor: statusColor,
-            boxShadow: `0 0 10px ${statusColor}`,
-          }}
-        />
-      </div>
 
-      <div className="text-xs text-text-muted font-mono mb-4 truncate">
-        {path}
+        <div className="flex flex-col justify-between items-end">
+          <div
+            className="w-3 h-3 rounded-full animate-pulse flex-shrink-0"
+            style={{
+              backgroundColor: statusColor,
+              boxShadow: `0 0 10px ${statusColor}`,
+            }}
+          />
+          <div className="flex gap-1.5">
+            <button
+              className="p-2 text-neon-green hover:bg-neon-green hover:text-background rounded transition-all"
+              title="Start"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
+            <button
+              className="p-2 text-neon-red hover:bg-neon-red hover:text-background rounded transition-all"
+              title="Stop"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"
+                />
+              </svg>
+            </button>
+            <button
+              className="p-2 text-neon-blue hover:bg-neon-blue hover:text-background rounded transition-all"
+              title="Restart"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            </button>
+            <button
+              className="p-2 text-neon-purple hover:bg-neon-purple hover:text-background rounded transition-all"
+              title="Update"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
-
-      <div className="flex flex-wrap gap-2 mb-3">
-        <button className="px-3 py-1 text-xs font-mono bg-neon-green text-background rounded hover:bg-opacity-80 transition-all">
-          Start
-        </button>
-        <button className="px-3 py-1 text-xs font-mono bg-neon-red text-background rounded hover:bg-opacity-80 transition-all">
-          Stop
-        </button>
-        <button className="px-3 py-1 text-xs font-mono bg-neon-blue text-background rounded hover:bg-opacity-80 transition-all">
-          Restart
-        </button>
-        <button className="px-3 py-1 text-xs font-mono bg-neon-purple text-background rounded hover:bg-opacity-80 transition-all">
-          Update
-        </button>
-      </div>
-
-      <a
-        href={`http://localhost:${port}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs font-mono text-neon-green hover:text-neon-blue transition-colors"
-      >
-        Open App →
-      </a>
     </div>
   );
 }
