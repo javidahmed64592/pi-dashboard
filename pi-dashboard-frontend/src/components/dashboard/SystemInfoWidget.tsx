@@ -24,7 +24,7 @@ export default function SystemInfoWidget() {
   ];
 
   return (
-    <div className="bg-background-secondary border border-neon-green rounded-lg p-4 shadow-neon">
+    <div className="bg-background-secondary border border-border rounded-lg p-4 shadow-neon">
       <h2 className="text-lg font-bold text-neon-green font-mono mb-3">
         SYSTEM INFO
       </h2>
