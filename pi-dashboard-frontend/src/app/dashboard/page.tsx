@@ -34,14 +34,14 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Left Column (2/3 width on large screens) */}
-      <div className="lg:col-span-2 space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
+      {/* Column 1: System Info, Summary and Services - 3/7 width */}
+      <div className="lg:col-span-3 space-y-4">
         <SystemInfoWidget />
         <MiniSystemSummary />
 
         {/* Service Cards */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <h2 className="text-xl font-bold text-neon-green font-mono">
             SERVICES
           </h2>
@@ -58,10 +58,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Right Column (1/3 width on large screens) */}
-      <div className="space-y-6">
+      {/* Column 2: Weather and Calendar - 2/7 width */}
+      <div className="lg:col-span-2 space-y-4">
         <WeatherWidget />
         <CalendarWidget />
+      </div>
+
+      {/* Column 3: Notes (full height) - 2/7 width */}
+      <div className="lg:col-span-2">
         <NotesWidget />
       </div>
     </div>
