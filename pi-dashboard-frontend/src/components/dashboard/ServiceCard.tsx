@@ -60,8 +60,13 @@ export default function ServiceCard({
           />
           <div className="flex gap-1.5">
             <button
-              className="p-2 text-neon-green hover:bg-neon-green hover:text-background rounded transition-all"
+              className={`p-2 rounded transition-all ${
+                status === "stopped"
+                  ? "text-neon-green hover:bg-neon-green hover:text-background cursor-pointer"
+                  : "text-text-muted cursor-not-allowed opacity-50"
+              }`}
               title="Start"
+              disabled={status === "running"}
             >
               <svg
                 className="w-5 h-5"
@@ -84,8 +89,13 @@ export default function ServiceCard({
               </svg>
             </button>
             <button
-              className="p-2 text-neon-red hover:bg-neon-red hover:text-background rounded transition-all"
+              className={`p-2 rounded transition-all ${
+                status === "running"
+                  ? "text-neon-red hover:bg-neon-red hover:text-background cursor-pointer"
+                  : "text-text-muted cursor-not-allowed opacity-50"
+              }`}
               title="Stop"
+              disabled={status === "stopped"}
             >
               <svg
                 className="w-5 h-5"
@@ -108,8 +118,13 @@ export default function ServiceCard({
               </svg>
             </button>
             <button
-              className="p-2 text-neon-blue hover:bg-neon-blue hover:text-background rounded transition-all"
+              className={`p-2 rounded transition-all ${
+                status === "running"
+                  ? "text-neon-blue hover:bg-neon-blue hover:text-background cursor-pointer"
+                  : "text-text-muted cursor-not-allowed opacity-50"
+              }`}
               title="Restart"
+              disabled={status === "stopped"}
             >
               <svg
                 className="w-5 h-5"
@@ -126,7 +141,7 @@ export default function ServiceCard({
               </svg>
             </button>
             <button
-              className="p-2 text-neon-purple hover:bg-neon-purple hover:text-background rounded transition-all"
+              className="p-2 text-neon-purple hover:bg-neon-purple hover:text-background rounded transition-all cursor-pointer"
               title="Update"
             >
               <svg
