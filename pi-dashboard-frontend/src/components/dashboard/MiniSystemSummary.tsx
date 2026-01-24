@@ -28,24 +28,26 @@ function MetricCard({
 
   return (
     <div
-      className="relative bg-background-secondary rounded-full p-5 flex flex-col items-center justify-center aspect-square border-2 shadow-neon transition-all hover:scale-105"
+      className="relative bg-background-secondary rounded-full p-4 flex flex-col items-center justify-center aspect-square border-2 shadow-neon transition-all hover:scale-105"
       style={{ borderColor, boxShadow: `0 0 20px ${borderColor}40` }}
     >
-      <div className="text-sm font-bold text-text-muted font-mono mb-2 uppercase tracking-wider">
+      <div className="text-xs font-bold text-text-muted font-mono mb-1 uppercase tracking-wider text-center">
         {label}
       </div>
       <div
-        className="text-3xl font-extrabold font-mono leading-none"
+        className="text-2xl font-extrabold font-mono leading-none text-center"
         style={{ color: borderColor }}
       >
         {value !== undefined ? `${value.toFixed(1)}${unit}` : "--"}
       </div>
-      {total !== undefined && (
-        <div className="text-xs text-text-muted font-mono mt-2">
-          ({total.toFixed(1)}
-          {totalUnit})
-        </div>
-      )}
+      <div className="text-xs text-text-muted font-mono mt-1 h-3 text-center">
+        {total !== undefined && (
+          <>
+            ({total.toFixed(1)}
+            {totalUnit})
+          </>
+        )}
+      </div>
     </div>
   );
 }
