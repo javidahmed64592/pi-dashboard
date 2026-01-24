@@ -6,9 +6,9 @@ function HealthIndicator() {
   const getStatusStyles = (status: HealthStatus): string => {
     switch (status) {
       case "online":
-        return "bg-neon-green shadow-[0_0_4px_currentColor]";
+        return "bg-neon-green shadow-[0_0_4px_currentColor] animate-pulse";
       case "offline":
-        return "bg-neon-red shadow-[0_0_4px_currentColor]";
+        return "bg-neon-red shadow-[0_0_4px_currentColor] animate-pulse";
       case "checking":
         return "animate-pulse bg-yellow-400 shadow-[0_0_4px_currentColor]";
       default:
