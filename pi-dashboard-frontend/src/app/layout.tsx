@@ -4,6 +4,7 @@ import "./globals.css";
 import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { DataProvider } from "@/contexts/DataContext";
 import { SystemProvider } from "@/contexts/SystemContext";
 
 export const metadata: Metadata = {
@@ -42,13 +43,15 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <SystemProvider>
-            <div className="min-h-screen bg-background">
-              <Navigation />
-              <main className="container mx-auto px-4 py-4 max-w-7xl pb-16">
-                {children}
-              </main>
-              <Footer />
-            </div>
+            <DataProvider>
+              <div className="min-h-screen bg-background">
+                <Navigation />
+                <main className="container mx-auto px-4 py-4 max-w-7xl pb-16">
+                  {children}
+                </main>
+                <Footer />
+              </div>
+            </DataProvider>
           </SystemProvider>
         </AuthProvider>
       </body>

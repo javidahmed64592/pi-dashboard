@@ -13,12 +13,16 @@ from fastapi.testclient import TestClient
 from python_template_server.models import ResponseCode
 
 from pi_dashboard.models import (
+    CreateNoteRequest,
     GetSystemMetricsHistoryRequest,
+    Note,
     PiDashboardConfig,
     SystemInfo,
     SystemMetrics,
     SystemMetricsHistory,
+    UpdateNoteRequest,
 )
+from pi_dashboard.notes_handler import NotesHandler
 from pi_dashboard.server import PiDashboardServer
 
 
@@ -61,6 +65,7 @@ def mock_server(
     mock_get_system_info: MagicMock,
     mock_get_system_metrics: MagicMock,
     mock_system_metrics_history: SystemMetricsHistory,
+    mock_notes_handler: NotesHandler,
 ) -> Generator[PiDashboardServer]:
     """Provide a PiDashboardServer instance for testing."""
 
@@ -74,6 +79,7 @@ def mock_server(
         patch.object(PiDashboardServer, "_verify_api_key", new=fake_verify_api_key),
         patch("pi_dashboard.server.PiDashboardConfig.save_to_file"),
         patch("pi_dashboard.server.SystemMetricsHistory", return_value=mock_system_metrics_history),
+        patch("pi_dashboard.server.NotesHandler", return_value=mock_notes_handler),
     ):
         server = PiDashboardServer(config=mock_pi_dashboard_config)
         yield server
@@ -86,6 +92,12 @@ class TestPiDashboardServer:
         """Test PiDashboardServer initialization."""
         assert isinstance(mock_server.config, PiDashboardConfig)
         assert mock_server.metrics_history == mock_system_metrics_history
+
+    def test_data_dir(self, mock_server: PiDashboardServer) -> None:
+        """Test data directory property."""
+        expected_path = mock_server.data_dir
+        assert expected_path.exists()
+        assert expected_path.is_dir()
 
     def test_current_timestamp_int(self, mock_server: PiDashboardServer) -> None:
         """Test current timestamp integer retrieval."""
@@ -117,6 +129,8 @@ class TestPiDashboardServerRoutes:
             "/system/info",
             "/system/metrics",
             "/system/metrics/history",
+            "/notes",
+            "/notes/{note_id}",
         ]
         for endpoint in expected_endpoints:
             assert endpoint in routes, f"Expected endpoint {endpoint} not found in routes"
@@ -237,3 +251,195 @@ class TestGetSystemMetricsHistoryEndpoint:
         assert response_body["message"] == "Retrieved system metrics history successfully"
         assert isinstance(response_body["timestamp"], str)
         assert response_body["history"] == mock_system_metrics_history.model_dump()
+
+
+class TestGetNotesEndpoint:
+    """Integration and unit tests for the /notes endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock Request object with JSON data."""
+        return MagicMock(spec=Request)
+
+    def test_get_notes(
+        self, mock_server: PiDashboardServer, mock_request_object: MagicMock, mock_notes_handler: NotesHandler
+    ) -> None:
+        """Test the /notes method handles valid JSON and returns a model reply."""
+        response = asyncio.run(mock_server.get_notes(mock_request_object))
+
+        assert response.code == ResponseCode.OK
+        assert response.message == "Retrieved notes successfully"
+        assert isinstance(response.timestamp, str)
+        assert response.notes == mock_notes_handler.get_all_notes()
+
+    def test_get_notes_endpoint(self, mock_server: PiDashboardServer, mock_notes_handler: NotesHandler) -> None:
+        """Test /notes endpoint returns 200 and includes all notes."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        response = client.get("/notes")
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert response_body["message"] == "Retrieved notes successfully"
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["notes"] == mock_notes_handler.get_all_notes().model_dump()
+
+
+class TestCreateNoteEndpoint:
+    """Integration and unit tests for the /notes endpoint."""
+
+    @pytest.fixture
+    def mock_request_body(self) -> CreateNoteRequest:
+        """Provide a mock request body for creating a note."""
+        return CreateNoteRequest(title="Test Note", content="This is a test note.")
+
+    @pytest.fixture
+    def mock_request_object(self, mock_request_body: CreateNoteRequest) -> MagicMock:
+        """Provide a mock Request object with JSON data."""
+        request = MagicMock(spec=Request)
+        request.json = AsyncMock(return_value=mock_request_body.model_dump())
+        return request
+
+    def test_create_note(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+        mock_notes_handler: NotesHandler,
+    ) -> None:
+        """Test the /notes method handles valid JSON and returns a model reply."""
+        response = asyncio.run(mock_server.create_note(mock_request_object))
+
+        assert response.code == ResponseCode.OK
+        assert response.message == "Created note successfully"
+        assert isinstance(response.timestamp, str)
+        assert response.note.title == mock_request_object.json.return_value["title"]
+        assert response.note.content == mock_request_object.json.return_value["content"]
+
+        created_note = mock_server.notes_handler.collection.get_note_by_id(response.note.id)
+        assert created_note is not None
+        assert created_note.title == mock_request_object.json.return_value["title"]
+        assert created_note.content == mock_request_object.json.return_value["content"]
+
+    def test_create_note_endpoint(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_body: CreateNoteRequest,
+        mock_notes_handler: NotesHandler,
+    ) -> None:
+        """Test /notes endpoint returns 200 and includes created note."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        response = client.post("/notes", json=mock_request_body.model_dump())
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert response_body["message"] == "Created note successfully"
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["note"]["title"] == mock_request_body.title
+        assert response_body["note"]["content"] == mock_request_body.content
+
+
+class TestUpdateNoteEndpoint:
+    """Integration and unit tests for the /notes/{note_id} endpoint."""
+
+    @pytest.fixture
+    def mock_request_body(self) -> UpdateNoteRequest:
+        """Provide a mock request body for updating a note."""
+        return UpdateNoteRequest(title="Updated Test Note", content="This is an updated test note.")
+
+    @pytest.fixture
+    def mock_request_object(self, mock_request_body: UpdateNoteRequest) -> MagicMock:
+        """Provide a mock Request object with JSON data."""
+        request = MagicMock(spec=Request)
+        request.json = AsyncMock(return_value=mock_request_body.model_dump())
+        return request
+
+    def test_update_note(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+        mock_notes_handler: NotesHandler,
+        mock_note: Note,
+    ) -> None:
+        """Test the /notes/{note_id} method handles valid JSON and returns a model reply."""
+        response = asyncio.run(mock_server.update_note(mock_request_object, mock_note.id))
+
+        assert response.code == ResponseCode.OK
+        assert response.message == "Updated note successfully"
+        assert isinstance(response.timestamp, str)
+        assert response.note.title == mock_request_object.json.return_value["title"]
+        assert response.note.content == mock_request_object.json.return_value["content"]
+
+        updated_note = mock_server.notes_handler.collection.get_note_by_id(mock_note.id)
+        assert updated_note is not None
+        assert updated_note.title == mock_request_object.json.return_value["title"]
+        assert updated_note.content == mock_request_object.json.return_value["content"]
+
+    def test_update_note_endpoint(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_body: UpdateNoteRequest,
+        mock_notes_handler: NotesHandler,
+        mock_note: Note,
+    ) -> None:
+        """Test /notes/{note_id} endpoint returns 200 and includes updated note."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        response = client.put(f"/notes/{mock_note.id}", json=mock_request_body.model_dump())
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert response_body["message"] == "Updated note successfully"
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["note"]["title"] == mock_request_body.title
+        assert response_body["note"]["content"] == mock_request_body.content
+
+
+class TestDeleteNoteEndpoint:
+    """Integration and unit tests for the /notes/{note_id} endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock Request object with JSON data."""
+        return MagicMock(spec=Request)
+
+    def test_delete_note(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+        mock_notes_handler: NotesHandler,
+        mock_note: Note,
+    ) -> None:
+        """Test the /notes/{note_id} method handles valid JSON and returns a model reply."""
+        response = asyncio.run(mock_server.delete_note(mock_request_object, mock_note.id))
+
+        assert response.code == ResponseCode.OK
+        assert response.message == "Deleted note successfully"
+        assert isinstance(response.timestamp, str)
+
+        deleted_note = mock_server.notes_handler.collection.get_note_by_id(mock_note.id)
+        assert deleted_note is None
+
+    def test_delete_note_endpoint(
+        self,
+        mock_server: PiDashboardServer,
+        mock_notes_handler: NotesHandler,
+        mock_note: Note,
+    ) -> None:
+        """Test /notes/{note_id} endpoint returns 200 and confirms deletion."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        response = client.delete(f"/notes/{mock_note.id}")
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert response_body["message"] == "Deleted note successfully"
+        assert isinstance(response_body["timestamp"], str)

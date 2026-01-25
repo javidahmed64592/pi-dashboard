@@ -3,10 +3,22 @@ import { renderHook } from "@testing-library/react";
 import {
   getHealth,
   login,
+  getNotes,
+  createNote,
+  updateNote,
+  deleteNote,
   useHealthStatus,
   type HealthStatus,
 } from "@/lib/api";
-import type { HealthResponse, LoginResponse } from "@/lib/types";
+import type {
+  HealthResponse,
+  LoginResponse,
+  GetNotesResponse,
+  CreateNoteResponse,
+  UpdateNoteResponse,
+  DeleteNoteResponse,
+  Note,
+} from "@/lib/types";
 
 jest.mock("../api", () => {
   const actual = jest.requireActual("../api");
@@ -14,6 +26,10 @@ jest.mock("../api", () => {
     ...actual,
     getHealth: jest.fn(),
     login: jest.fn(),
+    getNotes: jest.fn(),
+    createNote: jest.fn(),
+    updateNote: jest.fn(),
+    deleteNote: jest.fn(),
     encodeImage: jest.fn(),
     decodeImage: jest.fn(),
     getImageCapacity: jest.fn(),
@@ -25,6 +41,26 @@ global.fetch = jest.fn();
 
 const mockGetHealth = getHealth as jest.MockedFunction<typeof getHealth>;
 const mockLogin = login as jest.MockedFunction<typeof login>;
+const mockGetNotes = getNotes as jest.MockedFunction<typeof getNotes>;
+const mockCreateNote = createNote as jest.MockedFunction<typeof createNote>;
+const mockUpdateNote = updateNote as jest.MockedFunction<typeof updateNote>;
+const mockDeleteNote = deleteNote as jest.MockedFunction<typeof deleteNote>;
+
+const mockNote1: Note = {
+  id: "1",
+  title: "Test Note 1",
+  content: "Content 1",
+  created_at: "2024-01-01T00:00:00Z",
+  updated_at: "2024-01-01T00:00:00Z",
+};
+
+const mockNote2: Note = {
+  id: "2",
+  title: "Test Note 2",
+  content: "Content 2",
+  created_at: "2024-01-02T00:00:00Z",
+  updated_at: "2024-01-02T00:00:00Z",
+};
 
 describe("API Tests", () => {
   beforeEach(() => {
@@ -116,6 +152,142 @@ describe("API Tests", () => {
       const status: HealthStatus = result.current;
       expect(["checking", "online", "offline"]).toContain(status);
       unmount();
+    });
+  });
+
+  describe("notes", () => {
+    describe("getNotes", () => {
+      it("should fetch notes successfully", async () => {
+        const mockResponse: GetNotesResponse = {
+          code: 200,
+          message: "Retrieved notes successfully",
+          timestamp: "2024-01-01T00:00:00Z",
+          notes: { notes: [mockNote1, mockNote2] },
+        };
+
+        mockGetNotes.mockResolvedValue(mockResponse);
+
+        const result = await getNotes();
+
+        expect(mockGetNotes).toHaveBeenCalled();
+        expect(result).toEqual(mockResponse);
+        expect(result.notes.notes).toHaveLength(2);
+      });
+
+      it("should handle fetch notes error", async () => {
+        const errorMessage = "Failed to fetch notes";
+        mockGetNotes.mockRejectedValue(new Error(errorMessage));
+
+        await expect(getNotes()).rejects.toThrow(errorMessage);
+      });
+    });
+
+    describe("createNote", () => {
+      it("should create a note successfully", async () => {
+        const mockResponse: CreateNoteResponse = {
+          code: 200,
+          message: "Created note successfully",
+          timestamp: "2024-01-01T00:00:00Z",
+          note: mockNote1,
+        };
+
+        mockCreateNote.mockResolvedValue(mockResponse);
+
+        const request = { title: "Test Note 1", content: "Content 1" };
+        const result = await createNote(request);
+
+        expect(mockCreateNote).toHaveBeenCalledWith(request);
+        expect(result).toEqual(mockResponse);
+        expect(result.note.title).toBe("Test Note 1");
+      });
+
+      it("should handle create note error", async () => {
+        const errorMessage = "Failed to create note";
+        mockCreateNote.mockRejectedValue(new Error(errorMessage));
+
+        const request = { title: "Test", content: "Content" };
+        await expect(createNote(request)).rejects.toThrow(errorMessage);
+      });
+
+      it("should validate required fields", async () => {
+        const errorMessage = "Title is required";
+        mockCreateNote.mockRejectedValue(new Error(errorMessage));
+
+        const request = { title: "", content: "Content" };
+        await expect(createNote(request)).rejects.toThrow();
+      });
+    });
+
+    describe("updateNote", () => {
+      it("should update a note successfully", async () => {
+        const updatedNote = { ...mockNote1, title: "Updated Title" };
+        const mockResponse: UpdateNoteResponse = {
+          code: 200,
+          message: "Updated note successfully",
+          timestamp: "2024-01-01T00:00:00Z",
+          note: updatedNote,
+        };
+
+        mockUpdateNote.mockResolvedValue(mockResponse);
+
+        const request = { title: "Updated Title" };
+        const result = await updateNote("1", request);
+
+        expect(mockUpdateNote).toHaveBeenCalledWith("1", request);
+        expect(result).toEqual(mockResponse);
+        expect(result.note.title).toBe("Updated Title");
+      });
+
+      it("should update note content only", async () => {
+        const updatedNote = { ...mockNote1, content: "New content" };
+        const mockResponse: UpdateNoteResponse = {
+          code: 200,
+          message: "Updated note successfully",
+          timestamp: "2024-01-01T00:00:00Z",
+          note: updatedNote,
+        };
+
+        mockUpdateNote.mockResolvedValue(mockResponse);
+
+        const request = { content: "New content" };
+        const result = await updateNote("1", request);
+
+        expect(result.note.content).toBe("New content");
+        expect(result.note.title).toBe(mockNote1.title);
+      });
+
+      it("should handle update note error", async () => {
+        const errorMessage = "Note not found: 999";
+        mockUpdateNote.mockRejectedValue(new Error(errorMessage));
+
+        const request = { title: "Updated" };
+        await expect(updateNote("999", request)).rejects.toThrow(errorMessage);
+      });
+    });
+
+    describe("deleteNote", () => {
+      it("should delete a note successfully", async () => {
+        const mockResponse: DeleteNoteResponse = {
+          code: 200,
+          message: "Deleted note successfully",
+          timestamp: "2024-01-01T00:00:00Z",
+        };
+
+        mockDeleteNote.mockResolvedValue(mockResponse);
+
+        const result = await deleteNote("1");
+
+        expect(mockDeleteNote).toHaveBeenCalledWith("1");
+        expect(result).toEqual(mockResponse);
+        expect(result.message).toBe("Deleted note successfully");
+      });
+
+      it("should handle delete note error", async () => {
+        const errorMessage = "Note not found: 999";
+        mockDeleteNote.mockRejectedValue(new Error(errorMessage));
+
+        await expect(deleteNote("999")).rejects.toThrow(errorMessage);
+      });
     });
   });
 });
