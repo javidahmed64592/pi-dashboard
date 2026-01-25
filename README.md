@@ -13,55 +13,59 @@ A FastAPI-based dashboard for monitoring on a Raspberry Pi.
 
 <!-- omit from toc -->
 ## Table of Contents
-- [Quick Start - From Source](#quick-start---from-source)
-  - [Prerequisites](#prerequisites)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
   - [Installation](#installation)
-  - [Generate API Token](#generate-api-token)
-  - [Build the UI](#build-the-ui)
-  - [Run the Server](#run-the-server)
+  - [Configuration](#configuration)
+  - [Managing the Container](#managing-the-container)
 - [Links](#links)
 - [Documentation](#documentation)
 - [License](#license)
 
-## Quick Start - From Source
+## Prerequisites
 
-### Prerequisites
+- Docker and Docker Compose installed
+- Linux system
 
-- Python 3.13+
-- [uv](https://docs.astral.sh/uv/) package manager
+## Quick Start
 
 ### Installation
 
-```sh
-# Clone the repository
-git clone https://github.com/javidahmed64592/pi-dashboard.git
-cd pi-dashboard
+1. Download the latest release from [GitHub Releases](https://github.com/javidahmed64592/pi-dashboard/releases) and extract:
+   ```sh
+   VERSION=0.1.0
+   wget https://github.com/javidahmed64592/pi-dashboard/releases/download/v${VERSION}/pi_dashboard_${VERSION}.tar.gz
+   tar -xzf pi_dashboard_${VERSION}.tar.gz
+   cd pi-dashboard
+   ```
 
-# Install dependencies
-uv sync --extra dev
+### Configuration
+
+Rename `.env.example` to `.env` and edit it to configure the server.
+
+**Configuration Options:**
+- `PORT`: Server port (default: 443)
+- `API_TOKEN_HASH`: Leave blank to auto-generate on first run, or provide your own token hash
+
+### Managing the Container
+
+```sh
+# Start the container
+docker compose up -d
+
+# Stop the container
+docker compose down
+
+# Update to the latest version
+docker compose pull && docker compose up -d
+
+# View the logs
+docker compose logs -f pi-dashboard
 ```
 
-### Generate API Token
-
+**Note:** You may need to add your user to the Docker group and log out/in for permission changes to take effect:
 ```sh
-uv run generate-new-token
-# ⚠️ Save the displayed token - you'll need it for API requests!
-```
-
-### Build the UI
-
-```sh
-cd pi-dashboard-frontend
-npm install
-npm run build
-cp -r out ../static
-```
-
-### Run the Server
-
-```sh
-# Start the server
-uv run pi-dashboard
+sudo usermod -aG docker ${USER}
 ```
 
 ## Links

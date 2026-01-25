@@ -41,8 +41,6 @@ include = [
   "pi_dashboard/**",
   "static/**",
   ".here",
-  "LICENSE",
-  "README.md",
 ]
 
 [tool.hatch.build.force-include]

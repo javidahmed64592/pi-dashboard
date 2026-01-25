@@ -64,18 +64,20 @@ RUN mkdir -p /app/logs
 # Copy included files from installed wheel to app directory
 RUN SITE_PACKAGES_DIR=$(find /usr/local/lib -name "site-packages" -type d | head -1) && \
     cp -r "${SITE_PACKAGES_DIR}/static" /app/ && \
-    cp "${SITE_PACKAGES_DIR}/.here" /app/.here && \
-    cp "${SITE_PACKAGES_DIR}/LICENSE" /app/LICENSE && \
-    cp "${SITE_PACKAGES_DIR}/README.md" /app/README.md
+    cp "${SITE_PACKAGES_DIR}/.here" /app/.here
 
 # Create startup script
 RUN echo '#!/bin/sh\n\
     set -e\n\
     \n\
-    # Generate API token if needed\n\
+    cd /app\n\
+    \n\
+    # Generate API token if needed (only if not provided AND not already generated)\n\
     if [ -z "$API_TOKEN_HASH" ]; then\n\
+    if [ ! -f .env ] || ! grep -q "API_TOKEN_HASH=." .env; then\n\
     echo "Generating new token..."\n\
     generate-new-token\n\
+    fi\n\
     export $(grep -v "^#" .env | xargs)\n\
     fi\n\
     \n\
