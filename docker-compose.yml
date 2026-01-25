@@ -15,6 +15,7 @@ services:
       # Point to host filesystem for metrics collection
       - HOST_ROOT=/host
     volumes:
+      - data:/app/data
       - certs:/app/certs
       - logs:/app/logs
       # Mount host directories for system metrics collection
@@ -36,5 +37,6 @@ services:
       start_period: 10s
 
 volumes:
+  data:
   certs:
   logs:
