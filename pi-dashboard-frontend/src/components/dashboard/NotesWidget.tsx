@@ -41,8 +41,7 @@ export default function NotesWidget() {
       selectNote(newNote);
       setSaveMessage("Note created!");
       setTimeout(() => setSaveMessage(null), 2000);
-    } catch (error) {
-      console.error("Failed to create note:", error);
+    } catch {
       setSaveMessage("Failed to create note");
       setTimeout(() => setSaveMessage(null), 3000);
     }
@@ -61,8 +60,7 @@ export default function NotesWidget() {
       await updateExistingNote(selectedNote.id, { title, content });
       setSaveMessage("Saved!");
       setTimeout(() => setSaveMessage(null), 2000);
-    } catch (error) {
-      console.error("Failed to save note:", error);
+    } catch {
       setSaveMessage("Failed to save");
       setTimeout(() => setSaveMessage(null), 3000);
     } finally {
@@ -79,8 +77,7 @@ export default function NotesWidget() {
       await deleteExistingNote(selectedNote.id);
       setSaveMessage("Deleted!");
       setTimeout(() => setSaveMessage(null), 2000);
-    } catch (error) {
-      console.error("Failed to delete note:", error);
+    } catch {
       setSaveMessage("Failed to delete");
       setTimeout(() => setSaveMessage(null), 3000);
     }
@@ -94,7 +91,9 @@ export default function NotesWidget() {
   if (isLoadingNotes) {
     return (
       <div className="bg-background-secondary border border-border rounded-lg p-4 shadow-neon">
-        <h2 className="text-lg font-bold text-neon-green font-mono mb-4">NOTES</h2>
+        <h2 className="text-lg font-bold text-neon-green font-mono mb-4">
+          NOTES
+        </h2>
         <div className="flex items-center justify-center h-40 text-text-muted font-mono text-sm">
           Loading notes...
         </div>
@@ -105,7 +104,9 @@ export default function NotesWidget() {
   if (notesError) {
     return (
       <div className="bg-background-secondary border border-border rounded-lg p-4 shadow-neon">
-        <h2 className="text-lg font-bold text-neon-green font-mono mb-4">NOTES</h2>
+        <h2 className="text-lg font-bold text-neon-green font-mono mb-4">
+          NOTES
+        </h2>
         <div className="flex items-center justify-center h-40 text-neon-red font-mono text-sm">
           Error: {notesError}
         </div>

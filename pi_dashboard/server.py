@@ -61,7 +61,7 @@ class PiDashboardServer(TemplateServer):
     @property
     def data_dir(self) -> Path:
         """Get the data directory path."""
-        return ROOT_DIR / "data"
+        return ROOT_DIR / "data"  # type: ignore[no-any-return]
 
     @staticmethod
     def _current_timestamp_int() -> int:
