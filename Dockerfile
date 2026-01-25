@@ -70,13 +70,15 @@ RUN SITE_PACKAGES_DIR=$(find /usr/local/lib -name "site-packages" -type d | head
 RUN echo '#!/bin/sh\n\
     set -e\n\
     \n\
-    # Generate API token if needed\n\
+    cd /app\n\
+    \n\
+    # Generate API token if needed (only if not provided AND not already generated)\n\
     if [ -z "$API_TOKEN_HASH" ]; then\n\
-    if [ ! -f /app/.env ]; then\n\
+    if [ ! -f .env ] || ! grep -q "API_TOKEN_HASH=." .env; then\n\
     echo "Generating new token..."\n\
     generate-new-token\n\
     fi\n\
-    export $(grep -v "^#" /app/.env | xargs)\n\
+    export $(grep -v "^#" .env | xargs)\n\
     fi\n\
     \n\
     exec pi-dashboard --port $PORT' > /app/start.sh && \
