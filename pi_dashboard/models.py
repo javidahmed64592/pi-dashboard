@@ -1,6 +1,5 @@
 """Pydantic models for the server."""
 
-from datetime import datetime
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -186,12 +185,6 @@ class GetNotesResponse(BaseResponse):
     """Response model for listing all notes."""
 
     notes: list[Note] = Field(..., description="List of all notes")
-
-
-class GetNoteResponse(BaseResponse):
-    """Response model for getting a single note."""
-
-    note: Note = Field(..., description="The requested note")
 
 
 class CreateNoteResponse(BaseResponse):

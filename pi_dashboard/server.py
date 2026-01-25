@@ -17,7 +17,6 @@ from pi_dashboard.models import (
     CreateNoteRequest,
     CreateNoteResponse,
     DeleteNoteResponse,
-    GetNoteResponse,
     GetNotesResponse,
     GetSystemInfoResponse,
     GetSystemMetricsHistoryRequest,
@@ -175,13 +174,6 @@ class PiDashboardServer(TemplateServer):
             limited=True,
         )
         self.add_authenticated_route(
-            endpoint="/notes/{note_id}",
-            handler_function=self.get_note,
-            response_model=GetNoteResponse,
-            methods=["GET"],
-            limited=True,
-        )
-        self.add_authenticated_route(
             endpoint="/notes",
             handler_function=self.create_note,
             response_model=CreateNoteResponse,
@@ -258,22 +250,6 @@ class PiDashboardServer(TemplateServer):
             message="Retrieved notes successfully",
             timestamp=GetNotesResponse.current_timestamp(),
             notes=notes,
-        )
-
-    async def get_note(self, request: Request, note_id: str) -> GetNoteResponse:
-        """Get a specific note by ID.
-
-        :param str note_id: The UUID of the note to retrieve
-        :return GetNoteResponse: Response containing the requested note
-        :raises HTTPException: If the note is not found (404)
-        """
-        if (note := self.notes_handler.get_note_by_id(note_id)) is None:
-            raise HTTPException(status_code=ResponseCode.NOT_FOUND, detail=f"Note not found: {note_id}")
-        return GetNoteResponse(
-            code=ResponseCode.OK,
-            message="Retrieved note successfully",
-            timestamp=GetNoteResponse.current_timestamp(),
-            note=note,
         )
 
     async def create_note(self, request: Request) -> CreateNoteResponse:
