@@ -43,6 +43,19 @@ export interface SystemMetricsHistory {
   history: SystemMetricsHistoryEntry[];
 }
 
+// Notes types
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotesCollection {
+  notes: Note[];
+}
+
 // Response types
 export interface HealthResponse extends BaseResponse {
   status: string;
@@ -62,7 +75,31 @@ export interface GetSystemMetricsHistoryResponse extends BaseResponse {
   history: SystemMetricsHistory;
 }
 
+export interface CreateNoteRequest {
+  title: string;
+  content: string;
+}
+
+export interface UpdateNoteRequest {
+  title?: string;
+  content?: string;
+}
+
 // Request types
+export interface GetNotesResponse extends BaseResponse {
+  notes: NotesCollection;
+}
+
+export interface CreateNoteResponse extends BaseResponse {
+  note: Note;
+}
+
+export interface UpdateNoteResponse extends BaseResponse {
+  note: Note;
+}
+
+export interface DeleteNoteResponse extends BaseResponse {}
+
 export interface GetSystemMetricsHistoryRequest {
   last_n_seconds: number;
 }

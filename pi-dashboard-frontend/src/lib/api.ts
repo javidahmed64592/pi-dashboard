@@ -9,6 +9,12 @@ import type {
   GetSystemMetricsResponse,
   GetSystemMetricsHistoryRequest,
   GetSystemMetricsHistoryResponse,
+  GetNotesResponse,
+  CreateNoteRequest,
+  CreateNoteResponse,
+  UpdateNoteRequest,
+  UpdateNoteResponse,
+  DeleteNoteResponse,
 } from "@/lib/types";
 
 // Determine the base URL based on environment
@@ -138,6 +144,53 @@ export const getSystemMetricsHistory = async (
       "/system/metrics/history",
       request
     );
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+// Notes API functions
+export const getNotes = async (): Promise<GetNotesResponse> => {
+  try {
+    const response = await api.get<GetNotesResponse>("/notes");
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const createNote = async (
+  request: CreateNoteRequest
+): Promise<CreateNoteResponse> => {
+  try {
+    const response = await api.post<CreateNoteResponse>("/notes", request);
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const updateNote = async (
+  noteId: string,
+  request: UpdateNoteRequest
+): Promise<UpdateNoteResponse> => {
+  try {
+    const response = await api.put<UpdateNoteResponse>(
+      `/notes/${noteId}`,
+      request
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const deleteNote = async (
+  noteId: string
+): Promise<DeleteNoteResponse> => {
+  try {
+    const response = await api.delete<DeleteNoteResponse>(`/notes/${noteId}`);
     return response.data;
   } catch (error) {
     throw new Error(extractErrorMessage(error));
