@@ -98,6 +98,7 @@ It consists of the following jobs:
 - Stop services with full cleanup: `docker compose down --volumes --remove-orphans`
 
 ### prepare-release
+- Depends on `build-docker` job
 - Checkout code
 - Setup Python environment with dev dependencies (via custom action)
 - Extract version from `pyproject.toml` using Python's `tomllib`
@@ -107,7 +108,7 @@ It consists of the following jobs:
 - Upload tarball as artifact
 
 ### publish-release
-- Depends on `build-docker` job
+- Depends on `prepare-release` job
 - Only runs on push to `main` branch (not PRs)
 - Requires `contents: write` and `packages: write` permissions
 - Checkout code
