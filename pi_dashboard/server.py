@@ -5,13 +5,20 @@ import logging
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from datetime import datetime
+from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
+from python_template_server.constants import ROOT_DIR
 from python_template_server.models import ResponseCode
 from python_template_server.template_server import TemplateServer
 
 from pi_dashboard.models import (
     BaseResponse,
+    CreateNoteRequest,
+    CreateNoteResponse,
+    DeleteNoteResponse,
+    GetNoteResponse,
+    GetNotesResponse,
     GetSystemInfoResponse,
     GetSystemMetricsHistoryRequest,
     GetSystemMetricsHistoryResponse,
@@ -19,7 +26,10 @@ from pi_dashboard.models import (
     PiDashboardConfig,
     SystemMetricsHistory,
     SystemMetricsHistoryEntry,
+    UpdateNoteRequest,
+    UpdateNoteResponse,
 )
+from pi_dashboard.notes_handler import NotesHandler
 from pi_dashboard.system_metrics_handler import (
     get_system_info,
     get_system_metrics,
@@ -42,7 +52,17 @@ class PiDashboardServer(TemplateServer):
             config=config,
         )
 
+        if not self.data_dir.exists():
+            logger.info("Creating data directory at: %s", self.data_dir)
+            self.data_dir.mkdir(parents=True, exist_ok=True)
+
         self.metrics_history = SystemMetricsHistory()
+        self.notes_handler = NotesHandler(self.data_dir)
+
+    @property
+    def data_dir(self) -> Path:
+        """Get the data directory path."""
+        return ROOT_DIR / "data"
 
     @staticmethod
     def _current_timestamp_int() -> int:
@@ -124,12 +144,13 @@ class PiDashboardServer(TemplateServer):
 
     def setup_routes(self) -> None:
         """Set up API routes."""
+        # System routes
         self.add_authenticated_route(
             endpoint="/system/info",
             handler_function=self.get_system_info,
             response_model=GetSystemInfoResponse,
             methods=["GET"],
-            limited=False,
+            limited=True,
         )
         self.add_authenticated_route(
             endpoint="/system/metrics",
@@ -144,6 +165,42 @@ class PiDashboardServer(TemplateServer):
             response_model=GetSystemMetricsHistoryResponse,
             methods=["POST"],
             limited=False,
+        )
+        # Notes routes
+        self.add_authenticated_route(
+            endpoint="/notes",
+            handler_function=self.get_notes,
+            response_model=GetNotesResponse,
+            methods=["GET"],
+            limited=True,
+        )
+        self.add_authenticated_route(
+            endpoint="/notes/{note_id}",
+            handler_function=self.get_note,
+            response_model=GetNoteResponse,
+            methods=["GET"],
+            limited=True,
+        )
+        self.add_authenticated_route(
+            endpoint="/notes",
+            handler_function=self.create_note,
+            response_model=CreateNoteResponse,
+            methods=["POST"],
+            limited=True,
+        )
+        self.add_authenticated_route(
+            endpoint="/notes/{note_id}",
+            handler_function=self.update_note,
+            response_model=UpdateNoteResponse,
+            methods=["PUT"],
+            limited=True,
+        )
+        self.add_authenticated_route(
+            endpoint="/notes/{note_id}",
+            handler_function=self.delete_note,
+            response_model=DeleteNoteResponse,
+            methods=["DELETE"],
+            limited=True,
         )
         super().setup_routes()
 
@@ -188,4 +245,83 @@ class PiDashboardServer(TemplateServer):
             message="Retrieved system metrics history successfully",
             timestamp=GetSystemMetricsHistoryResponse.current_timestamp(),
             history=SystemMetricsHistory(history=entries),
+        )
+
+    async def get_notes(self, request: Request) -> GetNotesResponse:
+        """Get all notes.
+
+        :return GetNotesResponse: Response containing all notes
+        """
+        notes = self.notes_handler.get_all_notes()
+        return GetNotesResponse(
+            code=ResponseCode.OK,
+            message="Retrieved notes successfully",
+            timestamp=GetNotesResponse.current_timestamp(),
+            notes=notes,
+        )
+
+    async def get_note(self, request: Request, note_id: str) -> GetNoteResponse:
+        """Get a specific note by ID.
+
+        :param str note_id: The UUID of the note to retrieve
+        :return GetNoteResponse: Response containing the requested note
+        :raises HTTPException: If the note is not found (404)
+        """
+        if (note := self.notes_handler.get_note_by_id(note_id)) is None:
+            raise HTTPException(status_code=ResponseCode.NOT_FOUND, detail=f"Note not found: {note_id}")
+        return GetNoteResponse(
+            code=ResponseCode.OK,
+            message="Retrieved note successfully",
+            timestamp=GetNoteResponse.current_timestamp(),
+            note=note,
+        )
+
+    async def create_note(self, request: Request) -> CreateNoteResponse:
+        """Create a new note.
+
+        :return CreateNoteResponse: Response containing the created note
+        """
+        note_request = CreateNoteRequest.model_validate(await request.json())
+        current_timestamp = CreateNoteResponse.current_timestamp()
+        note = self.notes_handler.create_note(note_request.title, note_request.content, current_timestamp)
+        return CreateNoteResponse(
+            code=ResponseCode.OK,
+            message="Created note successfully",
+            timestamp=current_timestamp,
+            note=note,
+        )
+
+    async def update_note(self, request: Request, note_id: str) -> UpdateNoteResponse:
+        """Update an existing note.
+
+        :param str note_id: The UUID of the note to update
+        :return UpdateNoteResponse: Response containing the updated note
+        :raises HTTPException: If the note is not found (404)
+        """
+        update_request = UpdateNoteRequest.model_validate(await request.json())
+        current_timestamp = UpdateNoteResponse.current_timestamp()
+        note = self.notes_handler.update_note(note_id, current_timestamp, update_request.title, update_request.content)
+        if note is None:
+            raise HTTPException(status_code=ResponseCode.NOT_FOUND, detail=f"Note not found: {note_id}")
+        return UpdateNoteResponse(
+            code=ResponseCode.OK,
+            message="Updated note successfully",
+            timestamp=current_timestamp,
+            note=note,
+        )
+
+    async def delete_note(self, request: Request, note_id: str) -> DeleteNoteResponse:
+        """Delete a note.
+
+        :param str note_id: The UUID of the note to delete
+        :return DeleteNoteResponse: Response confirming deletion
+        :raises HTTPException: If the note is not found (404)
+        """
+        success = self.notes_handler.delete_note(note_id)
+        if not success:
+            raise HTTPException(status_code=ResponseCode.NOT_FOUND, detail=f"Note not found: {note_id}")
+        return DeleteNoteResponse(
+            code=ResponseCode.OK,
+            message="Deleted note successfully",
+            timestamp=DeleteNoteResponse.current_timestamp(),
         )
