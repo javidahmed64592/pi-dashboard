@@ -93,7 +93,7 @@ It consists of the following jobs:
 - Create `.env` file from `.env.example` template
 - Build and start services with `docker compose up --build -d`
 - Wait for services to start (5 seconds)
-- Show server logs from `pi-dashboard` container
+- Show server logs from container
 - **Health check** using reusable composite action `.github/actions/docker-check-containers` with port 443
 - Stop services with full cleanup: `docker compose down --volumes --remove-orphans`
 
