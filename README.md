@@ -31,13 +31,7 @@ A FastAPI-based dashboard for monitoring on a Raspberry Pi.
 
 ### Installation
 
-1. Download the latest release from [GitHub Releases](https://github.com/javidahmed64592/pi-dashboard/releases) and extract:
-   ```sh
-   VERSION=0.1.0
-   wget https://github.com/javidahmed64592/pi-dashboard/releases/download/v${VERSION}/pi_dashboard_${VERSION}.tar.gz
-   tar -xzf pi_dashboard_${VERSION}.tar.gz
-   cd pi-dashboard
-   ```
+Download the latest release from [GitHub Releases](https://github.com/javidahmed64592/pi-dashboard/releases).
 
 ### Configuration
 
