@@ -96,8 +96,8 @@ class Note(BaseModel):
     id: str = Field(..., description="Unique identifier (UUID) for the note")
     title: str = Field(..., description="Note title")
     content: str = Field(..., description="Note content")
-    created_at: datetime = Field(..., description="Timestamp when the note was created")
-    updated_at: datetime = Field(..., description="Timestamp when the note was last updated")
+    created_at: str = Field(..., description="Timestamp when the note was created")
+    updated_at: str = Field(..., description="Timestamp when the note was last updated")
 
 
 class NotesCollection(BaseModel):
