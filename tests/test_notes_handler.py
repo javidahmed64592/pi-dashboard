@@ -10,7 +10,7 @@ class TestNotesHandler:
     def test_get_all_notes(self, mock_notes_handler: NotesHandler, mock_notes_collection: NotesCollection) -> None:
         """Test retrieving all notes."""
         notes = mock_notes_handler.get_all_notes()
-        assert notes == mock_notes_collection.notes
+        assert notes == mock_notes_collection
 
     def test_get_note_by_id(self, mock_notes_handler: NotesHandler, mock_note: Note) -> None:
         """Test retrieving a note by ID."""

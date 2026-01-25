@@ -244,12 +244,11 @@ class PiDashboardServer(TemplateServer):
 
         :return GetNotesResponse: Response containing all notes
         """
-        notes = self.notes_handler.get_all_notes()
         return GetNotesResponse(
             code=ResponseCode.OK,
             message="Retrieved notes successfully",
             timestamp=GetNotesResponse.current_timestamp(),
-            notes=notes,
+            notes=self.notes_handler.get_all_notes(),
         )
 
     async def create_note(self, request: Request) -> CreateNoteResponse:
@@ -259,12 +258,11 @@ class PiDashboardServer(TemplateServer):
         """
         note_request = CreateNoteRequest.model_validate(await request.json())
         current_timestamp = CreateNoteResponse.current_timestamp()
-        note = self.notes_handler.create_note(note_request.title, note_request.content, current_timestamp)
         return CreateNoteResponse(
             code=ResponseCode.OK,
             message="Created note successfully",
             timestamp=current_timestamp,
-            note=note,
+            note=self.notes_handler.create_note(note_request.title, note_request.content, current_timestamp),
         )
 
     async def update_note(self, request: Request, note_id: str) -> UpdateNoteResponse:

@@ -184,7 +184,7 @@ class GetSystemMetricsHistoryResponse(BaseResponse):
 class GetNotesResponse(BaseResponse):
     """Response model for listing all notes."""
 
-    notes: list[Note] = Field(..., description="List of all notes")
+    notes: NotesCollection = Field(..., description="Collection of all notes")
 
 
 class CreateNoteResponse(BaseResponse):

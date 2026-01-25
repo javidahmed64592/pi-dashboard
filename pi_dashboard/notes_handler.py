@@ -55,12 +55,12 @@ class NotesHandler:
                 temp_file.unlink()
             raise
 
-    def get_all_notes(self) -> list[Note]:
+    def get_all_notes(self) -> NotesCollection:
         """Get all notes.
 
-        :return list[Note]: List of all notes
+        :return NotesCollection: List of all notes
         """
-        return self.collection.notes
+        return self.collection
 
     def get_note_by_id(self, note_id: str) -> Note | None:
         """Get a specific note by ID.
