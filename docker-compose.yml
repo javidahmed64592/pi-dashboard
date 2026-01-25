@@ -15,6 +15,7 @@ services:
       # Point to host filesystem for metrics collection
       - HOST_ROOT=/host
     volumes:
+      - ./.env:/app/.env
       - data:/app/data
       - certs:/app/certs
       - logs:/app/logs

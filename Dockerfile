@@ -29,7 +29,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Copy backend source files
 COPY pi_dashboard/ ./pi_dashboard/
-COPY pyproject.toml .here LICENSE README.md ./
+COPY pyproject.toml .here ./
 
 # Copy built frontend from previous stage
 COPY --from=frontend-builder /frontend/out ./static/
@@ -64,9 +64,7 @@ RUN mkdir -p /app/logs
 # Copy included files from installed wheel to app directory
 RUN SITE_PACKAGES_DIR=$(find /usr/local/lib -name "site-packages" -type d | head -1) && \
     cp -r "${SITE_PACKAGES_DIR}/static" /app/ && \
-    cp "${SITE_PACKAGES_DIR}/.here" /app/.here && \
-    cp "${SITE_PACKAGES_DIR}/LICENSE" /app/LICENSE && \
-    cp "${SITE_PACKAGES_DIR}/README.md" /app/README.md
+    cp "${SITE_PACKAGES_DIR}/.here" /app/.here &&
 
 # Create startup script
 RUN echo '#!/bin/sh\n\
@@ -74,9 +72,11 @@ RUN echo '#!/bin/sh\n\
     \n\
     # Generate API token if needed\n\
     if [ -z "$API_TOKEN_HASH" ]; then\n\
+    if [ ! -f /app/.env ]; then\n\
     echo "Generating new token..."\n\
     generate-new-token\n\
-    export $(grep -v "^#" .env | xargs)\n\
+    fi\n\
+    export $(grep -v "^#" /app/.env | xargs)\n\
     fi\n\
     \n\
     exec pi-dashboard --port $PORT' > /app/start.sh && \
