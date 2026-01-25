@@ -29,7 +29,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Copy backend source files
 COPY pi_dashboard/ ./pi_dashboard/
-COPY pyproject.toml .here ./
+COPY pyproject.toml .here LICENSE README.md ./
 
 # Copy built frontend from previous stage
 COPY --from=frontend-builder /frontend/out ./static/
