@@ -152,6 +152,7 @@ jobs:
 
           ```bash
           # Download and extract
+          wget https://github.com/javidahmed64592/pi-dashboard/releases/download/v${{ steps.get_version.outputs.version }}/pi_dashboard_${{ steps.get_version.outputs.version }}.tar.gz
           tar -xzf ${{ env.PACKAGE_NAME }}_${{ steps.get_version.outputs.version }}.tar.gz
           cd ${{ env.PACKAGE_NAME }}_${{ steps.get_version.outputs.version }}
 
