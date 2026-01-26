@@ -22,17 +22,21 @@ from pi_dashboard.models import (
     GetSystemMetricsHistoryRequest,
     GetSystemMetricsHistoryResponse,
     GetSystemMetricsResponse,
+    GetWeatherLocationResponse,
+    GetWeatherResponse,
     PiDashboardConfig,
     SystemMetricsHistory,
     SystemMetricsHistoryEntry,
     UpdateNoteRequest,
     UpdateNoteResponse,
+    UpdateWeatherLocationRequest,
 )
 from pi_dashboard.notes_handler import NotesHandler
 from pi_dashboard.system_metrics_handler import (
     get_system_info,
     get_system_metrics,
 )
+from pi_dashboard.weather_handler import WeatherHandler
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +61,12 @@ class PiDashboardServer(TemplateServer):
 
         self.metrics_history = SystemMetricsHistory()
         self.notes_handler = NotesHandler(self.data_dir)
+        self.weather_handler = WeatherHandler(
+            self.config.weather.latitude,
+            self.config.weather.longitude,
+            self.config.weather.location_name,
+            self.config.weather.forecast_hours,
+        )
 
     @property
     def data_dir(self) -> Path:
@@ -194,6 +204,28 @@ class PiDashboardServer(TemplateServer):
             methods=["DELETE"],
             limited=True,
         )
+        # Weather routes
+        self.add_authenticated_route(
+            endpoint="/weather",
+            handler_function=self.get_weather,
+            response_model=GetWeatherResponse,
+            methods=["GET"],
+            limited=True,
+        )
+        self.add_authenticated_route(
+            endpoint="/weather/location",
+            handler_function=self.get_weather_location,
+            response_model=GetWeatherLocationResponse,
+            methods=["GET"],
+            limited=True,
+        )
+        self.add_authenticated_route(
+            endpoint="/weather/location",
+            handler_function=self.update_weather_location,
+            response_model=GetWeatherLocationResponse,
+            methods=["PUT"],
+            limited=True,
+        )
         super().setup_routes()
 
     async def get_system_info(self, request: Request) -> GetSystemInfoResponse:
@@ -298,4 +330,80 @@ class PiDashboardServer(TemplateServer):
             code=ResponseCode.OK,
             message="Deleted note successfully",
             timestamp=DeleteNoteResponse.current_timestamp(),
+        )
+
+    async def get_weather(self, request: Request) -> GetWeatherResponse:
+        """Get current weather data.
+
+        :return GetWeatherResponse: Response containing current weather data
+        :raises HTTPException: If weather data cannot be fetched (503)
+        """
+        try:
+            weather_data = await self.weather_handler.get_weather()
+            return GetWeatherResponse(
+                code=ResponseCode.OK,
+                message="Retrieved weather data successfully",
+                timestamp=GetWeatherResponse.current_timestamp(),
+                weather=weather_data,
+            )
+        except Exception as e:
+            logger.exception("Error getting weather data")
+            raise HTTPException(
+                status_code=ResponseCode.SERVICE_UNAVAILABLE, detail=f"Failed to fetch weather data: {e!s}"
+            ) from e
+
+    async def get_weather_location(self, request: Request) -> GetWeatherLocationResponse:
+        """Get the configured weather location.
+
+        :return GetWeatherLocationResponse: Response containing weather location information
+        """
+        return GetWeatherLocationResponse(
+            code=ResponseCode.OK,
+            message="Retrieved weather location successfully",
+            timestamp=GetWeatherLocationResponse.current_timestamp(),
+            latitude=self.config.weather.latitude,
+            longitude=self.config.weather.longitude,
+            location_name=self.config.weather.location_name,
+        )
+
+    async def update_weather_location(self, request: Request) -> GetWeatherLocationResponse:
+        """Update the weather location by geocoding a location name.
+
+        :return GetWeatherLocationResponse: Response containing updated weather location
+        :raises HTTPException: If geocoding fails (400) or weather is disabled (503)
+        """
+        location_request = UpdateWeatherLocationRequest.model_validate(await request.json())
+
+        # Geocode the location
+        coordinates = await WeatherHandler.geocode_location(location_request.location)
+        if coordinates is None:
+            raise HTTPException(
+                status_code=ResponseCode.BAD_REQUEST,
+                detail=f"Could not geocode location: {location_request.location}",
+            )
+
+        latitude, longitude = coordinates
+
+        # Update configuration
+        self.config.weather.latitude = latitude
+        self.config.weather.longitude = longitude
+        self.config.weather.location_name = location_request.location
+
+        # Reinitialize weather handler with new coordinates
+        self.weather_handler = WeatherHandler(
+            latitude,
+            longitude,
+            location_request.location,
+            self.config.weather.forecast_hours,
+        )
+
+        logger.info("Weather location updated to: %s (%.4f, %.4f)", location_request.location, latitude, longitude)
+
+        return GetWeatherLocationResponse(
+            code=ResponseCode.OK,
+            message="Updated weather location successfully",
+            timestamp=GetWeatherLocationResponse.current_timestamp(),
+            latitude=self.config.weather.latitude,
+            longitude=self.config.weather.longitude,
+            location_name=self.config.weather.location_name,
         )

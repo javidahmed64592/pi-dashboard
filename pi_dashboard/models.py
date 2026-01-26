@@ -18,10 +18,22 @@ class MetricsConfig(BaseModel):
     )
 
 
+class WeatherConfig(BaseModel):
+    """Configuration model for weather data."""
+
+    latitude: float = Field(default=51.5074, ge=-90, le=90, description="Latitude coordinate for weather location")
+    longitude: float = Field(default=-0.1278, ge=-180, le=180, description="Longitude coordinate for weather location")
+    location_name: str = Field(default="London", description="Human-readable location name")
+    forecast_hours: int = Field(
+        default=12, ge=1, le=24, description="Number of hours to include in the weather forecast"
+    )
+
+
 class PiDashboardConfig(TemplateServerConfig):
     """Configuration model for the Pi Dashboard server."""
 
     metrics: MetricsConfig = Field(default_factory=MetricsConfig, description="System metrics collection configuration")
+    weather: WeatherConfig = Field(default_factory=WeatherConfig, description="Weather configuration")
 
 
 # General models
@@ -162,6 +174,28 @@ class NotesCollection(BaseModel):
         return False
 
 
+# Weather models
+class WeatherForecastHour(BaseModel):
+    """Model representing a single hour in the weather forecast."""
+
+    time: str = Field(..., description="Time of forecast (e.g., '3PM')")
+    temperature: float = Field(..., description="Temperature in Celsius")
+    weather_code: int = Field(..., description="WMO weather code")
+
+
+class WeatherData(BaseModel):
+    """Model representing current weather data."""
+
+    location_name: str = Field(..., description="Human-readable location name")
+    temperature: float = Field(..., description="Current temperature in Celsius")
+    weather_code: int = Field(..., description="WMO weather code")
+    high: float = Field(..., description="High temperature for the day in Celsius")
+    low: float = Field(..., description="Low temperature for the day in Celsius")
+    humidity: int = Field(..., ge=0, le=100, description="Relative humidity percentage")
+    wind_speed: float = Field(..., ge=0, description="Wind speed in km/h")
+    forecast: list[WeatherForecastHour] = Field(..., description="12-hour forecast")
+
+
 # Response models
 class GetSystemInfoResponse(BaseResponse):
     """Response model for system information."""
@@ -205,6 +239,20 @@ class DeleteNoteResponse(BaseResponse):
     pass
 
 
+class GetWeatherResponse(BaseResponse):
+    """Response model for weather data."""
+
+    weather: WeatherData = Field(..., description="Current weather data")
+
+
+class GetWeatherLocationResponse(BaseResponse):
+    """Response model for weather location."""
+
+    latitude: float = Field(..., description="Latitude coordinate")
+    longitude: float = Field(..., description="Longitude coordinate")
+    location_name: str = Field(..., description="Human-readable location name")
+
+
 # Request models
 class GetSystemMetricsHistoryRequest(BaseModel):
     """Request model for system metrics history."""
@@ -224,3 +272,9 @@ class UpdateNoteRequest(BaseModel):
 
     title: str | None = Field(None, min_length=1, max_length=200, description="Updated note title")
     content: str | None = Field(None, description="Updated note content")
+
+
+class UpdateWeatherLocationRequest(BaseModel):
+    """Request model for updating weather location."""
+
+    location: str = Field(..., min_length=1, description="Location name to geocode")

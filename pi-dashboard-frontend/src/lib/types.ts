@@ -56,6 +56,24 @@ export interface NotesCollection {
   notes: Note[];
 }
 
+// Weather types
+export interface WeatherForecastHour {
+  time: string;
+  temperature: number;
+  weather_code: number;
+}
+
+export interface WeatherData {
+  location_name: string;
+  temperature: number;
+  weather_code: number;
+  high: number;
+  low: number;
+  humidity: number;
+  wind_speed: number;
+  forecast: WeatherForecastHour[];
+}
+
 // Response types
 export interface HealthResponse extends BaseResponse {
   status: string;
@@ -85,6 +103,16 @@ export interface UpdateNoteRequest {
   content?: string;
 }
 
+export interface GetWeatherResponse extends BaseResponse {
+  weather: WeatherData;
+}
+
+export interface GetWeatherLocationResponse extends BaseResponse {
+  location_name: string;
+  latitude: number;
+  longitude: number;
+}
+
 // Request types
 export interface GetNotesResponse extends BaseResponse {
   notes: NotesCollection;
@@ -102,4 +130,8 @@ export interface DeleteNoteResponse extends BaseResponse {}
 
 export interface GetSystemMetricsHistoryRequest {
   last_n_seconds: number;
+}
+
+export interface UpdateWeatherLocationRequest {
+  location: string;
 }
