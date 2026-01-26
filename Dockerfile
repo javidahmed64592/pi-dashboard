@@ -81,7 +81,7 @@ RUN echo '#!/bin/sh\n\
     export $(grep -v "^#" .env | xargs)\n\
     fi\n\
     \n\
-    exec pi-dashboard --port $PORT' > /app/start.sh && \
+    exec pi-dashboard' > /app/start.sh && \
     chmod +x /app/start.sh
 
 # Set default environment variable for host root path
