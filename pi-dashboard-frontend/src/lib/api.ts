@@ -15,6 +15,9 @@ import type {
   UpdateNoteRequest,
   UpdateNoteResponse,
   DeleteNoteResponse,
+  GetWeatherResponse,
+  GetWeatherLocationResponse,
+  UpdateWeatherLocationRequest,
 } from "@/lib/types";
 
 // Determine the base URL based on environment
@@ -191,6 +194,41 @@ export const deleteNote = async (
 ): Promise<DeleteNoteResponse> => {
   try {
     const response = await api.delete<DeleteNoteResponse>(`/notes/${noteId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+// Weather API functions
+export const getWeather = async (): Promise<GetWeatherResponse> => {
+  try {
+    const response = await api.get<GetWeatherResponse>("/weather");
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const getWeatherLocation =
+  async (): Promise<GetWeatherLocationResponse> => {
+    try {
+      const response =
+        await api.get<GetWeatherLocationResponse>("/weather/location");
+      return response.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+export const updateWeatherLocation = async (
+  request: UpdateWeatherLocationRequest
+): Promise<GetWeatherLocationResponse> => {
+  try {
+    const response = await api.put<GetWeatherLocationResponse>(
+      "/weather/location",
+      request
+    );
     return response.data;
   } catch (error) {
     throw new Error(extractErrorMessage(error));

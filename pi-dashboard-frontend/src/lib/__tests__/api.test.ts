@@ -7,6 +7,9 @@ import {
   createNote,
   updateNote,
   deleteNote,
+  getWeather,
+  getWeatherLocation,
+  updateWeatherLocation,
   useHealthStatus,
   type HealthStatus,
 } from "@/lib/api";
@@ -18,6 +21,10 @@ import type {
   UpdateNoteResponse,
   DeleteNoteResponse,
   Note,
+  GetWeatherResponse,
+  GetWeatherLocationResponse,
+  WeatherData,
+  WeatherForecastHour,
 } from "@/lib/types";
 
 jest.mock("../api", () => {
@@ -30,9 +37,9 @@ jest.mock("../api", () => {
     createNote: jest.fn(),
     updateNote: jest.fn(),
     deleteNote: jest.fn(),
-    encodeImage: jest.fn(),
-    decodeImage: jest.fn(),
-    getImageCapacity: jest.fn(),
+    getWeather: jest.fn(),
+    getWeatherLocation: jest.fn(),
+    updateWeatherLocation: jest.fn(),
   };
 });
 
@@ -45,6 +52,13 @@ const mockGetNotes = getNotes as jest.MockedFunction<typeof getNotes>;
 const mockCreateNote = createNote as jest.MockedFunction<typeof createNote>;
 const mockUpdateNote = updateNote as jest.MockedFunction<typeof updateNote>;
 const mockDeleteNote = deleteNote as jest.MockedFunction<typeof deleteNote>;
+const mockGetWeather = getWeather as jest.MockedFunction<typeof getWeather>;
+const mockGetWeatherLocation = getWeatherLocation as jest.MockedFunction<
+  typeof getWeatherLocation
+>;
+const mockUpdateWeatherLocation = updateWeatherLocation as jest.MockedFunction<
+  typeof updateWeatherLocation
+>;
 
 const mockNote1: Note = {
   id: "1",
@@ -287,6 +301,132 @@ describe("API Tests", () => {
         mockDeleteNote.mockRejectedValue(new Error(errorMessage));
 
         await expect(deleteNote("999")).rejects.toThrow(errorMessage);
+      });
+    });
+  });
+
+  describe("weather", () => {
+    const mockForecast: WeatherForecastHour[] = [
+      { time: "12PM", temperature: 22.5, weather_code: 1 },
+      { time: "1PM", temperature: 23.0, weather_code: 1 },
+      { time: "2PM", temperature: 24.5, weather_code: 2 },
+      { time: "3PM", temperature: 25.0, weather_code: 2 },
+      { time: "4PM", temperature: 24.0, weather_code: 3 },
+      { time: "5PM", temperature: 23.5, weather_code: 3 },
+      { time: "6PM", temperature: 22.0, weather_code: 61 },
+      { time: "7PM", temperature: 21.0, weather_code: 61 },
+      { time: "8PM", temperature: 20.5, weather_code: 63 },
+      { time: "9PM", temperature: 19.5, weather_code: 63 },
+      { time: "10PM", temperature: 19.0, weather_code: 45 },
+      { time: "11PM", temperature: 18.5, weather_code: 45 },
+    ];
+
+    const mockWeatherData: WeatherData = {
+      location_name: "Test Location",
+      temperature: 22.5,
+      weather_code: 1,
+      high: 25.0,
+      low: 17.5,
+      humidity: 65,
+      wind_speed: 12.5,
+      forecast: mockForecast,
+    };
+
+    describe("getWeather", () => {
+      it("should fetch weather data successfully", async () => {
+        const mockResponse: GetWeatherResponse = {
+          code: 200,
+          message: "Retrieved weather successfully",
+          timestamp: "2024-01-01T00:00:00Z",
+          weather: mockWeatherData,
+        };
+
+        mockGetWeather.mockResolvedValue(mockResponse);
+
+        const result = await getWeather();
+
+        expect(mockGetWeather).toHaveBeenCalled();
+        expect(result).toEqual(mockResponse);
+        expect(result.weather.location_name).toBe("Test Location");
+        expect(result.weather.temperature).toBe(22.5);
+        expect(result.weather.forecast).toHaveLength(12);
+      });
+
+      it("should handle fetch weather error", async () => {
+        const errorMessage = "Failed to fetch weather";
+        mockGetWeather.mockRejectedValue(new Error(errorMessage));
+
+        await expect(getWeather()).rejects.toThrow(errorMessage);
+      });
+    });
+
+    describe("getWeatherLocation", () => {
+      it("should fetch weather location successfully", async () => {
+        const mockResponse: GetWeatherLocationResponse = {
+          code: 200,
+          message: "Retrieved location successfully",
+          timestamp: "2024-01-01T00:00:00Z",
+          location_name: "Test Location",
+          latitude: 12.34,
+          longitude: 56.78,
+        };
+
+        mockGetWeatherLocation.mockResolvedValue(mockResponse);
+
+        const result = await getWeatherLocation();
+
+        expect(mockGetWeatherLocation).toHaveBeenCalled();
+        expect(result).toEqual(mockResponse);
+        expect(result.location_name).toBe("Test Location");
+        expect(result.latitude).toBe(12.34);
+        expect(result.longitude).toBe(56.78);
+      });
+
+      it("should handle fetch weather location error", async () => {
+        const errorMessage = "Failed to fetch location";
+        mockGetWeatherLocation.mockRejectedValue(new Error(errorMessage));
+
+        await expect(getWeatherLocation()).rejects.toThrow(errorMessage);
+      });
+    });
+
+    describe("updateWeatherLocation", () => {
+      it("should update weather location successfully", async () => {
+        const mockResponse: GetWeatherLocationResponse = {
+          code: 200,
+          message: "Updated location successfully",
+          timestamp: "2024-01-01T00:00:00Z",
+          location_name: "New Location",
+          latitude: 34.56,
+          longitude: 78.9,
+        };
+
+        mockUpdateWeatherLocation.mockResolvedValue(mockResponse);
+
+        const request = { location: "New Location" };
+        const result = await updateWeatherLocation(request);
+
+        expect(mockUpdateWeatherLocation).toHaveBeenCalledWith(request);
+        expect(result).toEqual(mockResponse);
+        expect(result.location_name).toBe("New Location");
+      });
+
+      it("should handle update weather location error", async () => {
+        const errorMessage = "Location not found";
+        mockUpdateWeatherLocation.mockRejectedValue(new Error(errorMessage));
+
+        const request = { location: "Invalid Location" };
+        await expect(updateWeatherLocation(request)).rejects.toThrow(
+          errorMessage
+        );
+      });
+
+      it("should validate location parameter", async () => {
+        const errorMessage = "Location is required";
+        mockUpdateWeatherLocation.mockRejectedValue(new Error(errorMessage));
+
+        const request = { location: "" };
+        await expect(updateWeatherLocation(request)).rejects.toThrow();
       });
     });
   });
