@@ -21,9 +21,13 @@ from pi_dashboard.models import (
     SystemMetrics,
     SystemMetricsHistory,
     UpdateNoteRequest,
+    UpdateWeatherLocationRequest,
+    WeatherConfig,
+    WeatherData,
 )
 from pi_dashboard.notes_handler import NotesHandler
 from pi_dashboard.server import PiDashboardServer
+from pi_dashboard.weather_handler import WeatherHandler
 
 
 @pytest.fixture(autouse=True)
@@ -60,12 +64,24 @@ def mock_get_system_metrics(mock_system_metrics: SystemMetrics) -> Generator[Mag
 
 
 @pytest.fixture
+def mock_weather_handler(mock_weather_data: WeatherData) -> Generator[MagicMock]:
+    """Mock the WeatherHandler class."""
+    with patch("pi_dashboard.server.WeatherHandler") as mock_handler_class:
+        mock_handler_instance = MagicMock(spec=WeatherHandler)
+        mock_handler_instance.get_weather = AsyncMock(return_value=mock_weather_data)
+        mock_handler_class.return_value = mock_handler_instance
+        mock_handler_class.geocode_location = AsyncMock(return_value=(51.5074, -0.1278))
+        yield mock_handler_class
+
+
+@pytest.fixture
 def mock_server(
     mock_pi_dashboard_config: PiDashboardConfig,
     mock_get_system_info: MagicMock,
     mock_get_system_metrics: MagicMock,
     mock_system_metrics_history: SystemMetricsHistory,
     mock_notes_handler: NotesHandler,
+    mock_weather_handler: MagicMock,
 ) -> Generator[PiDashboardServer]:
     """Provide a PiDashboardServer instance for testing."""
 
@@ -131,6 +147,8 @@ class TestPiDashboardServerRoutes:
             "/system/metrics/history",
             "/notes",
             "/notes/{note_id}",
+            "/weather",
+            "/weather/location",
         ]
         for endpoint in expected_endpoints:
             assert endpoint in routes, f"Expected endpoint {endpoint} not found in routes"
@@ -443,3 +461,138 @@ class TestDeleteNoteEndpoint:
         assert response_body["code"] == ResponseCode.OK
         assert response_body["message"] == "Deleted note successfully"
         assert isinstance(response_body["timestamp"], str)
+
+
+class TestGetWeatherEndpoint:
+    """Integration and unit tests for the /weather endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock Request object with JSON data."""
+        return MagicMock(spec=Request)
+
+    def test_get_weather(
+        self, mock_server: PiDashboardServer, mock_request_object: MagicMock, mock_weather_data: WeatherData
+    ) -> None:
+        """Test the /weather method handles valid request and returns weather data."""
+        response = asyncio.run(mock_server.get_weather(mock_request_object))
+
+        assert response.code == ResponseCode.OK
+        assert response.message == "Retrieved weather data successfully"
+        assert isinstance(response.timestamp, str)
+        assert response.weather == mock_weather_data
+
+    def test_get_weather_endpoint(self, mock_server: PiDashboardServer, mock_weather_data: WeatherData) -> None:
+        """Test /weather endpoint returns 200 and includes weather data."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        response = client.get("/weather")
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert response_body["message"] == "Retrieved weather data successfully"
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["weather"] == mock_weather_data.model_dump()
+
+
+class TestGetWeatherLocationEndpoint:
+    """Integration and unit tests for the /weather/location endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock Request object with JSON data."""
+        return MagicMock(spec=Request)
+
+    def test_get_weather_location(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+        mock_pi_dashboard_config: PiDashboardConfig,
+    ) -> None:
+        """Test the /weather/location method returns configured location."""
+        response = asyncio.run(mock_server.get_weather_location(mock_request_object))
+
+        assert response.code == ResponseCode.OK
+        assert response.message == "Retrieved weather location successfully"
+        assert isinstance(response.timestamp, str)
+        assert response.location_name == mock_pi_dashboard_config.weather.location_name
+        assert response.latitude == mock_pi_dashboard_config.weather.latitude
+        assert response.longitude == mock_pi_dashboard_config.weather.longitude
+
+    def test_get_weather_location_endpoint(
+        self, mock_server: PiDashboardServer, mock_pi_dashboard_config: PiDashboardConfig
+    ) -> None:
+        """Test /weather/location endpoint returns 200 and includes location info."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        response = client.get("/weather/location")
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert response_body["message"] == "Retrieved weather location successfully"
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["location_name"] == mock_pi_dashboard_config.weather.location_name
+        assert response_body["latitude"] == mock_pi_dashboard_config.weather.latitude
+        assert response_body["longitude"] == mock_pi_dashboard_config.weather.longitude
+
+
+class TestUpdateWeatherLocationEndpoint:
+    """Integration and unit tests for the /weather/location PUT endpoint."""
+
+    @pytest.fixture
+    def mock_request_body(self) -> UpdateWeatherLocationRequest:
+        """Provide a mock request body for updating weather location."""
+        return UpdateWeatherLocationRequest(location="London")
+
+    @pytest.fixture
+    def mock_request_object(self, mock_request_body: UpdateWeatherLocationRequest) -> MagicMock:
+        """Provide a mock Request object with JSON data."""
+        request = MagicMock(spec=Request)
+        request.json = AsyncMock(return_value=mock_request_body.model_dump())
+        return request
+
+    def test_update_weather_location(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+        mock_weather_handler: MagicMock,
+        mock_weather_config: WeatherConfig,
+    ) -> None:
+        """Test the /weather/location PUT method updates location and reinitializes handler."""
+        response = asyncio.run(mock_server.update_weather_location(mock_request_object))
+
+        assert response.code == ResponseCode.OK
+        assert response.message == "Updated weather location successfully"
+        assert isinstance(response.timestamp, str)
+        assert response.latitude == mock_weather_config.latitude
+        assert response.longitude == mock_weather_config.longitude
+        assert response.location_name == mock_weather_config.location_name
+
+        # Verify WeatherHandler.geocode_location was called
+        mock_weather_handler.geocode_location.assert_called_once_with("London")
+
+    def test_update_weather_location_endpoint(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_body: UpdateWeatherLocationRequest,
+        mock_weather_handler: MagicMock,
+        mock_weather_config: WeatherConfig,
+    ) -> None:
+        """Test /weather/location PUT endpoint returns 200 and updates location."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        response = client.put("/weather/location", json=mock_request_body.model_dump())
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert response_body["message"] == "Updated weather location successfully"
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["latitude"] == mock_weather_config.latitude
+        assert response_body["longitude"] == mock_weather_config.longitude
+        assert response_body["location_name"] == mock_weather_config.location_name
