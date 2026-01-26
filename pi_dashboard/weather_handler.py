@@ -24,7 +24,7 @@ def ttl_cache(minutes: int) -> Callable:
     """
 
     def decorator(func: Callable) -> Callable:
-        cache_data = {"result": None, "timestamp": None}
+        cache_data: dict[str, Any] = {"result": None, "timestamp": None}
 
         @wraps(func)
         async def wrapper(*args: tuple, **kwargs: dict) -> Any:  # noqa: ANN401
@@ -32,7 +32,7 @@ def ttl_cache(minutes: int) -> Callable:
             now = datetime.fromisoformat(now_str.rstrip("Z"))
 
             # Check if cache is valid
-            if cache_data["result"] is not None and cache_data["timestamp"] is not None:
+            if cache_data["result"] and cache_data["timestamp"]:
                 # Both timestamps are timezone-aware (UTC), safe to subtract
                 cache_age = now - cache_data["timestamp"]
                 cache_ttl = timedelta(minutes=minutes)
@@ -144,7 +144,7 @@ class WeatherHandler:
                 hourly_codes = hourly["weather_code"]
 
                 # Get next 12 hours starting from current hour
-                forecast_hours = []
+                forecast_hours: list[WeatherForecastHour] = []
                 current_time_str = current["time"]
 
                 logger.debug("Current time from API: %s", current_time_str)
