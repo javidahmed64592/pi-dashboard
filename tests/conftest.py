@@ -15,6 +15,7 @@ from pi_dashboard.models import (
     SystemMetrics,
     SystemMetricsHistory,
     SystemMetricsHistoryEntry,
+    WeatherConfig,
 )
 from pi_dashboard.notes_handler import NotesHandler
 
@@ -27,9 +28,24 @@ def mock_metrics_config() -> MetricsConfig:
 
 
 @pytest.fixture
-def mock_pi_dashboard_config(mock_metrics_config: MetricsConfig) -> PiDashboardConfig:
+def mock_weather_config() -> WeatherConfig:
+    """Provide a WeatherConfig instance for testing."""
+    return WeatherConfig.model_validate(
+        {
+            "latitude": 12.34,
+            "longitude": 56.78,
+            "location_name": "Test Location",
+            "forecast_hours": 12,
+        }
+    )
+
+
+@pytest.fixture
+def mock_pi_dashboard_config(
+    mock_metrics_config: MetricsConfig, mock_weather_config: WeatherConfig
+) -> PiDashboardConfig:
     """Provide a PiDashboardConfig instance for testing."""
-    return PiDashboardConfig(metrics=mock_metrics_config)
+    return PiDashboardConfig(metrics=mock_metrics_config, weather=mock_weather_config)
 
 
 # General model fixtures
