@@ -66,7 +66,6 @@ class ContainerHandler:
                 message="Docker daemon not available",
                 timestamp=ContainerListResponse.current_timestamp(),
                 containers=[],
-                docker_available=False,
             )
 
         try:
@@ -91,11 +90,9 @@ class ContainerHandler:
                 )
 
             return ContainerListResponse(
-                code=ResponseCode.OK,
                 message=f"Retrieved {len(docker_containers)} containers",
                 timestamp=ContainerListResponse.current_timestamp(),
                 containers=docker_containers,
-                docker_available=True,
             )
 
         except APIError:
@@ -105,7 +102,6 @@ class ContainerHandler:
                 message="Docker API error",
                 timestamp=ContainerListResponse.current_timestamp(),
                 containers=[],
-                docker_available=True,
             )
         except Exception:
             logger.exception("Unexpected error while listing containers")
@@ -114,7 +110,6 @@ class ContainerHandler:
                 message="Unexpected error",
                 timestamp=ContainerListResponse.current_timestamp(),
                 containers=[],
-                docker_available=False,
             )
 
     def start_container(self, container_id: str) -> ContainerActionResponse:
@@ -137,7 +132,6 @@ class ContainerHandler:
             container.start()
             logger.info("Started container: %s (%s)", container.name, container_id)
             return ContainerActionResponse(
-                code=ResponseCode.OK,
                 message=f"Container {container.name} started successfully",
                 timestamp=ContainerActionResponse.current_timestamp(),
                 container_id=container_id,
@@ -184,7 +178,6 @@ class ContainerHandler:
             container.stop(timeout=timeout)
             logger.info("Stopped container: %s (%s)", container.name, container_id)
             return ContainerActionResponse(
-                code=ResponseCode.OK,
                 message=f"Container {container.name} stopped successfully",
                 timestamp=ContainerActionResponse.current_timestamp(),
                 container_id=container_id,
@@ -231,7 +224,6 @@ class ContainerHandler:
             container.restart(timeout=timeout)
             logger.info("Restarted container: %s (%s)", container.name, container_id)
             return ContainerActionResponse(
-                code=ResponseCode.OK,
                 message=f"Container {container.name} restarted successfully",
                 timestamp=ContainerActionResponse.current_timestamp(),
                 container_id=container_id,
@@ -321,7 +313,6 @@ class ContainerHandler:
 
             logger.info("Container updated successfully: %s (%s)", container_name, new_container.short_id)
             return ContainerActionResponse(
-                code=ResponseCode.OK,
                 message=f"Container {container_name} updated successfully",
                 timestamp=ContainerActionResponse.current_timestamp(),
                 container_id=new_container.short_id,

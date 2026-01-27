@@ -271,7 +271,6 @@ class ContainerListResponse(BaseResponse):
     """Response model for listing containers."""
 
     containers: list[DockerContainer] = Field(..., description="List of Docker containers")
-    docker_available: bool = Field(default=True, description="Whether Docker daemon is accessible")
 
 
 class ContainerActionResponse(BaseResponse):

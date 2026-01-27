@@ -178,7 +178,6 @@ class TestGetSystemInfoEndpoint:
         """Test the /system/info method handles valid JSON and returns a model reply."""
         response = asyncio.run(mock_server.get_system_info(mock_request_object))
 
-        assert response.code == ResponseCode.OK
         assert response.message == "Retrieved system info successfully"
         assert isinstance(response.timestamp, str)
         assert response.info == mock_system_info
@@ -192,7 +191,6 @@ class TestGetSystemInfoEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert response_body["message"] == "Retrieved system info successfully"
         assert isinstance(response_body["timestamp"], str)
         assert response_body["info"] == mock_system_info.model_dump()
@@ -211,7 +209,6 @@ class TestGetSystemMetricsEndpoint:
     ) -> None:
         """Test the /system/metrics method handles valid JSON and returns a model reply."""
         response = asyncio.run(mock_server.get_system_metrics(mock_request_object))
-        assert response.code == ResponseCode.OK
         assert response.message == "Retrieved system metrics successfully"
         assert isinstance(response.timestamp, str)
         assert response.metrics == mock_system_metrics
@@ -227,7 +224,6 @@ class TestGetSystemMetricsEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert response_body["message"] == "Retrieved system metrics successfully"
         assert isinstance(response_body["timestamp"], str)
         assert response_body["metrics"] == mock_system_metrics.model_dump()
@@ -256,7 +252,6 @@ class TestGetSystemMetricsHistoryEndpoint:
     ) -> None:
         """Test the /system/metrics/history method handles valid JSON and returns a model reply."""
         response = asyncio.run(mock_server.get_system_metrics_history(mock_request_object))
-        assert response.code == ResponseCode.OK
         assert response.message == "Retrieved system metrics history successfully"
         assert isinstance(response.timestamp, str)
         assert response.history == mock_system_metrics_history
@@ -275,7 +270,6 @@ class TestGetSystemMetricsHistoryEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert response_body["message"] == "Retrieved system metrics history successfully"
         assert isinstance(response_body["timestamp"], str)
         assert response_body["history"] == mock_system_metrics_history.model_dump()
@@ -295,7 +289,6 @@ class TestGetNotesEndpoint:
         """Test the /notes method handles valid JSON and returns a model reply."""
         response = asyncio.run(mock_server.get_notes(mock_request_object))
 
-        assert response.code == ResponseCode.OK
         assert response.message == "Retrieved notes successfully"
         assert isinstance(response.timestamp, str)
         assert response.notes == mock_notes_handler.get_all_notes()
@@ -309,7 +302,6 @@ class TestGetNotesEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert response_body["message"] == "Retrieved notes successfully"
         assert isinstance(response_body["timestamp"], str)
         assert response_body["notes"] == mock_notes_handler.get_all_notes().model_dump()
@@ -339,7 +331,6 @@ class TestCreateNoteEndpoint:
         """Test the /notes method handles valid JSON and returns a model reply."""
         response = asyncio.run(mock_server.create_note(mock_request_object))
 
-        assert response.code == ResponseCode.OK
         assert response.message == "Created note successfully"
         assert isinstance(response.timestamp, str)
         assert response.note.title == mock_request_object.json.return_value["title"]
@@ -364,7 +355,6 @@ class TestCreateNoteEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert response_body["message"] == "Created note successfully"
         assert isinstance(response_body["timestamp"], str)
         assert response_body["note"]["title"] == mock_request_body.title
@@ -396,7 +386,6 @@ class TestUpdateNoteEndpoint:
         """Test the /notes/{note_id} method handles valid JSON and returns a model reply."""
         response = asyncio.run(mock_server.update_note(mock_request_object, mock_note.id))
 
-        assert response.code == ResponseCode.OK
         assert response.message == "Updated note successfully"
         assert isinstance(response.timestamp, str)
         assert response.note.title == mock_request_object.json.return_value["title"]
@@ -422,7 +411,6 @@ class TestUpdateNoteEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert response_body["message"] == "Updated note successfully"
         assert isinstance(response_body["timestamp"], str)
         assert response_body["note"]["title"] == mock_request_body.title
@@ -447,7 +435,6 @@ class TestDeleteNoteEndpoint:
         """Test the /notes/{note_id} method handles valid JSON and returns a model reply."""
         response = asyncio.run(mock_server.delete_note(mock_request_object, mock_note.id))
 
-        assert response.code == ResponseCode.OK
         assert response.message == "Deleted note successfully"
         assert isinstance(response.timestamp, str)
 
@@ -468,7 +455,6 @@ class TestDeleteNoteEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert response_body["message"] == "Deleted note successfully"
         assert isinstance(response_body["timestamp"], str)
 
@@ -487,7 +473,6 @@ class TestGetWeatherEndpoint:
         """Test the /weather method handles valid request and returns weather data."""
         response = asyncio.run(mock_server.get_weather(mock_request_object))
 
-        assert response.code == ResponseCode.OK
         assert response.message == "Retrieved weather data successfully"
         assert isinstance(response.timestamp, str)
         assert response.weather == mock_weather_data
@@ -501,7 +486,6 @@ class TestGetWeatherEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert response_body["message"] == "Retrieved weather data successfully"
         assert isinstance(response_body["timestamp"], str)
         assert response_body["weather"] == mock_weather_data.model_dump()
@@ -524,7 +508,6 @@ class TestGetWeatherLocationEndpoint:
         """Test the /weather/location method returns configured location."""
         response = asyncio.run(mock_server.get_weather_location(mock_request_object))
 
-        assert response.code == ResponseCode.OK
         assert response.message == "Retrieved weather location successfully"
         assert isinstance(response.timestamp, str)
         assert response.location_name == mock_pi_dashboard_config.weather.location_name
@@ -542,7 +525,6 @@ class TestGetWeatherLocationEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert response_body["message"] == "Retrieved weather location successfully"
         assert isinstance(response_body["timestamp"], str)
         assert response_body["location_name"] == mock_pi_dashboard_config.weather.location_name
@@ -575,7 +557,6 @@ class TestUpdateWeatherLocationEndpoint:
         """Test the /weather/location PUT method updates location and reinitializes handler."""
         response = asyncio.run(mock_server.update_weather_location(mock_request_object))
 
-        assert response.code == ResponseCode.OK
         assert response.message == "Updated weather location successfully"
         assert isinstance(response.timestamp, str)
         assert response.latitude == mock_weather_config.latitude
@@ -600,7 +581,6 @@ class TestUpdateWeatherLocationEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert response_body["message"] == "Updated weather location successfully"
         assert isinstance(response_body["timestamp"], str)
         assert response_body["latitude"] == mock_weather_config.latitude
@@ -624,10 +604,8 @@ class TestListContainersEndpoint:
         """Test the /containers method handles valid JSON and returns a model reply."""
         response = asyncio.run(mock_server.list_containers(mock_request_object))
 
-        assert response.code == ResponseCode.OK
         assert "Retrieved 2 containers" in response.message
         assert isinstance(response.timestamp, str)
-        assert response.docker_available is True
         assert len(response.containers) == 2  # noqa: PLR2004
 
     def test_list_containers_endpoint(
@@ -641,10 +619,8 @@ class TestListContainersEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert "Retrieved 2 containers" in response_body["message"]
         assert isinstance(response_body["timestamp"], str)
-        assert response_body["docker_available"] is True
         assert len(response_body["containers"]) == 2  # noqa: PLR2004
         assert response_body["containers"][0] == mock_docker_containers[0].model_dump()
 
@@ -666,10 +642,8 @@ class TestRefreshContainersEndpoint:
         """Test the /containers/refresh method handles valid JSON and returns a model reply."""
         response = asyncio.run(mock_server.refresh_containers(mock_request_object))
 
-        assert response.code == ResponseCode.OK
         assert "Retrieved 2 containers" in response.message
         assert isinstance(response.timestamp, str)
-        assert response.docker_available is True
         assert len(response.containers) == 2  # noqa: PLR2004
 
     def test_refresh_containers_endpoint(
@@ -683,10 +657,8 @@ class TestRefreshContainersEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert "Retrieved 2 containers" in response_body["message"]
         assert isinstance(response_body["timestamp"], str)
-        assert response_body["docker_available"] is True
         assert len(response_body["containers"]) == 2  # noqa: PLR2004
 
 
@@ -708,7 +680,6 @@ class TestStartContainerEndpoint:
         container_id = "abc123def456"
         response = asyncio.run(mock_server.start_container(mock_request_object, container_id))
 
-        assert response.code == ResponseCode.OK
         assert f"Container started: {container_id}" in response.message
         assert isinstance(response.timestamp, str)
         assert response.container_id == container_id
@@ -724,7 +695,6 @@ class TestStartContainerEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert f"Container started: {container_id}" in response_body["message"]
         assert isinstance(response_body["timestamp"], str)
         assert response_body["container_id"] == container_id
@@ -749,7 +719,6 @@ class TestStopContainerEndpoint:
         container_id = "abc123def456"
         response = asyncio.run(mock_server.stop_container(mock_request_object, container_id))
 
-        assert response.code == ResponseCode.OK
         assert f"Container stopped: {container_id}" in response.message
         assert isinstance(response.timestamp, str)
         assert response.container_id == container_id
@@ -765,7 +734,6 @@ class TestStopContainerEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert f"Container stopped: {container_id}" in response_body["message"]
         assert isinstance(response_body["timestamp"], str)
         assert response_body["container_id"] == container_id
@@ -790,7 +758,6 @@ class TestRestartContainerEndpoint:
         container_id = "abc123def456"
         response = asyncio.run(mock_server.restart_container(mock_request_object, container_id))
 
-        assert response.code == ResponseCode.OK
         assert f"Container restarted: {container_id}" in response.message
         assert isinstance(response.timestamp, str)
         assert response.container_id == container_id
@@ -806,7 +773,6 @@ class TestRestartContainerEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert f"Container restarted: {container_id}" in response_body["message"]
         assert isinstance(response_body["timestamp"], str)
         assert response_body["container_id"] == container_id
@@ -831,7 +797,6 @@ class TestUpdateContainerEndpoint:
         container_id = "abc123def456"
         response = asyncio.run(mock_server.update_container(mock_request_object, container_id))
 
-        assert response.code == ResponseCode.OK
         assert f"Container updated: {container_id}" in response.message
         assert isinstance(response.timestamp, str)
         assert response.container_id == container_id
@@ -847,7 +812,6 @@ class TestUpdateContainerEndpoint:
         assert response.status_code == ResponseCode.OK
 
         response_body = response.json()
-        assert response_body["code"] == ResponseCode.OK
         assert f"Container updated: {container_id}" in response_body["message"]
         assert isinstance(response_body["timestamp"], str)
         assert response_body["container_id"] == container_id

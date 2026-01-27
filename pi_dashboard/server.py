@@ -282,7 +282,6 @@ class PiDashboardServer(TemplateServer):
         """
         info = get_system_info()
         return GetSystemInfoResponse(
-            code=ResponseCode.OK,
             message="Retrieved system info successfully",
             timestamp=GetSystemInfoResponse.current_timestamp(),
             info=info,
@@ -295,7 +294,6 @@ class PiDashboardServer(TemplateServer):
         """
         metrics = get_system_metrics()
         return GetSystemMetricsResponse(
-            code=ResponseCode.OK,
             message="Retrieved system metrics successfully",
             timestamp=GetSystemMetricsResponse.current_timestamp(),
             metrics=metrics,
@@ -312,7 +310,6 @@ class PiDashboardServer(TemplateServer):
             PiDashboardServer._current_timestamp_int(),
         )
         return GetSystemMetricsHistoryResponse(
-            code=ResponseCode.OK,
             message="Retrieved system metrics history successfully",
             timestamp=GetSystemMetricsHistoryResponse.current_timestamp(),
             history=SystemMetricsHistory(history=entries),
@@ -324,7 +321,6 @@ class PiDashboardServer(TemplateServer):
         :return GetNotesResponse: Response containing all notes
         """
         return GetNotesResponse(
-            code=ResponseCode.OK,
             message="Retrieved notes successfully",
             timestamp=GetNotesResponse.current_timestamp(),
             notes=self.notes_handler.get_all_notes(),
@@ -338,7 +334,6 @@ class PiDashboardServer(TemplateServer):
         note_request = CreateNoteRequest.model_validate(await request.json())
         current_timestamp = CreateNoteResponse.current_timestamp()
         return CreateNoteResponse(
-            code=ResponseCode.OK,
             message="Created note successfully",
             timestamp=current_timestamp,
             note=self.notes_handler.create_note(note_request.title, note_request.content, current_timestamp),
@@ -357,7 +352,6 @@ class PiDashboardServer(TemplateServer):
         if note is None:
             raise HTTPException(status_code=ResponseCode.NOT_FOUND, detail=f"Note not found: {note_id}")
         return UpdateNoteResponse(
-            code=ResponseCode.OK,
             message="Updated note successfully",
             timestamp=current_timestamp,
             note=note,
@@ -374,7 +368,6 @@ class PiDashboardServer(TemplateServer):
         if not success:
             raise HTTPException(status_code=ResponseCode.NOT_FOUND, detail=f"Note not found: {note_id}")
         return DeleteNoteResponse(
-            code=ResponseCode.OK,
             message="Deleted note successfully",
             timestamp=DeleteNoteResponse.current_timestamp(),
         )
@@ -388,7 +381,6 @@ class PiDashboardServer(TemplateServer):
         try:
             weather_data = await self.weather_handler.get_weather()
             return GetWeatherResponse(
-                code=ResponseCode.OK,
                 message="Retrieved weather data successfully",
                 timestamp=GetWeatherResponse.current_timestamp(),
                 weather=weather_data,
@@ -405,7 +397,6 @@ class PiDashboardServer(TemplateServer):
         :return GetWeatherLocationResponse: Response containing weather location information
         """
         return GetWeatherLocationResponse(
-            code=ResponseCode.OK,
             message="Retrieved weather location successfully",
             timestamp=GetWeatherLocationResponse.current_timestamp(),
             latitude=self.config.weather.latitude,
@@ -447,7 +438,6 @@ class PiDashboardServer(TemplateServer):
         logger.info("Weather location updated to: %s (%.4f, %.4f)", location_request.location, latitude, longitude)
 
         return GetWeatherLocationResponse(
-            code=ResponseCode.OK,
             message="Updated weather location successfully",
             timestamp=GetWeatherLocationResponse.current_timestamp(),
             latitude=self.config.weather.latitude,

@@ -5,7 +5,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from python_template_server.models import ResponseCode
 
 from pi_dashboard.container_handler import ContainerHandler
 from pi_dashboard.models import (
@@ -220,17 +219,14 @@ def mock_container_handler(mock_docker_containers: list[DockerContainer]) -> Con
     # Mock list_containers method
     def mock_list_containers() -> ContainerListResponse:
         return ContainerListResponse(
-            code=ResponseCode.OK,
             message=f"Retrieved {len(mock_docker_containers)} containers",
             timestamp="2026-01-27T00:00:00Z",
             containers=mock_docker_containers,
-            docker_available=True,
         )
 
     # Mock action methods
     def mock_start_container(container_id: str) -> ContainerActionResponse:
         return ContainerActionResponse(
-            code=ResponseCode.OK,
             message=f"Container started: {container_id}",
             timestamp="2026-01-27T00:00:00Z",
             container_id=container_id,
@@ -239,7 +235,6 @@ def mock_container_handler(mock_docker_containers: list[DockerContainer]) -> Con
 
     def mock_stop_container(container_id: str) -> ContainerActionResponse:
         return ContainerActionResponse(
-            code=ResponseCode.OK,
             message=f"Container stopped: {container_id}",
             timestamp="2026-01-27T00:00:00Z",
             container_id=container_id,
@@ -248,7 +243,6 @@ def mock_container_handler(mock_docker_containers: list[DockerContainer]) -> Con
 
     def mock_restart_container(container_id: str) -> ContainerActionResponse:
         return ContainerActionResponse(
-            code=ResponseCode.OK,
             message=f"Container restarted: {container_id}",
             timestamp="2026-01-27T00:00:00Z",
             container_id=container_id,
@@ -257,7 +251,6 @@ def mock_container_handler(mock_docker_containers: list[DockerContainer]) -> Con
 
     def mock_update_container(container_id: str) -> ContainerActionResponse:
         return ContainerActionResponse(
-            code=ResponseCode.OK,
             message=f"Container updated: {container_id}",
             timestamp="2026-01-27T00:00:00Z",
             container_id=container_id,

@@ -88,8 +88,6 @@ class TestListContainers:
 
         response = container_handler.list_containers()
 
-        assert response.code == ResponseCode.OK
-        assert response.docker_available is True
         assert len(response.containers) == 1
 
         container = response.containers[0]
@@ -107,7 +105,6 @@ class TestListContainers:
 
         response = container_handler.list_containers()
 
-        assert response.code == ResponseCode.OK
         assert len(response.containers) == 1
         assert response.containers[0].image == "sha256:abcde"  # Shortened ID (12 chars)
 
@@ -119,7 +116,6 @@ class TestListContainers:
 
         response = container_handler.list_containers()
 
-        assert response.code == ResponseCode.OK
         assert response.containers[0].port is None
 
     def test_list_containers_null_port_bindings(
@@ -132,7 +128,6 @@ class TestListContainers:
 
         response = container_handler.list_containers()
 
-        assert response.code == ResponseCode.OK
         assert response.containers[0].port is None
 
     def test_list_containers_docker_unavailable(self) -> None:
@@ -143,7 +138,6 @@ class TestListContainers:
         response = handler.list_containers()
 
         assert response.code == ResponseCode.INTERNAL_SERVER_ERROR
-        assert response.docker_available is False
         assert len(response.containers) == 0
         assert "Docker daemon not available" in response.message
 
@@ -155,7 +149,6 @@ class TestListContainers:
         response = container_handler.list_containers()
 
         assert response.code == ResponseCode.INTERNAL_SERVER_ERROR
-        assert response.docker_available is True
         assert len(response.containers) == 0
         assert "Docker API error" in response.message
 
@@ -167,7 +160,6 @@ class TestListContainers:
         response = container_handler.list_containers()
 
         assert response.code == ResponseCode.INTERNAL_SERVER_ERROR
-        assert response.docker_available is False
         assert len(response.containers) == 0
         assert "Unexpected error" in response.message
 
@@ -182,7 +174,6 @@ class TestStartContainer:
 
         response = container_handler.start_container("abc123")
 
-        assert response.code == ResponseCode.OK
         assert response.container_id == "abc123"
         assert response.action == "start"
         assert "started successfully" in response.message
@@ -230,7 +221,6 @@ class TestStopContainer:
 
         response = container_handler.stop_container("abc123")
 
-        assert response.code == ResponseCode.OK
         assert response.container_id == "abc123"
         assert response.action == "stop"
         assert "stopped successfully" in response.message
@@ -241,9 +231,8 @@ class TestStopContainer:
         assert container_handler.client is not None
         container_handler.client.containers.get.return_value = mock_container
 
-        response = container_handler.stop_container("abc123", timeout=30)
+        container_handler.stop_container("abc123", timeout=30)
 
-        assert response.code == ResponseCode.OK
         mock_container.stop.assert_called_once_with(timeout=30)
 
     def test_stop_container_docker_unavailable(self) -> None:
@@ -277,7 +266,6 @@ class TestRestartContainer:
 
         response = container_handler.restart_container("abc123")
 
-        assert response.code == ResponseCode.OK
         assert response.container_id == "abc123"
         assert response.action == "restart"
         assert "restarted successfully" in response.message
@@ -310,7 +298,6 @@ class TestUpdateContainer:
 
         response = container_handler.update_container("abc123")
 
-        assert response.code == ResponseCode.OK
         assert response.container_id == "new123"
         assert response.action == "update"
         assert "updated successfully" in response.message
