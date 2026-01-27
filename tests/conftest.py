@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from python_template_server.models import ResponseCode
@@ -212,7 +212,7 @@ def mock_docker_containers() -> list[DockerContainer]:
 
 
 @pytest.fixture
-def mock_container_handler(mock_docker_containers: list[DockerContainer]) -> Generator[ContainerHandler]:
+def mock_container_handler(mock_docker_containers: list[DockerContainer]) -> ContainerHandler:
     """Provide a ContainerHandler instance for testing."""
     handler = ContainerHandler()
     handler.client = MagicMock()
@@ -264,10 +264,10 @@ def mock_container_handler(mock_docker_containers: list[DockerContainer]) -> Gen
             action="update",
         )
 
-    handler.list_containers = mock_list_containers
-    handler.start_container = mock_start_container
-    handler.stop_container = mock_stop_container
-    handler.restart_container = mock_restart_container
-    handler.update_container = mock_update_container
+    handler.list_containers = Mock(side_effect=mock_list_containers)  # type: ignore[method-assign]
+    handler.start_container = Mock(side_effect=mock_start_container)  # type: ignore[method-assign]
+    handler.stop_container = Mock(side_effect=mock_stop_container)  # type: ignore[method-assign]
+    handler.restart_container = Mock(side_effect=mock_restart_container)  # type: ignore[method-assign]
+    handler.update_container = Mock(side_effect=mock_update_container)  # type: ignore[method-assign]
 
     return handler

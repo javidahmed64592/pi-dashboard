@@ -51,7 +51,7 @@ class ContainerHandler:
             for binding in host_bindings:
                 host_port = binding.get("HostPort", "")
                 if host_port:
-                    return host_port
+                    return str(host_port)
 
         return None
 

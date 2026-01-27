@@ -1,7 +1,6 @@
 """Unit tests for the container handler module."""
 
-from datetime import datetime, timezone
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from docker.errors import APIError, NotFound
@@ -22,8 +21,7 @@ def mock_docker_client() -> Mock:
 def container_handler(mock_docker_client: Mock) -> ContainerHandler:
     """Provide a ContainerHandler instance with mocked Docker client."""
     with patch("pi_dashboard.container_handler.docker.from_env", return_value=mock_docker_client):
-        handler = ContainerHandler()
-    return handler
+        return ContainerHandler()
 
 
 @pytest.fixture
@@ -34,8 +32,8 @@ def mock_container() -> Mock:
     container.name = "test-container"
     container.status = "running"
     container.ports = {
-        "443/tcp": [{"HostIp": "0.0.0.0", "HostPort": "443"}],
-        "80/tcp": [{"HostIp": "0.0.0.0", "HostPort": "8080"}],
+        "443/tcp": [{"HostIp": "0.0.0.0", "HostPort": "443"}],  # noqa: S104
+        "80/tcp": [{"HostIp": "0.0.0.0", "HostPort": "8080"}],  # noqa: S104
     }
 
     # Mock image
@@ -85,6 +83,7 @@ class TestListContainers:
 
     def test_list_containers_success(self, container_handler: ContainerHandler, mock_container: Mock) -> None:
         """Test successfully listing containers."""
+        assert container_handler.client is not None
         container_handler.client.containers.list.return_value = [mock_container]
 
         response = container_handler.list_containers()
@@ -103,6 +102,7 @@ class TestListContainers:
     def test_list_containers_no_image_tags(self, container_handler: ContainerHandler, mock_container: Mock) -> None:
         """Test listing containers with no image tags."""
         mock_container.image.tags = []
+        assert container_handler.client is not None
         container_handler.client.containers.list.return_value = [mock_container]
 
         response = container_handler.list_containers()
@@ -114,6 +114,7 @@ class TestListContainers:
     def test_list_containers_no_ports(self, container_handler: ContainerHandler, mock_container: Mock) -> None:
         """Test listing containers with no port mappings."""
         mock_container.ports = {}
+        assert container_handler.client is not None
         container_handler.client.containers.list.return_value = [mock_container]
 
         response = container_handler.list_containers()
@@ -126,6 +127,7 @@ class TestListContainers:
     ) -> None:
         """Test listing containers with null port bindings."""
         mock_container.ports = {"443/tcp": None}
+        assert container_handler.client is not None
         container_handler.client.containers.list.return_value = [mock_container]
 
         response = container_handler.list_containers()
@@ -147,6 +149,7 @@ class TestListContainers:
 
     def test_list_containers_api_error(self, container_handler: ContainerHandler) -> None:
         """Test listing containers with Docker API error."""
+        assert container_handler.client is not None
         container_handler.client.containers.list.side_effect = APIError("API Error")
 
         response = container_handler.list_containers()
@@ -158,6 +161,7 @@ class TestListContainers:
 
     def test_list_containers_unexpected_error(self, container_handler: ContainerHandler) -> None:
         """Test listing containers with unexpected error."""
+        assert container_handler.client is not None
         container_handler.client.containers.list.side_effect = Exception("Unexpected error")
 
         response = container_handler.list_containers()
@@ -173,6 +177,7 @@ class TestStartContainer:
 
     def test_start_container_success(self, container_handler: ContainerHandler, mock_container: Mock) -> None:
         """Test successfully starting a container."""
+        assert container_handler.client is not None
         container_handler.client.containers.get.return_value = mock_container
 
         response = container_handler.start_container("abc123")
@@ -195,6 +200,7 @@ class TestStartContainer:
 
     def test_start_container_not_found(self, container_handler: ContainerHandler) -> None:
         """Test starting container that doesn't exist."""
+        assert container_handler.client is not None
         container_handler.client.containers.get.side_effect = NotFound("Container not found")
 
         response = container_handler.start_container("nonexistent")
@@ -204,6 +210,7 @@ class TestStartContainer:
 
     def test_start_container_api_error(self, container_handler: ContainerHandler, mock_container: Mock) -> None:
         """Test starting container with Docker API error."""
+        assert container_handler.client is not None
         container_handler.client.containers.get.return_value = mock_container
         mock_container.start.side_effect = APIError("Cannot start container")
 
@@ -218,6 +225,7 @@ class TestStopContainer:
 
     def test_stop_container_success(self, container_handler: ContainerHandler, mock_container: Mock) -> None:
         """Test successfully stopping a container."""
+        assert container_handler.client is not None
         container_handler.client.containers.get.return_value = mock_container
 
         response = container_handler.stop_container("abc123")
@@ -230,6 +238,7 @@ class TestStopContainer:
 
     def test_stop_container_custom_timeout(self, container_handler: ContainerHandler, mock_container: Mock) -> None:
         """Test stopping container with custom timeout."""
+        assert container_handler.client is not None
         container_handler.client.containers.get.return_value = mock_container
 
         response = container_handler.stop_container("abc123", timeout=30)
@@ -249,6 +258,7 @@ class TestStopContainer:
 
     def test_stop_container_not_found(self, container_handler: ContainerHandler) -> None:
         """Test stopping container that doesn't exist."""
+        assert container_handler.client is not None
         container_handler.client.containers.get.side_effect = NotFound("Container not found")
 
         response = container_handler.stop_container("nonexistent")
@@ -262,6 +272,7 @@ class TestRestartContainer:
 
     def test_restart_container_success(self, container_handler: ContainerHandler, mock_container: Mock) -> None:
         """Test successfully restarting a container."""
+        assert container_handler.client is not None
         container_handler.client.containers.get.return_value = mock_container
 
         response = container_handler.restart_container("abc123")
@@ -288,6 +299,7 @@ class TestUpdateContainer:
 
     def test_update_container_success(self, container_handler: ContainerHandler, mock_container: Mock) -> None:
         """Test successfully updating a container."""
+        assert container_handler.client is not None
         container_handler.client.containers.get.return_value = mock_container
 
         # Mock the new container created after update
@@ -312,6 +324,7 @@ class TestUpdateContainer:
     def test_update_container_no_image_tags(self, container_handler: ContainerHandler, mock_container: Mock) -> None:
         """Test updating container with no image tags."""
         mock_container.image.tags = []
+        assert container_handler.client is not None
         container_handler.client.containers.get.return_value = mock_container
 
         response = container_handler.update_container("abc123")
@@ -331,6 +344,7 @@ class TestUpdateContainer:
 
     def test_update_container_not_found(self, container_handler: ContainerHandler) -> None:
         """Test updating container that doesn't exist."""
+        assert container_handler.client is not None
         container_handler.client.containers.get.side_effect = NotFound("Container not found")
 
         response = container_handler.update_container("nonexistent")
@@ -340,6 +354,7 @@ class TestUpdateContainer:
 
     def test_update_container_pull_error(self, container_handler: ContainerHandler, mock_container: Mock) -> None:
         """Test updating container with image pull error."""
+        assert container_handler.client is not None
         container_handler.client.containers.get.return_value = mock_container
         container_handler.client.images.pull.side_effect = APIError("Failed to pull image")
 
@@ -355,8 +370,8 @@ class TestExtractPrimaryPort:
     def test_extract_primary_port_standard(self, container_handler: ContainerHandler) -> None:
         """Test extracting port from standard port mappings."""
         ports = {
-            "443/tcp": [{"HostPort": "443", "HostIp": "0.0.0.0"}],
-            "80/tcp": [{"HostPort": "8080", "HostIp": "0.0.0.0"}],
+            "443/tcp": [{"HostPort": "443", "HostIp": "0.0.0.0"}],  # noqa: S104
+            "80/tcp": [{"HostPort": "8080", "HostIp": "0.0.0.0"}],  # noqa: S104
         }
 
         result = container_handler._extract_primary_port(ports)
@@ -381,7 +396,7 @@ class TestExtractPrimaryPort:
         """Test that only first port is extracted when multiple exist."""
         ports = {
             "80/tcp": [
-                {"HostPort": "8080", "HostIp": "0.0.0.0"},
+                {"HostPort": "8080", "HostIp": "0.0.0.0"},  # noqa: S104
                 {"HostPort": "8081", "HostIp": "127.0.0.1"},
             ]
         }
