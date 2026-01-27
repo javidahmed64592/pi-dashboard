@@ -18,6 +18,9 @@ import type {
   GetWeatherResponse,
   GetWeatherLocationResponse,
   UpdateWeatherLocationRequest,
+  GetContainersResponse,
+  ContainerActionResponse,
+  ContainerLogsResponse,
 } from "@/lib/types";
 
 // Determine the base URL based on environment
@@ -228,6 +231,93 @@ export const updateWeatherLocation = async (
     const response = await api.put<GetWeatherLocationResponse>(
       "/weather/location",
       request
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+// Container API functions
+export const getContainers = async (): Promise<GetContainersResponse> => {
+  try {
+    const response = await api.get<GetContainersResponse>("/containers");
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const refreshContainers = async (): Promise<GetContainersResponse> => {
+  try {
+    const response = await api.post<GetContainersResponse>(
+      "/containers/refresh"
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const startContainer = async (
+  containerId: string
+): Promise<ContainerActionResponse> => {
+  try {
+    const response = await api.post<ContainerActionResponse>(
+      `/containers/${containerId}/start`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const stopContainer = async (
+  containerId: string
+): Promise<ContainerActionResponse> => {
+  try {
+    const response = await api.post<ContainerActionResponse>(
+      `/containers/${containerId}/stop`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const restartContainer = async (
+  containerId: string
+): Promise<ContainerActionResponse> => {
+  try {
+    const response = await api.post<ContainerActionResponse>(
+      `/containers/${containerId}/restart`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const updateContainer = async (
+  containerId: string
+): Promise<ContainerActionResponse> => {
+  try {
+    const response = await api.post<ContainerActionResponse>(
+      `/containers/${containerId}/update`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const getContainerLogs = async (
+  containerId: string,
+  tail = 100
+): Promise<ContainerLogsResponse> => {
+  try {
+    const response = await api.get<ContainerLogsResponse>(
+      `/containers/${containerId}/logs?tail=${tail}`
     );
     return response.data;
   } catch (error) {

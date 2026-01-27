@@ -73,6 +73,21 @@ export interface WeatherData {
   wind_speed: number;
   forecast: WeatherForecastHour[];
 }
+// Container types
+export interface PortMapping {
+  container: string;
+  host: string;
+  protocol: string;
+}
+
+export interface DockerContainer {
+  container_id: string;
+  name: string;
+  image: string;
+  status: string;
+  ports: PortMapping[];
+  created: string;
+}
 
 // Response types
 export interface HealthResponse extends BaseResponse {
@@ -111,6 +126,19 @@ export interface GetWeatherLocationResponse extends BaseResponse {
   location_name: string;
   latitude: number;
   longitude: number;
+}
+
+export interface GetContainersResponse extends BaseResponse {
+  containers: DockerContainer[];
+}
+
+export interface ContainerActionResponse extends BaseResponse {
+  container_id: string;
+}
+
+export interface ContainerLogsResponse extends BaseResponse {
+  container_id: string;
+  logs: string;
 }
 
 // Request types

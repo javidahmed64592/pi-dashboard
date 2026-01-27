@@ -1,19 +1,29 @@
-interface ServiceCardProps {
+interface ContainerCardProps {
+  container_id: string;
   name: string;
-  description: string;
-  path: string;
-  status: "running" | "stopped";
-  port: number;
+  image: string;
+  status: "running" | "exited" | "created" | "restarting" | "paused";
+  ports: Array<{ host: string; container: string; protocol: string }>;
+  onStart?: (id: string) => void;
+  onStop?: (id: string) => void;
+  onRestart?: (id: string) => void;
+  onUpdate?: (id: string) => void;
 }
 
-export default function ServiceCard({
+export default function ContainerCard({
+  container_id,
   name,
-  description,
-  path,
+  image,
   status,
-  port,
-}: ServiceCardProps) {
+  ports,
+  onStart,
+  onStop,
+  onRestart,
+  onUpdate,
+}: ContainerCardProps) {
   const statusColor = status === "running" ? "#00ff41" : "#ff0040";
+  const isRunning = status === "running";
+  const primaryPort = ports.length > 0 ? ports[0]?.host : null;
 
   return (
     <div className="bg-background-secondary border border-border rounded-lg p-4 shadow-neon hover:border-neon-green transition-all">
@@ -21,32 +31,38 @@ export default function ServiceCard({
         <div className="flex-1 min-w-0 flex flex-col justify-between">
           <div>
             <h3 className="text-lg font-bold text-text-primary font-mono">
-              <a
-                href={`http://localhost:${port}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 group hover:text-neon-green transition-colors"
-              >
-                {description}
-                <svg
-                  className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              {primaryPort ? (
+                <a
+                  href={`http://localhost:${primaryPort}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 group hover:text-neon-green transition-colors"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </a>
+                  {name}
+                  <svg
+                    className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                </a>
+              ) : (
+                <span>{name}</span>
+              )}
             </h3>
-            <p className="text-xs text-text-muted font-mono mt-1">{name}</p>
+            <p className="text-xs text-text-muted font-mono mt-1 truncate">
+              {image}
+            </p>
           </div>
-          <div className="text-xs text-text-muted font-mono truncate">
-            {path}
+          <div className="text-xs text-text-muted font-mono">
+            {ports.length > 0 && <span>Port: {ports[0]?.host}</span>}
           </div>
         </div>
 
@@ -61,12 +77,13 @@ export default function ServiceCard({
           <div className="flex gap-1.5">
             <button
               className={`p-2 rounded transition-all ${
-                status === "stopped"
+                !isRunning
                   ? "text-neon-green hover:bg-neon-green hover:text-background cursor-pointer"
                   : "text-text-muted cursor-not-allowed opacity-50"
               }`}
               title="Start"
-              disabled={status === "running"}
+              disabled={isRunning}
+              onClick={() => onStart?.(container_id)}
             >
               <svg
                 className="w-5 h-5"
@@ -90,12 +107,13 @@ export default function ServiceCard({
             </button>
             <button
               className={`p-2 rounded transition-all ${
-                status === "running"
+                isRunning
                   ? "text-neon-red hover:bg-neon-red hover:text-background cursor-pointer"
                   : "text-text-muted cursor-not-allowed opacity-50"
               }`}
               title="Stop"
-              disabled={status === "stopped"}
+              disabled={!isRunning}
+              onClick={() => onStop?.(container_id)}
             >
               <svg
                 className="w-5 h-5"
@@ -119,12 +137,13 @@ export default function ServiceCard({
             </button>
             <button
               className={`p-2 rounded transition-all ${
-                status === "running"
+                isRunning
                   ? "text-neon-blue hover:bg-neon-blue hover:text-background cursor-pointer"
                   : "text-text-muted cursor-not-allowed opacity-50"
               }`}
               title="Restart"
-              disabled={status === "stopped"}
+              disabled={!isRunning}
+              onClick={() => onRestart?.(container_id)}
             >
               <svg
                 className="w-5 h-5"
@@ -143,6 +162,7 @@ export default function ServiceCard({
             <button
               className="p-2 text-neon-purple hover:bg-neon-purple hover:text-background rounded transition-all cursor-pointer"
               title="Update"
+              onClick={() => onUpdate?.(container_id)}
             >
               <svg
                 className="w-5 h-5"
