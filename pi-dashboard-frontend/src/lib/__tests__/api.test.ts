@@ -470,16 +470,14 @@ describe("API Tests", () => {
           name: "pi-dashboard",
           image: "ghcr.io/user/pi-dashboard:latest",
           status: "running",
-          ports: [{ host: "443", container: "443", protocol: "tcp" }],
-          created: "2024-01-01T00:00:00Z",
+          port: "443",
         },
         {
           container_id: "def456",
           name: "homebridge",
           image: "homebridge/homebridge:latest",
           status: "running",
-          ports: [{ host: "8581", container: "8581", protocol: "tcp" }],
-          created: "2024-01-01T00:00:00Z",
+          port: "8581",
         },
       ];
 

@@ -3,7 +3,7 @@ interface ContainerCardProps {
   name: string;
   image: string;
   status: "running" | "exited" | "created" | "restarting" | "paused";
-  ports: Array<{ host: string; container: string; protocol: string }>;
+  port: string | null;
   onStart?: (id: string) => void;
   onStop?: (id: string) => void;
   onRestart?: (id: string) => void;
@@ -15,7 +15,7 @@ export default function ContainerCard({
   name,
   image,
   status,
-  ports,
+  port,
   onStart,
   onStop,
   onRestart,
@@ -23,7 +23,6 @@ export default function ContainerCard({
 }: ContainerCardProps) {
   const statusColor = status === "running" ? "#00ff41" : "#ff0040";
   const isRunning = status === "running";
-  const primaryPort = ports.length > 0 ? ports[0]?.host : null;
 
   return (
     <div className="bg-background-secondary border border-border rounded-lg p-4 shadow-neon hover:border-neon-green transition-all">
@@ -31,9 +30,9 @@ export default function ContainerCard({
         <div className="flex-1 min-w-0 flex flex-col justify-between">
           <div>
             <h3 className="text-lg font-bold text-text-primary font-mono">
-              {primaryPort ? (
+              {port ? (
                 <a
-                  href={`http://localhost:${primaryPort}`}
+                  href={`http://localhost:${port}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 group hover:text-neon-green transition-colors"
@@ -62,7 +61,7 @@ export default function ContainerCard({
             </p>
           </div>
           <div className="text-xs text-text-muted font-mono">
-            {ports.length > 0 && <span>Port: {ports[0]?.host}</span>}
+            {port && <span>Port: {port}</span>}
           </div>
         </div>
 

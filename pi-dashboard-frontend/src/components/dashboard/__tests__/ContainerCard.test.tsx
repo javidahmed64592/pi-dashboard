@@ -15,10 +15,7 @@ describe("ContainerCard", () => {
     name: "pi-dashboard",
     image: "ghcr.io/user/pi-dashboard:latest",
     status: "running" as const,
-    ports: [
-      { host: "443", container: "443", protocol: "tcp" },
-      { host: "8080", container: "80", protocol: "tcp" },
-    ],
+    port: "443",
     ...mockHandlers,
   };
 
@@ -50,7 +47,7 @@ describe("ContainerCard", () => {
   });
 
   it("does not render link when container has no ports", () => {
-    render(<ContainerCard {...defaultProps} ports={[]} />);
+    render(<ContainerCard {...defaultProps} port={null} />);
 
     const link = screen.queryByRole("link");
     expect(link).not.toBeInTheDocument();
@@ -227,7 +224,7 @@ describe("ContainerCard", () => {
   });
 
   it("handles container with no ports", () => {
-    render(<ContainerCard {...defaultProps} ports={[]} />);
+    render(<ContainerCard {...defaultProps} port={null} />);
     expect(screen.queryByText(/Port:/)).not.toBeInTheDocument();
   });
 });

@@ -33,14 +33,8 @@ export default function ContainerWidget() {
         if (!aIsRunning && bIsRunning) return 1;
 
         // Both have same running status, sort by port number
-        const aPort =
-          a.ports.length > 0 && a.ports[0] && a.ports[0].host
-            ? parseInt(a.ports[0].host)
-            : 99999;
-        const bPort =
-          b.ports.length > 0 && b.ports[0] && b.ports[0].host
-            ? parseInt(b.ports[0].host)
-            : 99999;
+        const aPort = a.port ? parseInt(a.port) : 99999;
+        const bPort = b.port ? parseInt(b.port) : 99999;
 
         return aPort - bPort;
       });
@@ -63,39 +57,23 @@ export default function ContainerWidget() {
   }, []);
 
   const handleStart = async (id: string) => {
-    try {
-      await startContainer(id);
-      await loadContainers();
-    } catch (err) {
-      console.error("Failed to start container:", err);
-    }
+    await startContainer(id);
+    await loadContainers();
   };
 
   const handleStop = async (id: string) => {
-    try {
-      await stopContainer(id);
-      await loadContainers();
-    } catch (err) {
-      console.error("Failed to stop container:", err);
-    }
+    await stopContainer(id);
+    await loadContainers();
   };
 
   const handleRestart = async (id: string) => {
-    try {
-      await restartContainer(id);
-      await loadContainers();
-    } catch (err) {
-      console.error("Failed to restart container:", err);
-    }
+    await restartContainer(id);
+    await loadContainers();
   };
 
   const handleUpdate = async (id: string) => {
-    try {
-      await updateContainer(id);
-      await loadContainers();
-    } catch (err) {
-      console.error("Failed to update container:", err);
-    }
+    await updateContainer(id);
+    await loadContainers();
   };
 
   const handleRefresh = async () => {
@@ -111,14 +89,8 @@ export default function ContainerWidget() {
         if (aIsRunning && !bIsRunning) return -1;
         if (!aIsRunning && bIsRunning) return 1;
 
-        const aPort =
-          a.ports.length > 0 && a.ports[0] && a.ports[0].host
-            ? parseInt(a.ports[0].host)
-            : 99999;
-        const bPort =
-          b.ports.length > 0 && b.ports[0] && b.ports[0].host
-            ? parseInt(b.ports[0].host)
-            : 99999;
+        const aPort = a.port ? parseInt(a.port) : 99999;
+        const bPort = b.port ? parseInt(b.port) : 99999;
 
         return aPort - bPort;
       });
@@ -186,7 +158,7 @@ export default function ContainerWidget() {
                   | "restarting"
                   | "paused"
               }
-              ports={container.ports}
+              port={container.port}
               onStart={handleStart}
               onStop={handleStop}
               onRestart={handleRestart}

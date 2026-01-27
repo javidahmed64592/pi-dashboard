@@ -74,19 +74,12 @@ export interface WeatherData {
   forecast: WeatherForecastHour[];
 }
 // Container types
-export interface PortMapping {
-  container: string;
-  host: string;
-  protocol: string;
-}
-
 export interface DockerContainer {
   container_id: string;
   name: string;
   image: string;
   status: string;
-  ports: PortMapping[];
-  created: string;
+  port: string | null;
 }
 
 // Response types
