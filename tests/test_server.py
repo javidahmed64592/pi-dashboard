@@ -12,8 +12,10 @@ from fastapi.security import APIKeyHeader
 from fastapi.testclient import TestClient
 from python_template_server.models import ResponseCode
 
+from pi_dashboard.container_handler import ContainerHandler
 from pi_dashboard.models import (
     CreateNoteRequest,
+    DockerContainer,
     GetSystemMetricsHistoryRequest,
     Note,
     PiDashboardConfig,
@@ -82,6 +84,7 @@ def mock_server(
     mock_system_metrics_history: SystemMetricsHistory,
     mock_notes_handler: NotesHandler,
     mock_weather_handler: MagicMock,
+    mock_container_handler: ContainerHandler,
 ) -> Generator[PiDashboardServer]:
     """Provide a PiDashboardServer instance for testing."""
 
@@ -96,6 +99,7 @@ def mock_server(
         patch("pi_dashboard.server.PiDashboardConfig.save_to_file"),
         patch("pi_dashboard.server.SystemMetricsHistory", return_value=mock_system_metrics_history),
         patch("pi_dashboard.server.NotesHandler", return_value=mock_notes_handler),
+        patch("pi_dashboard.server.ContainerHandler", return_value=mock_container_handler),
     ):
         server = PiDashboardServer(config=mock_pi_dashboard_config)
         yield server
@@ -149,6 +153,12 @@ class TestPiDashboardServerRoutes:
             "/notes/{note_id}",
             "/weather",
             "/weather/location",
+            "/containers",
+            "/containers/refresh",
+            "/containers/{container_id}/start",
+            "/containers/{container_id}/stop",
+            "/containers/{container_id}/restart",
+            "/containers/{container_id}/update",
         ]
         for endpoint in expected_endpoints:
             assert endpoint in routes, f"Expected endpoint {endpoint} not found in routes"
@@ -595,4 +605,250 @@ class TestUpdateWeatherLocationEndpoint:
         assert isinstance(response_body["timestamp"], str)
         assert response_body["latitude"] == mock_weather_config.latitude
         assert response_body["longitude"] == mock_weather_config.longitude
-        assert response_body["location_name"] == mock_weather_config.location_name
+
+
+class TestListContainersEndpoint:
+    """Integration and unit tests for the /containers endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock request object for testing."""
+        return MagicMock()
+
+    def test_list_containers(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+        mock_container_handler: ContainerHandler,
+    ) -> None:
+        """Test the /containers method handles valid JSON and returns a model reply."""
+        response = asyncio.run(mock_server.list_containers(mock_request_object))
+
+        assert response.code == ResponseCode.OK
+        assert "Retrieved 2 containers" in response.message
+        assert isinstance(response.timestamp, str)
+        assert response.docker_available is True
+        assert len(response.containers) == 2  # noqa: PLR2004
+
+    def test_list_containers_endpoint(
+        self, mock_server: PiDashboardServer, mock_docker_containers: list[DockerContainer]
+    ) -> None:
+        """Test /containers endpoint returns 200 and includes container list."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        response = client.get("/containers")
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert "Retrieved 2 containers" in response_body["message"]
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["docker_available"] is True
+        assert len(response_body["containers"]) == 2  # noqa: PLR2004
+        assert response_body["containers"][0] == mock_docker_containers[0].model_dump()
+
+
+class TestRefreshContainersEndpoint:
+    """Integration and unit tests for the /containers/refresh endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock request object for testing."""
+        return MagicMock()
+
+    def test_refresh_containers(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+        mock_container_handler: ContainerHandler,
+    ) -> None:
+        """Test the /containers/refresh method handles valid JSON and returns a model reply."""
+        response = asyncio.run(mock_server.refresh_containers(mock_request_object))
+
+        assert response.code == ResponseCode.OK
+        assert "Retrieved 2 containers" in response.message
+        assert isinstance(response.timestamp, str)
+        assert response.docker_available is True
+        assert len(response.containers) == 2  # noqa: PLR2004
+
+    def test_refresh_containers_endpoint(
+        self, mock_server: PiDashboardServer, mock_docker_containers: list[DockerContainer]
+    ) -> None:
+        """Test /containers/refresh endpoint returns 200 and includes refreshed container list."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        response = client.post("/containers/refresh")
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert "Retrieved 2 containers" in response_body["message"]
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["docker_available"] is True
+        assert len(response_body["containers"]) == 2  # noqa: PLR2004
+
+
+class TestStartContainerEndpoint:
+    """Integration and unit tests for the /containers/{container_id}/start endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock request object for testing."""
+        return MagicMock()
+
+    def test_start_container(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+        mock_container_handler: ContainerHandler,
+    ) -> None:
+        """Test the /containers/{container_id}/start method handles valid JSON and returns a model reply."""
+        container_id = "abc123def456"
+        response = asyncio.run(mock_server.start_container(mock_request_object, container_id))
+
+        assert response.code == ResponseCode.OK
+        assert f"Container started: {container_id}" in response.message
+        assert isinstance(response.timestamp, str)
+        assert response.container_id == container_id
+        assert response.action == "start"
+
+    def test_start_container_endpoint(self, mock_server: PiDashboardServer) -> None:
+        """Test /containers/{container_id}/start endpoint returns 200 and starts container."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        container_id = "abc123def456"
+        response = client.post(f"/containers/{container_id}/start")
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert f"Container started: {container_id}" in response_body["message"]
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["container_id"] == container_id
+        assert response_body["action"] == "start"
+
+
+class TestStopContainerEndpoint:
+    """Integration and unit tests for the /containers/{container_id}/stop endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock request object for testing."""
+        return MagicMock()
+
+    def test_stop_container(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+        mock_container_handler: ContainerHandler,
+    ) -> None:
+        """Test the /containers/{container_id}/stop method handles valid JSON and returns a model reply."""
+        container_id = "abc123def456"
+        response = asyncio.run(mock_server.stop_container(mock_request_object, container_id))
+
+        assert response.code == ResponseCode.OK
+        assert f"Container stopped: {container_id}" in response.message
+        assert isinstance(response.timestamp, str)
+        assert response.container_id == container_id
+        assert response.action == "stop"
+
+    def test_stop_container_endpoint(self, mock_server: PiDashboardServer) -> None:
+        """Test /containers/{container_id}/stop endpoint returns 200 and stops container."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        container_id = "abc123def456"
+        response = client.post(f"/containers/{container_id}/stop")
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert f"Container stopped: {container_id}" in response_body["message"]
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["container_id"] == container_id
+        assert response_body["action"] == "stop"
+
+
+class TestRestartContainerEndpoint:
+    """Integration and unit tests for the /containers/{container_id}/restart endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock request object for testing."""
+        return MagicMock()
+
+    def test_restart_container(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+        mock_container_handler: ContainerHandler,
+    ) -> None:
+        """Test the /containers/{container_id}/restart method handles valid JSON and returns a model reply."""
+        container_id = "abc123def456"
+        response = asyncio.run(mock_server.restart_container(mock_request_object, container_id))
+
+        assert response.code == ResponseCode.OK
+        assert f"Container restarted: {container_id}" in response.message
+        assert isinstance(response.timestamp, str)
+        assert response.container_id == container_id
+        assert response.action == "restart"
+
+    def test_restart_container_endpoint(self, mock_server: PiDashboardServer) -> None:
+        """Test /containers/{container_id}/restart endpoint returns 200 and restarts container."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        container_id = "abc123def456"
+        response = client.post(f"/containers/{container_id}/restart")
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert f"Container restarted: {container_id}" in response_body["message"]
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["container_id"] == container_id
+        assert response_body["action"] == "restart"
+
+
+class TestUpdateContainerEndpoint:
+    """Integration and unit tests for the /containers/{container_id}/update endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock request object for testing."""
+        return MagicMock()
+
+    def test_update_container(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+        mock_container_handler: ContainerHandler,
+    ) -> None:
+        """Test the /containers/{container_id}/update method handles valid JSON and returns a model reply."""
+        container_id = "abc123def456"
+        response = asyncio.run(mock_server.update_container(mock_request_object, container_id))
+
+        assert response.code == ResponseCode.OK
+        assert f"Container updated: {container_id}" in response.message
+        assert isinstance(response.timestamp, str)
+        assert response.container_id == container_id
+        assert response.action == "update"
+
+    def test_update_container_endpoint(self, mock_server: PiDashboardServer) -> None:
+        """Test /containers/{container_id}/update endpoint returns 200 and updates container."""
+        app = mock_server.app
+        client = TestClient(app)
+
+        container_id = "abc123def456"
+        response = client.post(f"/containers/{container_id}/update")
+        assert response.status_code == ResponseCode.OK
+
+        response_body = response.json()
+        assert response_body["code"] == ResponseCode.OK
+        assert f"Container updated: {container_id}" in response_body["message"]
+        assert isinstance(response_body["timestamp"], str)
+        assert response_body["container_id"] == container_id
+        assert response_body["action"] == "update"

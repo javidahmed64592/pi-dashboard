@@ -2,11 +2,16 @@
 
 from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+from python_template_server.models import ResponseCode
 
+from pi_dashboard.container_handler import ContainerHandler
 from pi_dashboard.models import (
+    ContainerActionResponse,
+    ContainerListResponse,
+    DockerContainer,
     MetricsConfig,
     Note,
     NotesCollection,
@@ -178,3 +183,91 @@ def mock_weather_data(mock_weather_forecast_hours: list[WeatherForecastHour]) ->
             "forecast": [hour.model_dump() for hour in mock_weather_forecast_hours],
         }
     )
+
+
+# Container model fixtures
+@pytest.fixture
+def mock_docker_containers() -> list[DockerContainer]:
+    """Provide a list of DockerContainer instances for testing."""
+    return [
+        DockerContainer.model_validate(
+            {
+                "container_id": "abc123def456",
+                "name": "pi-dashboard",
+                "image": "ghcr.io/user/pi-dashboard:latest",
+                "status": "running",
+                "port": "443",
+            }
+        ),
+        DockerContainer.model_validate(
+            {
+                "container_id": "def456ghi789",
+                "name": "homebridge",
+                "image": "homebridge/homebridge:latest",
+                "status": "running",
+                "port": "8581",
+            }
+        ),
+    ]
+
+
+@pytest.fixture
+def mock_container_handler(mock_docker_containers: list[DockerContainer]) -> Generator[ContainerHandler]:
+    """Provide a ContainerHandler instance for testing."""
+    handler = ContainerHandler()
+    handler.client = MagicMock()
+
+    # Mock list_containers method
+    def mock_list_containers() -> ContainerListResponse:
+        return ContainerListResponse(
+            code=ResponseCode.OK,
+            message=f"Retrieved {len(mock_docker_containers)} containers",
+            timestamp="2026-01-27T00:00:00Z",
+            containers=mock_docker_containers,
+            docker_available=True,
+        )
+
+    # Mock action methods
+    def mock_start_container(container_id: str) -> ContainerActionResponse:
+        return ContainerActionResponse(
+            code=ResponseCode.OK,
+            message=f"Container started: {container_id}",
+            timestamp="2026-01-27T00:00:00Z",
+            container_id=container_id,
+            action="start",
+        )
+
+    def mock_stop_container(container_id: str) -> ContainerActionResponse:
+        return ContainerActionResponse(
+            code=ResponseCode.OK,
+            message=f"Container stopped: {container_id}",
+            timestamp="2026-01-27T00:00:00Z",
+            container_id=container_id,
+            action="stop",
+        )
+
+    def mock_restart_container(container_id: str) -> ContainerActionResponse:
+        return ContainerActionResponse(
+            code=ResponseCode.OK,
+            message=f"Container restarted: {container_id}",
+            timestamp="2026-01-27T00:00:00Z",
+            container_id=container_id,
+            action="restart",
+        )
+
+    def mock_update_container(container_id: str) -> ContainerActionResponse:
+        return ContainerActionResponse(
+            code=ResponseCode.OK,
+            message=f"Container updated: {container_id}",
+            timestamp="2026-01-27T00:00:00Z",
+            container_id=container_id,
+            action="update",
+        )
+
+    handler.list_containers = mock_list_containers
+    handler.start_container = mock_start_container
+    handler.stop_container = mock_stop_container
+    handler.restart_container = mock_restart_container
+    handler.update_container = mock_update_container
+
+    return handler
