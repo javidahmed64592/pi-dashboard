@@ -1,5 +1,6 @@
 """Pydantic models for the server."""
 
+from typing import Literal
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -196,6 +197,19 @@ class WeatherData(BaseModel):
     forecast: list[WeatherForecastHour] = Field(..., description="12-hour forecast")
 
 
+# Docker container models
+class DockerContainer(BaseModel):
+    """Model representing a Docker container."""
+
+    container_id: str = Field(..., description="Docker container ID (12-char short ID)")
+    name: str = Field(..., description="Container name (without leading /)")
+    image: str = Field(..., description="Full image name with tag")
+    status: Literal["running", "stopped", "restarting", "exited", "paused", "dead"] = Field(
+        ..., description="Container status"
+    )
+    port: str | None = Field(None, description="Primary host port")
+
+
 # Response models
 class GetSystemInfoResponse(BaseResponse):
     """Response model for system information."""
@@ -251,6 +265,20 @@ class GetWeatherLocationResponse(BaseResponse):
     latitude: float = Field(..., description="Latitude coordinate")
     longitude: float = Field(..., description="Longitude coordinate")
     location_name: str = Field(..., description="Human-readable location name")
+
+
+class ContainerListResponse(BaseResponse):
+    """Response model for listing containers."""
+
+    containers: list[DockerContainer] = Field(..., description="List of Docker containers")
+    docker_available: bool = Field(default=True, description="Whether Docker daemon is accessible")
+
+
+class ContainerActionResponse(BaseResponse):
+    """Response model for container actions (start/stop/restart/update)."""
+
+    container_id: str = Field(..., description="Container ID that was acted upon")
+    action: str = Field(..., description="Action that was performed")
 
 
 # Request models

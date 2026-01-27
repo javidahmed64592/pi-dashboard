@@ -12,8 +12,11 @@ from python_template_server.constants import ROOT_DIR
 from python_template_server.models import ResponseCode
 from python_template_server.template_server import TemplateServer
 
+from pi_dashboard.container_handler import ContainerHandler
 from pi_dashboard.models import (
     BaseResponse,
+    ContainerActionResponse,
+    ContainerListResponse,
     CreateNoteRequest,
     CreateNoteResponse,
     DeleteNoteResponse,
@@ -67,6 +70,7 @@ class PiDashboardServer(TemplateServer):
             self.config.weather.location_name,
             self.config.weather.forecast_hours,
         )
+        self.container_handler = ContainerHandler()
 
     @property
     def data_dir(self) -> Path:
@@ -224,6 +228,49 @@ class PiDashboardServer(TemplateServer):
             handler_function=self.update_weather_location,
             response_model=GetWeatherLocationResponse,
             methods=["PUT"],
+            limited=True,
+        )
+        # Container routes
+        self.add_authenticated_route(
+            endpoint="/containers",
+            handler_function=self.list_containers,
+            response_model=ContainerListResponse,
+            methods=["GET"],
+            limited=True,
+        )
+        self.add_authenticated_route(
+            endpoint="/containers/refresh",
+            handler_function=self.refresh_containers,
+            response_model=ContainerListResponse,
+            methods=["POST"],
+            limited=True,
+        )
+        self.add_authenticated_route(
+            endpoint="/containers/{container_id}/start",
+            handler_function=self.start_container,
+            response_model=ContainerActionResponse,
+            methods=["POST"],
+            limited=True,
+        )
+        self.add_authenticated_route(
+            endpoint="/containers/{container_id}/stop",
+            handler_function=self.stop_container,
+            response_model=ContainerActionResponse,
+            methods=["POST"],
+            limited=True,
+        )
+        self.add_authenticated_route(
+            endpoint="/containers/{container_id}/restart",
+            handler_function=self.restart_container,
+            response_model=ContainerActionResponse,
+            methods=["POST"],
+            limited=True,
+        )
+        self.add_authenticated_route(
+            endpoint="/containers/{container_id}/update",
+            handler_function=self.update_container,
+            response_model=ContainerActionResponse,
+            methods=["POST"],
             limited=True,
         )
         super().setup_routes()
@@ -407,3 +454,49 @@ class PiDashboardServer(TemplateServer):
             longitude=self.config.weather.longitude,
             location_name=self.config.weather.location_name,
         )
+
+    async def list_containers(self, request: Request) -> ContainerListResponse:
+        """List all Docker containers.
+
+        :return ContainerListResponse: Response containing list of containers
+        """
+        return self.container_handler.list_containers()
+
+    async def refresh_containers(self, request: Request) -> ContainerListResponse:
+        """Refresh container list from Docker daemon.
+
+        :return ContainerListResponse: Response containing refreshed list of containers
+        """
+        return self.container_handler.list_containers()
+
+    async def start_container(self, request: Request, container_id: str) -> ContainerActionResponse:
+        """Start a Docker container.
+
+        :param str container_id: The container ID to start
+        :return ContainerActionResponse: Response indicating success or failure
+        """
+        return self.container_handler.start_container(container_id)
+
+    async def stop_container(self, request: Request, container_id: str) -> ContainerActionResponse:
+        """Stop a Docker container.
+
+        :param str container_id: The container ID to stop
+        :return ContainerActionResponse: Response indicating success or failure
+        """
+        return self.container_handler.stop_container(container_id)
+
+    async def restart_container(self, request: Request, container_id: str) -> ContainerActionResponse:
+        """Restart a Docker container.
+
+        :param str container_id: The container ID to restart
+        :return ContainerActionResponse: Response indicating success or failure
+        """
+        return self.container_handler.restart_container(container_id)
+
+    async def update_container(self, request: Request, container_id: str) -> ContainerActionResponse:
+        """Update a Docker container by pulling latest image and recreating it.
+
+        :param str container_id: The container ID to update
+        :return ContainerActionResponse: Response indicating success or failure
+        """
+        return self.container_handler.update_container(container_id)
