@@ -136,11 +136,6 @@ export interface ContainerActionResponse extends BaseResponse {
   container_id: string;
 }
 
-export interface ContainerLogsResponse extends BaseResponse {
-  container_id: string;
-  logs: string;
-}
-
 // Request types
 export interface GetNotesResponse extends BaseResponse {
   notes: NotesCollection;

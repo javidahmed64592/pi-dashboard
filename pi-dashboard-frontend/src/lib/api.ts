@@ -20,7 +20,6 @@ import type {
   UpdateWeatherLocationRequest,
   GetContainersResponse,
   ContainerActionResponse,
-  ContainerLogsResponse,
 } from "@/lib/types";
 
 // Determine the base URL based on environment
@@ -304,20 +303,6 @@ export const updateContainer = async (
   try {
     const response = await api.post<ContainerActionResponse>(
       `/containers/${containerId}/update`
-    );
-    return response.data;
-  } catch (error) {
-    throw new Error(extractErrorMessage(error));
-  }
-};
-
-export const getContainerLogs = async (
-  containerId: string,
-  tail = 100
-): Promise<ContainerLogsResponse> => {
-  try {
-    const response = await api.get<ContainerLogsResponse>(
-      `/containers/${containerId}/logs?tail=${tail}`
     );
     return response.data;
   } catch (error) {

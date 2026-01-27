@@ -16,7 +16,6 @@ import {
   stopContainer,
   restartContainer,
   updateContainer,
-  getContainerLogs,
   useHealthStatus,
   type HealthStatus,
 } from "@/lib/api";
@@ -35,7 +34,6 @@ import type {
   GetContainersResponse,
   DockerContainer,
   ContainerActionResponse,
-  ContainerLogsResponse,
 } from "@/lib/types";
 
 jest.mock("../api", () => {
@@ -57,7 +55,6 @@ jest.mock("../api", () => {
     stopContainer: jest.fn(),
     restartContainer: jest.fn(),
     updateContainer: jest.fn(),
-    getContainerLogs: jest.fn(),
   };
 });
 
@@ -87,9 +84,6 @@ const mockRestartContainer = restartContainer as jest.MockedFunction<
 >;
 const mockUpdateContainer = updateContainer as jest.MockedFunction<
   typeof updateContainer
->;
-const mockGetContainerLogs = getContainerLogs as jest.MockedFunction<
-  typeof getContainerLogs
 >;
 const mockGetWeather = getWeather as jest.MockedFunction<typeof getWeather>;
 const mockGetWeatherLocation = getWeatherLocation as jest.MockedFunction<
@@ -448,238 +442,6 @@ describe("API Tests", () => {
         expect(mockUpdateWeatherLocation).toHaveBeenCalledWith(request);
         expect(result).toEqual(mockResponse);
         expect(result.location_name).toBe("New Location");
-
-        describe("containers", () => {
-          const mockContainers: DockerContainer[] = [
-            {
-              container_id: "abc123",
-              name: "pi-dashboard",
-              image: "ghcr.io/user/pi-dashboard:latest",
-              status: "running",
-              ports: [{ host: "443", container: "443", protocol: "tcp" }],
-              created: "2024-01-01T00:00:00Z",
-            },
-            {
-              container_id: "def456",
-              name: "homebridge",
-              image: "homebridge/homebridge:latest",
-              status: "running",
-              ports: [{ host: "8581", container: "8581", protocol: "tcp" }],
-              created: "2024-01-01T00:00:00Z",
-            },
-          ];
-
-          describe("getContainers", () => {
-            it("should fetch containers successfully", async () => {
-              const mockResponse: GetContainersResponse = {
-                code: 200,
-                message: "Retrieved containers successfully",
-                timestamp: "2024-01-01T00:00:00Z",
-                containers: mockContainers,
-              };
-
-              mockGetContainers.mockResolvedValue(mockResponse);
-
-              const result = await getContainers();
-
-              expect(mockGetContainers).toHaveBeenCalled();
-              expect(result).toEqual(mockResponse);
-              expect(result.containers).toHaveLength(2);
-              expect(result.containers[0]?.name).toBe("pi-dashboard");
-            });
-
-            it("should handle get containers error", async () => {
-              const errorMessage = "Failed to connect to Docker daemon";
-              mockGetContainers.mockRejectedValue(new Error(errorMessage));
-
-              await expect(getContainers()).rejects.toThrow(errorMessage);
-            });
-          });
-
-          describe("refreshContainers", () => {
-            it("should refresh containers successfully", async () => {
-              const mockResponse: GetContainersResponse = {
-                code: 200,
-                message: "Refreshed containers successfully",
-                timestamp: "2024-01-01T00:00:00Z",
-                containers: mockContainers,
-              };
-
-              mockRefreshContainers.mockResolvedValue(mockResponse);
-
-              const result = await refreshContainers();
-
-              expect(mockRefreshContainers).toHaveBeenCalled();
-              expect(result).toEqual(mockResponse);
-              expect(result.containers).toHaveLength(2);
-            });
-
-            it("should handle refresh containers error", async () => {
-              const errorMessage = "Refresh failed";
-              mockRefreshContainers.mockRejectedValue(new Error(errorMessage));
-
-              await expect(refreshContainers()).rejects.toThrow(errorMessage);
-            });
-          });
-
-          describe("startContainer", () => {
-            it("should start container successfully", async () => {
-              const mockResponse: ContainerActionResponse = {
-                code: 200,
-                message: "Container started successfully",
-                timestamp: "2024-01-01T00:00:00Z",
-                container_id: "abc123",
-              };
-
-              mockStartContainer.mockResolvedValue(mockResponse);
-
-              const result = await startContainer("abc123");
-
-              expect(mockStartContainer).toHaveBeenCalledWith("abc123");
-              expect(result).toEqual(mockResponse);
-              expect(result.container_id).toBe("abc123");
-            });
-
-            it("should handle start container error", async () => {
-              const errorMessage = "Container not found";
-              mockStartContainer.mockRejectedValue(new Error(errorMessage));
-
-              await expect(startContainer("invalid")).rejects.toThrow(
-                errorMessage
-              );
-            });
-          });
-
-          describe("stopContainer", () => {
-            it("should stop container successfully", async () => {
-              const mockResponse: ContainerActionResponse = {
-                code: 200,
-                message: "Container stopped successfully",
-                timestamp: "2024-01-01T00:00:00Z",
-                container_id: "abc123",
-              };
-
-              mockStopContainer.mockResolvedValue(mockResponse);
-
-              const result = await stopContainer("abc123");
-
-              expect(mockStopContainer).toHaveBeenCalledWith("abc123");
-              expect(result).toEqual(mockResponse);
-              expect(result.container_id).toBe("abc123");
-            });
-
-            it("should handle stop container error", async () => {
-              const errorMessage = "Container already stopped";
-              mockStopContainer.mockRejectedValue(new Error(errorMessage));
-
-              await expect(stopContainer("abc123")).rejects.toThrow(
-                errorMessage
-              );
-            });
-          });
-
-          describe("restartContainer", () => {
-            it("should restart container successfully", async () => {
-              const mockResponse: ContainerActionResponse = {
-                code: 200,
-                message: "Container restarted successfully",
-                timestamp: "2024-01-01T00:00:00Z",
-                container_id: "abc123",
-              };
-
-              mockRestartContainer.mockResolvedValue(mockResponse);
-
-              const result = await restartContainer("abc123");
-
-              expect(mockRestartContainer).toHaveBeenCalledWith("abc123");
-              expect(result).toEqual(mockResponse);
-              expect(result.container_id).toBe("abc123");
-            });
-
-            it("should handle restart container error", async () => {
-              const errorMessage = "Container not running";
-              mockRestartContainer.mockRejectedValue(new Error(errorMessage));
-
-              await expect(restartContainer("abc123")).rejects.toThrow(
-                errorMessage
-              );
-            });
-          });
-
-          describe("updateContainer", () => {
-            it("should update container successfully", async () => {
-              const mockResponse: ContainerActionResponse = {
-                code: 200,
-                message: "Container updated successfully",
-                timestamp: "2024-01-01T00:00:00Z",
-                container_id: "abc123",
-              };
-
-              mockUpdateContainer.mockResolvedValue(mockResponse);
-
-              const result = await updateContainer("abc123");
-
-              expect(mockUpdateContainer).toHaveBeenCalledWith("abc123");
-              expect(result).toEqual(mockResponse);
-              expect(result.container_id).toBe("abc123");
-            });
-
-            it("should handle update container error", async () => {
-              const errorMessage = "Failed to pull image";
-              mockUpdateContainer.mockRejectedValue(new Error(errorMessage));
-
-              await expect(updateContainer("abc123")).rejects.toThrow(
-                errorMessage
-              );
-            });
-          });
-
-          describe("getContainerLogs", () => {
-            it("should get container logs successfully", async () => {
-              const mockResponse: ContainerLogsResponse = {
-                code: 200,
-                message: "Retrieved logs successfully",
-                timestamp: "2024-01-01T00:00:00Z",
-                container_id: "abc123",
-                logs: "Log line 1\nLog line 2\nLog line 3",
-              };
-
-              mockGetContainerLogs.mockResolvedValue(mockResponse);
-
-              const result = await getContainerLogs("abc123", 100);
-
-              expect(mockGetContainerLogs).toHaveBeenCalledWith("abc123", 100);
-              expect(result).toEqual(mockResponse);
-              expect(result.logs).toContain("Log line 1");
-            });
-
-            it("should use default tail value", async () => {
-              const mockResponse: ContainerLogsResponse = {
-                code: 200,
-                message: "Retrieved logs successfully",
-                timestamp: "2024-01-01T00:00:00Z",
-                container_id: "abc123",
-                logs: "Default log output",
-              };
-
-              mockGetContainerLogs.mockResolvedValue(mockResponse);
-
-              const result = await getContainerLogs("abc123");
-
-              expect(mockGetContainerLogs).toHaveBeenCalledWith("abc123", 100);
-              expect(result).toEqual(mockResponse);
-            });
-
-            it("should handle get logs error", async () => {
-              const errorMessage = "Container not found";
-              mockGetContainerLogs.mockRejectedValue(new Error(errorMessage));
-
-              await expect(getContainerLogs("invalid")).rejects.toThrow(
-                errorMessage
-              );
-            });
-          });
-        });
       });
 
       it("should handle update weather location error", async () => {
@@ -698,6 +460,186 @@ describe("API Tests", () => {
 
         const request = { location: "" };
         await expect(updateWeatherLocation(request)).rejects.toThrow();
+      });
+    });
+
+    describe("containers", () => {
+      const mockContainers: DockerContainer[] = [
+        {
+          container_id: "abc123",
+          name: "pi-dashboard",
+          image: "ghcr.io/user/pi-dashboard:latest",
+          status: "running",
+          ports: [{ host: "443", container: "443", protocol: "tcp" }],
+          created: "2024-01-01T00:00:00Z",
+        },
+        {
+          container_id: "def456",
+          name: "homebridge",
+          image: "homebridge/homebridge:latest",
+          status: "running",
+          ports: [{ host: "8581", container: "8581", protocol: "tcp" }],
+          created: "2024-01-01T00:00:00Z",
+        },
+      ];
+
+      describe("getContainers", () => {
+        it("should fetch containers successfully", async () => {
+          const mockResponse: GetContainersResponse = {
+            code: 200,
+            message: "Retrieved containers successfully",
+            timestamp: "2024-01-01T00:00:00Z",
+            containers: mockContainers,
+          };
+
+          mockGetContainers.mockResolvedValue(mockResponse);
+
+          const result = await getContainers();
+
+          expect(mockGetContainers).toHaveBeenCalled();
+          expect(result).toEqual(mockResponse);
+          expect(result.containers).toHaveLength(2);
+          expect(result.containers[0]?.name).toBe("pi-dashboard");
+        });
+
+        it("should handle get containers error", async () => {
+          const errorMessage = "Failed to connect to Docker daemon";
+          mockGetContainers.mockRejectedValue(new Error(errorMessage));
+
+          await expect(getContainers()).rejects.toThrow(errorMessage);
+        });
+      });
+
+      describe("refreshContainers", () => {
+        it("should refresh containers successfully", async () => {
+          const mockResponse: GetContainersResponse = {
+            code: 200,
+            message: "Refreshed containers successfully",
+            timestamp: "2024-01-01T00:00:00Z",
+            containers: mockContainers,
+          };
+
+          mockRefreshContainers.mockResolvedValue(mockResponse);
+
+          const result = await refreshContainers();
+
+          expect(mockRefreshContainers).toHaveBeenCalled();
+          expect(result).toEqual(mockResponse);
+          expect(result.containers).toHaveLength(2);
+        });
+
+        it("should handle refresh containers error", async () => {
+          const errorMessage = "Refresh failed";
+          mockRefreshContainers.mockRejectedValue(new Error(errorMessage));
+
+          await expect(refreshContainers()).rejects.toThrow(errorMessage);
+        });
+      });
+
+      describe("startContainer", () => {
+        it("should start container successfully", async () => {
+          const mockResponse: ContainerActionResponse = {
+            code: 200,
+            message: "Container started successfully",
+            timestamp: "2024-01-01T00:00:00Z",
+            container_id: "abc123",
+          };
+
+          mockStartContainer.mockResolvedValue(mockResponse);
+
+          const result = await startContainer("abc123");
+
+          expect(mockStartContainer).toHaveBeenCalledWith("abc123");
+          expect(result).toEqual(mockResponse);
+          expect(result.container_id).toBe("abc123");
+        });
+
+        it("should handle start container error", async () => {
+          const errorMessage = "Container not found";
+          mockStartContainer.mockRejectedValue(new Error(errorMessage));
+
+          await expect(startContainer("invalid")).rejects.toThrow(errorMessage);
+        });
+      });
+
+      describe("stopContainer", () => {
+        it("should stop container successfully", async () => {
+          const mockResponse: ContainerActionResponse = {
+            code: 200,
+            message: "Container stopped successfully",
+            timestamp: "2024-01-01T00:00:00Z",
+            container_id: "abc123",
+          };
+
+          mockStopContainer.mockResolvedValue(mockResponse);
+
+          const result = await stopContainer("abc123");
+
+          expect(mockStopContainer).toHaveBeenCalledWith("abc123");
+          expect(result).toEqual(mockResponse);
+          expect(result.container_id).toBe("abc123");
+        });
+
+        it("should handle stop container error", async () => {
+          const errorMessage = "Container already stopped";
+          mockStopContainer.mockRejectedValue(new Error(errorMessage));
+
+          await expect(stopContainer("abc123")).rejects.toThrow(errorMessage);
+        });
+      });
+
+      describe("restartContainer", () => {
+        it("should restart container successfully", async () => {
+          const mockResponse: ContainerActionResponse = {
+            code: 200,
+            message: "Container restarted successfully",
+            timestamp: "2024-01-01T00:00:00Z",
+            container_id: "abc123",
+          };
+
+          mockRestartContainer.mockResolvedValue(mockResponse);
+
+          const result = await restartContainer("abc123");
+
+          expect(mockRestartContainer).toHaveBeenCalledWith("abc123");
+          expect(result).toEqual(mockResponse);
+          expect(result.container_id).toBe("abc123");
+        });
+
+        it("should handle restart container error", async () => {
+          const errorMessage = "Container not running";
+          mockRestartContainer.mockRejectedValue(new Error(errorMessage));
+
+          await expect(restartContainer("abc123")).rejects.toThrow(
+            errorMessage
+          );
+        });
+      });
+
+      describe("updateContainer", () => {
+        it("should update container successfully", async () => {
+          const mockResponse: ContainerActionResponse = {
+            code: 200,
+            message: "Container updated successfully",
+            timestamp: "2024-01-01T00:00:00Z",
+            container_id: "abc123",
+          };
+
+          mockUpdateContainer.mockResolvedValue(mockResponse);
+
+          const result = await updateContainer("abc123");
+
+          expect(mockUpdateContainer).toHaveBeenCalledWith("abc123");
+          expect(result).toEqual(mockResponse);
+          expect(result.container_id).toBe("abc123");
+        });
+
+        it("should handle update container error", async () => {
+          const errorMessage = "Failed to pull image";
+          mockUpdateContainer.mockRejectedValue(new Error(errorMessage));
+
+          await expect(updateContainer("abc123")).rejects.toThrow(errorMessage);
+        });
       });
     });
   });
