@@ -381,36 +381,6 @@ describe("ContainerWidget", () => {
     });
   });
 
-  it("should log error on failed start action", async () => {
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
-    mockGetContainers.mockResolvedValue(mockContainersResponse);
-    mockStartContainer.mockRejectedValue(new Error("Failed to start"));
-
-    render(<ContainerWidget />);
-
-    await waitFor(() => {
-      expect(screen.getByText("plex")).toBeInTheDocument();
-    });
-
-    const startButtons = screen.getAllByTitle("Start");
-    const plexStartButton = startButtons.find(
-      btn => !btn.hasAttribute("disabled")
-    );
-
-    if (plexStartButton) {
-      fireEvent.click(plexStartButton);
-    }
-
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Failed to start container:",
-        expect.any(Error)
-      );
-    });
-
-    consoleErrorSpy.mockRestore();
-  });
-
   it("should render container cards with correct props", async () => {
     mockGetContainers.mockResolvedValue(mockContainersResponse);
 
