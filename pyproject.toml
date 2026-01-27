@@ -166,6 +166,7 @@ pretty = true
 
 [[tool.mypy.overrides]]
 module = [
+    "docker.*",
     "psutil.*",
     "python_template_server.*",
 ]
