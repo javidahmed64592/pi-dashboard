@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
+from docker.errors import APIError, NotFound
 from fastapi import FastAPI, HTTPException, Request
 from python_template_server.constants import ROOT_DIR
 from python_template_server.models import ResponseCode
@@ -450,14 +451,38 @@ class PiDashboardServer(TemplateServer):
 
         :return ContainerListResponse: Response containing list of containers
         """
-        return self.container_handler.list_containers()
+        try:
+            containers = self.container_handler.list_containers()
+            return ContainerListResponse(
+                message=f"Retrieved {len(containers)} containers",
+                timestamp=ContainerListResponse.current_timestamp(),
+                containers=containers,
+            )
+        except Exception as e:
+            logger.exception("Unexpected error while listing containers")
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
 
     async def refresh_containers(self, request: Request) -> ContainerListResponse:
         """Refresh container list from Docker daemon.
 
         :return ContainerListResponse: Response containing refreshed list of containers
         """
-        return self.container_handler.list_containers()
+        try:
+            containers = self.container_handler.list_containers()
+            return ContainerListResponse(
+                message=f"Retrieved {len(containers)} containers",
+                timestamp=ContainerListResponse.current_timestamp(),
+                containers=containers,
+            )
+        except Exception as e:
+            logger.exception("Unexpected error while listing containers")
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
 
     async def start_container(self, request: Request, container_id: str) -> ContainerActionResponse:
         """Start a Docker container.
@@ -465,7 +490,32 @@ class PiDashboardServer(TemplateServer):
         :param str container_id: The container ID to start
         :return ContainerActionResponse: Response indicating success or failure
         """
-        return self.container_handler.start_container(container_id)
+        try:
+            container_name = self.container_handler.start_container(container_id)
+            return ContainerActionResponse(
+                message=f"Container {container_name} started successfully",
+                timestamp=ContainerActionResponse.current_timestamp(),
+                container_id=container_id,
+                action="start",
+            )
+        except NotFound as e:
+            logger.exception("Container not found: %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.NOT_FOUND,
+                detail=f"Container not found: {container_id}",
+            ) from e
+        except APIError as e:
+            logger.exception("Docker API error while starting container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Docker API error",
+            ) from e
+        except Exception as e:
+            logger.exception("Unexpected error while starting container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
 
     async def stop_container(self, request: Request, container_id: str) -> ContainerActionResponse:
         """Stop a Docker container.
@@ -473,7 +523,32 @@ class PiDashboardServer(TemplateServer):
         :param str container_id: The container ID to stop
         :return ContainerActionResponse: Response indicating success or failure
         """
-        return self.container_handler.stop_container(container_id)
+        try:
+            container_name = self.container_handler.stop_container(container_id)
+            return ContainerActionResponse(
+                message=f"Container {container_name} stopped successfully",
+                timestamp=ContainerActionResponse.current_timestamp(),
+                container_id=container_id,
+                action="stop",
+            )
+        except NotFound as e:
+            logger.exception("Container not found: %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.NOT_FOUND,
+                detail=f"Container not found: {container_id}",
+            ) from e
+        except APIError as e:
+            logger.exception("Docker API error while stopping container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Docker API error",
+            ) from e
+        except Exception as e:
+            logger.exception("Unexpected error while stopping container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
 
     async def restart_container(self, request: Request, container_id: str) -> ContainerActionResponse:
         """Restart a Docker container.
@@ -481,7 +556,32 @@ class PiDashboardServer(TemplateServer):
         :param str container_id: The container ID to restart
         :return ContainerActionResponse: Response indicating success or failure
         """
-        return self.container_handler.restart_container(container_id)
+        try:
+            container_name = self.container_handler.restart_container(container_id)
+            return ContainerActionResponse(
+                message=f"Container {container_name} restarted successfully",
+                timestamp=ContainerActionResponse.current_timestamp(),
+                container_id=container_id,
+                action="restart",
+            )
+        except NotFound as e:
+            logger.exception("Container not found: %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.NOT_FOUND,
+                detail=f"Container not found: {container_id}",
+            ) from e
+        except APIError as e:
+            logger.exception("Docker API error while restarting container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Docker API error",
+            ) from e
+        except Exception as e:
+            logger.exception("Unexpected error while restarting container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
 
     async def update_container(self, request: Request, container_id: str) -> ContainerActionResponse:
         """Update a Docker container by pulling latest image and recreating it.
@@ -489,4 +589,29 @@ class PiDashboardServer(TemplateServer):
         :param str container_id: The container ID to update
         :return ContainerActionResponse: Response indicating success or failure
         """
-        return self.container_handler.update_container(container_id)
+        try:
+            container_name, new_container_id = self.container_handler.update_container(container_id)
+            return ContainerActionResponse(
+                message=f"Container {container_name} updated successfully",
+                timestamp=ContainerActionResponse.current_timestamp(),
+                container_id=new_container_id,
+                action="update",
+            )
+        except NotFound as e:
+            logger.exception("Container not found: %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.NOT_FOUND,
+                detail="Container not found",
+            ) from e
+        except APIError as e:
+            logger.exception("Docker API error while updating container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Docker API error",
+            ) from e
+        except Exception as e:
+            logger.exception("Unexpected error while updating container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
