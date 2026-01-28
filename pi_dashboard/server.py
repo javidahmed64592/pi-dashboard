@@ -491,7 +491,7 @@ class PiDashboardServer(TemplateServer):
         :return ContainerActionResponse: Response indicating success or failure
         """
         try:
-            container_name = self.container_handler.start_container(container_id)
+            container_name = self.container_handler.start_container(container_id=container_id)
             return ContainerActionResponse(
                 message=f"Container {container_name} started successfully",
                 timestamp=ContainerActionResponse.current_timestamp(),
@@ -524,7 +524,7 @@ class PiDashboardServer(TemplateServer):
         :return ContainerActionResponse: Response indicating success or failure
         """
         try:
-            container_name = self.container_handler.stop_container(container_id)
+            container_name = self.container_handler.stop_container(container_id=container_id, timeout=10)
             return ContainerActionResponse(
                 message=f"Container {container_name} stopped successfully",
                 timestamp=ContainerActionResponse.current_timestamp(),
@@ -557,7 +557,7 @@ class PiDashboardServer(TemplateServer):
         :return ContainerActionResponse: Response indicating success or failure
         """
         try:
-            container_name = self.container_handler.restart_container(container_id)
+            container_name = self.container_handler.restart_container(container_id=container_id, timeout=10)
             return ContainerActionResponse(
                 message=f"Container {container_name} restarted successfully",
                 timestamp=ContainerActionResponse.current_timestamp(),
@@ -590,7 +590,9 @@ class PiDashboardServer(TemplateServer):
         :return ContainerActionResponse: Response indicating success or failure
         """
         try:
-            container_name, new_container_id = self.container_handler.update_container(container_id)
+            container_name, new_container_id = self.container_handler.update_container(
+                container_id=container_id, timeout=10
+            )
             return ContainerActionResponse(
                 message=f"Container {container_name} updated successfully",
                 timestamp=ContainerActionResponse.current_timestamp(),
