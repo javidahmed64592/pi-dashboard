@@ -91,7 +91,7 @@ class ContainerHandler:
         container = self.client.containers.get(container_id)
         container.start()
         logger.info("Started container: %s (%s)", container.name, container_id)
-        return container.name
+        return str(container.name)
 
     def stop_container(self, container_id: str, timeout: int) -> str:
         """Stop a Docker container.
@@ -105,7 +105,7 @@ class ContainerHandler:
         container = self.client.containers.get(container_id)
         container.stop(timeout=timeout)
         logger.info("Stopped container: %s (%s)", container.name, container_id)
-        return container.name
+        return str(container.name)
 
     def restart_container(self, container_id: str, timeout: int) -> str:
         """Restart a Docker container.
@@ -119,7 +119,7 @@ class ContainerHandler:
         container = self.client.containers.get(container_id)
         container.restart(timeout=timeout)
         logger.info("Restarted container: %s (%s)", container.name, container_id)
-        return container.name
+        return str(container.name)
 
     def update_container(self, container_id: str, timeout: int) -> tuple[str, str]:
         """Update a Docker container by pulling latest image and recreating it.
