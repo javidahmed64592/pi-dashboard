@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -183,9 +183,9 @@ def mock_weather_data(mock_weather_forecast_hours: list[WeatherForecastHour]) ->
 
 # Docker fixtures
 @pytest.fixture
-def mock_container() -> Mock:
+def mock_container() -> MagicMock:
     """Provide a mock Docker container."""
-    container = Mock()
+    container = MagicMock()
     container.short_id = "abc123def456"
     container.name = "test-container"
     container.status = "running"
@@ -195,7 +195,7 @@ def mock_container() -> Mock:
     }
 
     # Mock image
-    mock_image = Mock()
+    mock_image = MagicMock()
     mock_image.tags = ["test/image:latest"]
     mock_image.id = "sha256:abcdef123456"
     container.image = mock_image
@@ -218,9 +218,9 @@ def mock_container() -> Mock:
 
 
 @pytest.fixture
-def mock_docker_client(mock_container: Mock) -> Mock:
+def mock_docker_client(mock_container: MagicMock) -> MagicMock:
     """Provide a mock Docker client for testing."""
-    client = Mock()
+    client = MagicMock()
     client.ping.return_value = True
     client.containers.list.return_value = [mock_container]
     client.containers.get.return_value = mock_container
@@ -228,7 +228,7 @@ def mock_docker_client(mock_container: Mock) -> Mock:
 
 
 @pytest.fixture
-def mock_container_handler(mock_docker_client: Mock) -> ContainerHandler:
+def mock_container_handler(mock_docker_client: MagicMock) -> ContainerHandler:
     """Provide a ContainerHandler instance with mocked Docker client."""
     with (
         patch("docker.from_env", return_value=mock_docker_client),

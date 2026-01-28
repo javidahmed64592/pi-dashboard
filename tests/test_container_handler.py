@@ -1,6 +1,6 @@
 """Unit tests for the container handler module."""
 
-from unittest.mock import Mock
+from unittest.mock import MagicMock
 
 import pytest
 from docker.errors import APIError
@@ -50,7 +50,7 @@ class TestCheckDockerAvailable:
 class TestListContainers:
     """Tests for listing Docker containers."""
 
-    def test_list_containers(self, mock_container_handler: ContainerHandler, mock_container: Mock) -> None:
+    def test_list_containers(self, mock_container_handler: ContainerHandler, mock_container: MagicMock) -> None:
         """Test successfully listing containers."""
         containers = mock_container_handler.list_containers()
 
@@ -67,7 +67,7 @@ class TestListContainers:
 class TestStartContainer:
     """Tests for starting Docker containers."""
 
-    def test_start_container(self, mock_container_handler: ContainerHandler, mock_container: Mock) -> None:
+    def test_start_container(self, mock_container_handler: ContainerHandler, mock_container: MagicMock) -> None:
         """Test successfully starting a container."""
         container_name = mock_container_handler.start_container("abc123")
         assert container_name == "test-container"
@@ -77,7 +77,7 @@ class TestStartContainer:
 class TestStopContainer:
     """Tests for stopping Docker containers."""
 
-    def test_stop_container(self, mock_container_handler: ContainerHandler, mock_container: Mock) -> None:
+    def test_stop_container(self, mock_container_handler: ContainerHandler, mock_container: MagicMock) -> None:
         """Test successfully stopping a container."""
         container_name = mock_container_handler.stop_container(container_id="abc123", timeout=10)
         assert container_name == "test-container"
@@ -87,7 +87,7 @@ class TestStopContainer:
 class TestRestartContainer:
     """Tests for restarting Docker containers."""
 
-    def test_restart_container(self, mock_container_handler: ContainerHandler, mock_container: Mock) -> None:
+    def test_restart_container(self, mock_container_handler: ContainerHandler, mock_container: MagicMock) -> None:
         """Test successfully restarting a container."""
         container_name = mock_container_handler.restart_container(container_id="abc123", timeout=10)
         assert container_name == "test-container"
@@ -97,9 +97,11 @@ class TestRestartContainer:
 class TestUpdateContainer:
     """Tests for updating Docker containers."""
 
-    def test_update_container_success(self, mock_container_handler: ContainerHandler, mock_container: Mock) -> None:
+    def test_update_container_success(
+        self, mock_container_handler: ContainerHandler, mock_container: MagicMock
+    ) -> None:
         """Test successfully updating a container."""
-        new_container = Mock()
+        new_container = MagicMock()
         new_container.short_id = "new123"
         new_container.name = "test-container"
         mock_container_handler.client.containers.run.return_value = new_container
