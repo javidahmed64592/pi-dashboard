@@ -3,6 +3,7 @@
 import logging
 
 import docker
+from docker.errors import APIError
 from fastapi import HTTPException, status
 
 from pi_dashboard.models import DockerContainer
@@ -56,10 +57,9 @@ class ContainerHandler:
         :return list[DockerContainer]: List of containers
         """
         if not self.client:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Docker daemon not available",
-            )
+            msg = "Docker daemon not available"
+            logger.error(msg)
+            raise APIError(msg)
 
         containers = self.client.containers.list(all=True)
         docker_containers: list[DockerContainer] = []
@@ -90,10 +90,9 @@ class ContainerHandler:
         :return str: The name of the started container
         """
         if not self.client:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Docker daemon not available",
-            )
+            msg = "Docker daemon not available"
+            logger.error(msg)
+            raise APIError(msg)
 
         container = self.client.containers.get(container_id)
         container.start()
@@ -108,10 +107,9 @@ class ContainerHandler:
         :return str: The name of the stopped container
         """
         if not self.client:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Docker daemon not available",
-            )
+            msg = "Docker daemon not available"
+            logger.error(msg)
+            raise APIError(msg)
 
         container = self.client.containers.get(container_id)
         container.stop(timeout=timeout)
@@ -126,10 +124,9 @@ class ContainerHandler:
         :return str: The name of the restarted container
         """
         if not self.client:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Docker daemon not available",
-            )
+            msg = "Docker daemon not available"
+            logger.error(msg)
+            raise APIError(msg)
 
         container = self.client.containers.get(container_id)
         container.restart(timeout=timeout)
@@ -143,10 +140,9 @@ class ContainerHandler:
         :return tuple[str, str]: Tuple of (container_name, new_container_id)
         """
         if not self.client:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Docker daemon not available",
-            )
+            msg = "Docker daemon not available"
+            logger.error(msg)
+            raise APIError(msg)
 
         # Get container details
         container = self.client.containers.get(container_id)

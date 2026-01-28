@@ -507,7 +507,7 @@ class PiDashboardServer(TemplateServer):
         except APIError as e:
             logger.exception("Docker API error while starting container %s", container_id)
             raise HTTPException(
-                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                status_code=ResponseCode.SERVICE_UNAVAILABLE,
                 detail="Docker API error",
             ) from e
         except Exception as e:
@@ -540,7 +540,7 @@ class PiDashboardServer(TemplateServer):
         except APIError as e:
             logger.exception("Docker API error while stopping container %s", container_id)
             raise HTTPException(
-                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                status_code=ResponseCode.SERVICE_UNAVAILABLE,
                 detail="Docker API error",
             ) from e
         except Exception as e:
@@ -573,7 +573,7 @@ class PiDashboardServer(TemplateServer):
         except APIError as e:
             logger.exception("Docker API error while restarting container %s", container_id)
             raise HTTPException(
-                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                status_code=ResponseCode.SERVICE_UNAVAILABLE,
                 detail="Docker API error",
             ) from e
         except Exception as e:
@@ -606,7 +606,7 @@ class PiDashboardServer(TemplateServer):
         except APIError as e:
             logger.exception("Docker API error while updating container %s", container_id)
             raise HTTPException(
-                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                status_code=ResponseCode.SERVICE_UNAVAILABLE,
                 detail="Docker API error",
             ) from e
         except Exception as e:
