@@ -186,7 +186,7 @@ def mock_weather_data(mock_weather_forecast_hours: list[WeatherForecastHour]) ->
 def mock_container() -> MagicMock:
     """Provide a mock Docker container."""
     container = MagicMock()
-    container.short_id = "abc123def456"
+    container.short_id = "container_short_id"
     container.name = "test-container"
     container.status = "running"
     container.ports = {
@@ -224,6 +224,13 @@ def mock_docker_client(mock_container: MagicMock) -> MagicMock:
     client.ping.return_value = True
     client.containers.list.return_value = [mock_container]
     client.containers.get.return_value = mock_container
+
+    # Mock the containers.run() method to return a container with proper short_id
+    new_container = MagicMock()
+    new_container.short_id = "new_container_short_id"
+    new_container.name = "test-container"
+    client.containers.run.return_value = new_container
+
     return client
 
 

@@ -57,7 +57,7 @@ class TestListContainers:
         assert len(containers) == 1
 
         container = containers[0]
-        assert container.container_id == "abc123def456"
+        assert container.container_id == "container_short_id"
         assert container.name == "test-container"
         assert container.image == "test/image:latest"
         assert container.status == "running"
@@ -101,15 +101,10 @@ class TestUpdateContainer:
         self, mock_container_handler: ContainerHandler, mock_container: MagicMock
     ) -> None:
         """Test successfully updating a container."""
-        new_container = MagicMock()
-        new_container.short_id = "new123"
-        new_container.name = "test-container"
-        mock_container_handler.client.containers.run.return_value = new_container
-
         container_name, new_container_id = mock_container_handler.update_container(container_id="abc123", timeout=10)
 
         assert container_name == "test-container"
-        assert new_container_id == "new123"
+        assert new_container_id == "new_container_short_id"
 
         # Verify the update process
         mock_container_handler.client.images.pull.assert_called_once_with("test/image:latest")
