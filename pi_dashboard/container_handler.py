@@ -4,7 +4,6 @@ import logging
 
 import docker
 from docker.errors import APIError
-from fastapi import HTTPException, status
 
 from pi_dashboard.models import DockerContainer
 
@@ -16,21 +15,16 @@ class ContainerHandler:
 
     def __init__(self) -> None:
         """Initialize the ContainerHandler."""
-        self.client: docker.DockerClient | None = None
-        self._initialize_client()
-
-    def _initialize_client(self) -> None:
-        """Initialize the Docker client."""
         try:
             self.client = docker.from_env()
-            # Test connection
             self.client.ping()
             logger.info("Successfully connected to Docker daemon")
         except Exception:
             logger.exception("Failed to connect to Docker daemon")
             self.client = None
 
-    def _extract_primary_port(self, ports: dict) -> str | None:
+    @staticmethod
+    def _extract_primary_port(ports: dict) -> str | None:
         """Extract the primary (first) port from Docker container.
 
         :param dict ports: Docker ports dictionary
@@ -43,7 +37,6 @@ class ContainerHandler:
             if host_bindings is None:
                 continue
 
-            # Return the first host port found
             for binding in host_bindings:
                 host_port = binding.get("HostPort", "")
                 if host_port:
@@ -51,25 +44,29 @@ class ContainerHandler:
 
         return None
 
-    def list_containers(self) -> list[DockerContainer]:
-        """List all Docker containers.
+    def _check_docker_available(self) -> None:
+        """Check if Docker daemon is available.
 
-        :return list[DockerContainer]: List of containers
+        :raises APIError: If Docker daemon is not available
         """
         if not self.client:
             msg = "Docker daemon not available"
             logger.error(msg)
             raise APIError(msg)
 
+    def list_containers(self) -> list[DockerContainer]:
+        """List all Docker containers.
+
+        :return list[DockerContainer]: List of containers
+        """
+        self._check_docker_available()
+
         containers = self.client.containers.list(all=True)
         docker_containers: list[DockerContainer] = []
 
         for container in containers:
-            # Get image name with tag
             image_name = container.image.tags[0] if container.image.tags else container.image.id[:12]
-
-            # Extract primary port
-            primary_port = self._extract_primary_port(container.ports)
+            primary_port = ContainerHandler._extract_primary_port(container.ports)
 
             docker_containers.append(
                 DockerContainer(
@@ -89,72 +86,59 @@ class ContainerHandler:
         :param str container_id: The container ID to start
         :return str: The name of the started container
         """
-        if not self.client:
-            msg = "Docker daemon not available"
-            logger.error(msg)
-            raise APIError(msg)
+        self._check_docker_available()
 
         container = self.client.containers.get(container_id)
         container.start()
         logger.info("Started container: %s (%s)", container.name, container_id)
         return container.name
 
-    def stop_container(self, container_id: str, timeout: int = 10) -> str:
+    def stop_container(self, container_id: str, timeout: int) -> str:
         """Stop a Docker container.
 
         :param str container_id: The container ID to stop
         :param int timeout: Timeout in seconds before forcefully killing the container
         :return str: The name of the stopped container
         """
-        if not self.client:
-            msg = "Docker daemon not available"
-            logger.error(msg)
-            raise APIError(msg)
+        self._check_docker_available()
 
         container = self.client.containers.get(container_id)
         container.stop(timeout=timeout)
         logger.info("Stopped container: %s (%s)", container.name, container_id)
         return container.name
 
-    def restart_container(self, container_id: str, timeout: int = 10) -> str:
+    def restart_container(self, container_id: str, timeout: int) -> str:
         """Restart a Docker container.
 
         :param str container_id: The container ID to restart
         :param int timeout: Timeout in seconds before forcefully killing the container
         :return str: The name of the restarted container
         """
-        if not self.client:
-            msg = "Docker daemon not available"
-            logger.error(msg)
-            raise APIError(msg)
+        self._check_docker_available()
 
         container = self.client.containers.get(container_id)
         container.restart(timeout=timeout)
         logger.info("Restarted container: %s (%s)", container.name, container_id)
         return container.name
 
-    def update_container(self, container_id: str) -> tuple[str, str]:
+    def update_container(self, container_id: str, timeout: int) -> tuple[str, str]:
         """Update a Docker container by pulling latest image and recreating it.
 
         :param str container_id: The container ID to update
+        :param int timeout: Timeout in seconds before forcefully killing the container
         :return tuple[str, str]: Tuple of (container_name, new_container_id)
         """
-        if not self.client:
-            msg = "Docker daemon not available"
-            logger.error(msg)
-            raise APIError(msg)
+        self._check_docker_available()
 
-        # Get container details
         container = self.client.containers.get(container_id)
         container_name = container.name
 
         # Get image information
         image_tags = container.image.tags
         if not image_tags:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot update container: image has no tags",
-            )
+            msg = f"Container {container_name} has an image with no tags; cannot update."
+            logger.error(msg)
+            raise APIError(msg)
 
         image_name = image_tags[0]
 
@@ -163,14 +147,11 @@ class ContainerHandler:
         host_config = container.attrs["HostConfig"]
 
         logger.info("Pulling latest image: %s", image_name)
-
-        # Pull latest image
         self.client.images.pull(image_name)
 
-        logger.info("Stopping and removing container: %s", container_name)
-
         # Stop and remove old container
-        container.stop(timeout=10)
+        logger.info("Stopping and removing container: %s", container_name)
+        container.stop(timeout=timeout)
         container.remove()
 
         logger.info("Creating new container with updated image: %s", container_name)
