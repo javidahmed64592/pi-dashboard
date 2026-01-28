@@ -2,16 +2,12 @@
 
 from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from python_template_server.models import ResponseCode
 
 from pi_dashboard.container_handler import ContainerHandler
 from pi_dashboard.models import (
-    ContainerActionResponse,
-    ContainerListResponse,
-    DockerContainer,
     MetricsConfig,
     Note,
     NotesCollection,
@@ -185,89 +181,63 @@ def mock_weather_data(mock_weather_forecast_hours: list[WeatherForecastHour]) ->
     )
 
 
-# Container model fixtures
+# Docker fixtures
 @pytest.fixture
-def mock_docker_containers() -> list[DockerContainer]:
-    """Provide a list of DockerContainer instances for testing."""
-    return [
-        DockerContainer.model_validate(
-            {
-                "container_id": "abc123def456",
-                "name": "pi-dashboard",
-                "image": "ghcr.io/user/pi-dashboard:latest",
-                "status": "running",
-                "port": "443",
-            }
-        ),
-        DockerContainer.model_validate(
-            {
-                "container_id": "def456ghi789",
-                "name": "homebridge",
-                "image": "homebridge/homebridge:latest",
-                "status": "running",
-                "port": "8581",
-            }
-        ),
-    ]
+def mock_container() -> MagicMock:
+    """Provide a mock Docker container."""
+    container = MagicMock()
+    container.short_id = "container_short_id"
+    container.name = "test-container"
+    container.status = "running"
+    container.ports = {
+        "443/tcp": [{"HostIp": "0.0.0.0", "HostPort": "443"}],  # noqa: S104
+        "80/tcp": [{"HostIp": "0.0.0.0", "HostPort": "8080"}],  # noqa: S104
+    }
+
+    # Mock image
+    mock_image = MagicMock()
+    mock_image.tags = ["test/image:latest"]
+    mock_image.id = "sha256:abcdef123456"
+    container.image = mock_image
+
+    # Mock attrs
+    container.attrs = {
+        "Created": "2024-01-01T00:00:00.000000000Z",
+        "Config": {
+            "Env": ["ENV_VAR=value"],
+        },
+        "HostConfig": {
+            "PortBindings": {"443/tcp": [{"HostPort": "443"}]},
+            "Binds": ["/data:/app/data"],
+            "NetworkMode": "bridge",
+            "RestartPolicy": {"Name": "unless-stopped"},
+        },
+    }
+
+    return container
 
 
 @pytest.fixture
-def mock_container_handler(mock_docker_containers: list[DockerContainer]) -> ContainerHandler:
-    """Provide a ContainerHandler instance for testing."""
-    handler = ContainerHandler()
-    handler.client = MagicMock()
+def mock_docker_client(mock_container: MagicMock) -> MagicMock:
+    """Provide a mock Docker client for testing."""
+    client = MagicMock()
+    client.ping.return_value = True
+    client.containers.list.return_value = [mock_container]
+    client.containers.get.return_value = mock_container
 
-    # Mock list_containers method
-    def mock_list_containers() -> ContainerListResponse:
-        return ContainerListResponse(
-            code=ResponseCode.OK,
-            message=f"Retrieved {len(mock_docker_containers)} containers",
-            timestamp="2026-01-27T00:00:00Z",
-            containers=mock_docker_containers,
-            docker_available=True,
-        )
+    # Mock the containers.run() method to return a container with proper short_id
+    new_container = MagicMock()
+    new_container.short_id = "new_container_short_id"
+    new_container.name = "test-container"
+    client.containers.run.return_value = new_container
 
-    # Mock action methods
-    def mock_start_container(container_id: str) -> ContainerActionResponse:
-        return ContainerActionResponse(
-            code=ResponseCode.OK,
-            message=f"Container started: {container_id}",
-            timestamp="2026-01-27T00:00:00Z",
-            container_id=container_id,
-            action="start",
-        )
+    return client
 
-    def mock_stop_container(container_id: str) -> ContainerActionResponse:
-        return ContainerActionResponse(
-            code=ResponseCode.OK,
-            message=f"Container stopped: {container_id}",
-            timestamp="2026-01-27T00:00:00Z",
-            container_id=container_id,
-            action="stop",
-        )
 
-    def mock_restart_container(container_id: str) -> ContainerActionResponse:
-        return ContainerActionResponse(
-            code=ResponseCode.OK,
-            message=f"Container restarted: {container_id}",
-            timestamp="2026-01-27T00:00:00Z",
-            container_id=container_id,
-            action="restart",
-        )
-
-    def mock_update_container(container_id: str) -> ContainerActionResponse:
-        return ContainerActionResponse(
-            code=ResponseCode.OK,
-            message=f"Container updated: {container_id}",
-            timestamp="2026-01-27T00:00:00Z",
-            container_id=container_id,
-            action="update",
-        )
-
-    handler.list_containers = Mock(side_effect=mock_list_containers)  # type: ignore[method-assign]
-    handler.start_container = Mock(side_effect=mock_start_container)  # type: ignore[method-assign]
-    handler.stop_container = Mock(side_effect=mock_stop_container)  # type: ignore[method-assign]
-    handler.restart_container = Mock(side_effect=mock_restart_container)  # type: ignore[method-assign]
-    handler.update_container = Mock(side_effect=mock_update_container)  # type: ignore[method-assign]
-
-    return handler
+@pytest.fixture
+def mock_container_handler(mock_docker_client: MagicMock) -> ContainerHandler:
+    """Provide a ContainerHandler instance with mocked Docker client."""
+    with (
+        patch("docker.from_env", return_value=mock_docker_client),
+    ):
+        return ContainerHandler()

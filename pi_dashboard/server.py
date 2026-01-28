@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
+from docker.errors import APIError, NotFound
 from fastapi import FastAPI, HTTPException, Request
 from python_template_server.constants import ROOT_DIR
 from python_template_server.models import ResponseCode
@@ -282,7 +283,6 @@ class PiDashboardServer(TemplateServer):
         """
         info = get_system_info()
         return GetSystemInfoResponse(
-            code=ResponseCode.OK,
             message="Retrieved system info successfully",
             timestamp=GetSystemInfoResponse.current_timestamp(),
             info=info,
@@ -295,7 +295,6 @@ class PiDashboardServer(TemplateServer):
         """
         metrics = get_system_metrics()
         return GetSystemMetricsResponse(
-            code=ResponseCode.OK,
             message="Retrieved system metrics successfully",
             timestamp=GetSystemMetricsResponse.current_timestamp(),
             metrics=metrics,
@@ -312,7 +311,6 @@ class PiDashboardServer(TemplateServer):
             PiDashboardServer._current_timestamp_int(),
         )
         return GetSystemMetricsHistoryResponse(
-            code=ResponseCode.OK,
             message="Retrieved system metrics history successfully",
             timestamp=GetSystemMetricsHistoryResponse.current_timestamp(),
             history=SystemMetricsHistory(history=entries),
@@ -324,7 +322,6 @@ class PiDashboardServer(TemplateServer):
         :return GetNotesResponse: Response containing all notes
         """
         return GetNotesResponse(
-            code=ResponseCode.OK,
             message="Retrieved notes successfully",
             timestamp=GetNotesResponse.current_timestamp(),
             notes=self.notes_handler.get_all_notes(),
@@ -338,7 +335,6 @@ class PiDashboardServer(TemplateServer):
         note_request = CreateNoteRequest.model_validate(await request.json())
         current_timestamp = CreateNoteResponse.current_timestamp()
         return CreateNoteResponse(
-            code=ResponseCode.OK,
             message="Created note successfully",
             timestamp=current_timestamp,
             note=self.notes_handler.create_note(note_request.title, note_request.content, current_timestamp),
@@ -357,7 +353,6 @@ class PiDashboardServer(TemplateServer):
         if note is None:
             raise HTTPException(status_code=ResponseCode.NOT_FOUND, detail=f"Note not found: {note_id}")
         return UpdateNoteResponse(
-            code=ResponseCode.OK,
             message="Updated note successfully",
             timestamp=current_timestamp,
             note=note,
@@ -374,7 +369,6 @@ class PiDashboardServer(TemplateServer):
         if not success:
             raise HTTPException(status_code=ResponseCode.NOT_FOUND, detail=f"Note not found: {note_id}")
         return DeleteNoteResponse(
-            code=ResponseCode.OK,
             message="Deleted note successfully",
             timestamp=DeleteNoteResponse.current_timestamp(),
         )
@@ -388,7 +382,6 @@ class PiDashboardServer(TemplateServer):
         try:
             weather_data = await self.weather_handler.get_weather()
             return GetWeatherResponse(
-                code=ResponseCode.OK,
                 message="Retrieved weather data successfully",
                 timestamp=GetWeatherResponse.current_timestamp(),
                 weather=weather_data,
@@ -405,7 +398,6 @@ class PiDashboardServer(TemplateServer):
         :return GetWeatherLocationResponse: Response containing weather location information
         """
         return GetWeatherLocationResponse(
-            code=ResponseCode.OK,
             message="Retrieved weather location successfully",
             timestamp=GetWeatherLocationResponse.current_timestamp(),
             latitude=self.config.weather.latitude,
@@ -447,7 +439,6 @@ class PiDashboardServer(TemplateServer):
         logger.info("Weather location updated to: %s (%.4f, %.4f)", location_request.location, latitude, longitude)
 
         return GetWeatherLocationResponse(
-            code=ResponseCode.OK,
             message="Updated weather location successfully",
             timestamp=GetWeatherLocationResponse.current_timestamp(),
             latitude=self.config.weather.latitude,
@@ -460,14 +451,38 @@ class PiDashboardServer(TemplateServer):
 
         :return ContainerListResponse: Response containing list of containers
         """
-        return self.container_handler.list_containers()
+        try:
+            containers = self.container_handler.list_containers()
+            return ContainerListResponse(
+                message=f"Retrieved {len(containers)} containers",
+                timestamp=ContainerListResponse.current_timestamp(),
+                containers=containers,
+            )
+        except Exception as e:
+            logger.exception("Unexpected error while listing containers")
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
 
     async def refresh_containers(self, request: Request) -> ContainerListResponse:
         """Refresh container list from Docker daemon.
 
         :return ContainerListResponse: Response containing refreshed list of containers
         """
-        return self.container_handler.list_containers()
+        try:
+            containers = self.container_handler.list_containers()
+            return ContainerListResponse(
+                message=f"Retrieved {len(containers)} containers",
+                timestamp=ContainerListResponse.current_timestamp(),
+                containers=containers,
+            )
+        except Exception as e:
+            logger.exception("Unexpected error while listing containers")
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
 
     async def start_container(self, request: Request, container_id: str) -> ContainerActionResponse:
         """Start a Docker container.
@@ -475,7 +490,32 @@ class PiDashboardServer(TemplateServer):
         :param str container_id: The container ID to start
         :return ContainerActionResponse: Response indicating success or failure
         """
-        return self.container_handler.start_container(container_id)
+        try:
+            container_name = self.container_handler.start_container(container_id=container_id)
+            return ContainerActionResponse(
+                message=f"Container {container_name} started successfully",
+                timestamp=ContainerActionResponse.current_timestamp(),
+                container_id=container_id,
+                action="start",
+            )
+        except NotFound as e:
+            logger.exception("Container not found: %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.NOT_FOUND,
+                detail=f"Container not found: {container_id}",
+            ) from e
+        except APIError as e:
+            logger.exception("Docker API error while starting container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.SERVICE_UNAVAILABLE,
+                detail="Docker API error",
+            ) from e
+        except Exception as e:
+            logger.exception("Unexpected error while starting container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
 
     async def stop_container(self, request: Request, container_id: str) -> ContainerActionResponse:
         """Stop a Docker container.
@@ -483,7 +523,32 @@ class PiDashboardServer(TemplateServer):
         :param str container_id: The container ID to stop
         :return ContainerActionResponse: Response indicating success or failure
         """
-        return self.container_handler.stop_container(container_id)
+        try:
+            container_name = self.container_handler.stop_container(container_id=container_id, timeout=10)
+            return ContainerActionResponse(
+                message=f"Container {container_name} stopped successfully",
+                timestamp=ContainerActionResponse.current_timestamp(),
+                container_id=container_id,
+                action="stop",
+            )
+        except NotFound as e:
+            logger.exception("Container not found: %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.NOT_FOUND,
+                detail=f"Container not found: {container_id}",
+            ) from e
+        except APIError as e:
+            logger.exception("Docker API error while stopping container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.SERVICE_UNAVAILABLE,
+                detail="Docker API error",
+            ) from e
+        except Exception as e:
+            logger.exception("Unexpected error while stopping container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
 
     async def restart_container(self, request: Request, container_id: str) -> ContainerActionResponse:
         """Restart a Docker container.
@@ -491,7 +556,32 @@ class PiDashboardServer(TemplateServer):
         :param str container_id: The container ID to restart
         :return ContainerActionResponse: Response indicating success or failure
         """
-        return self.container_handler.restart_container(container_id)
+        try:
+            container_name = self.container_handler.restart_container(container_id=container_id, timeout=10)
+            return ContainerActionResponse(
+                message=f"Container {container_name} restarted successfully",
+                timestamp=ContainerActionResponse.current_timestamp(),
+                container_id=container_id,
+                action="restart",
+            )
+        except NotFound as e:
+            logger.exception("Container not found: %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.NOT_FOUND,
+                detail=f"Container not found: {container_id}",
+            ) from e
+        except APIError as e:
+            logger.exception("Docker API error while restarting container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.SERVICE_UNAVAILABLE,
+                detail="Docker API error",
+            ) from e
+        except Exception as e:
+            logger.exception("Unexpected error while restarting container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
 
     async def update_container(self, request: Request, container_id: str) -> ContainerActionResponse:
         """Update a Docker container by pulling latest image and recreating it.
@@ -499,4 +589,31 @@ class PiDashboardServer(TemplateServer):
         :param str container_id: The container ID to update
         :return ContainerActionResponse: Response indicating success or failure
         """
-        return self.container_handler.update_container(container_id)
+        try:
+            container_name, new_container_id = self.container_handler.update_container(
+                container_id=container_id, timeout=10
+            )
+            return ContainerActionResponse(
+                message=f"Container {container_name} updated successfully",
+                timestamp=ContainerActionResponse.current_timestamp(),
+                container_id=new_container_id,
+                action="update",
+            )
+        except NotFound as e:
+            logger.exception("Container not found: %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.NOT_FOUND,
+                detail="Container not found",
+            ) from e
+        except APIError as e:
+            logger.exception("Docker API error while updating container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.SERVICE_UNAVAILABLE,
+                detail="Docker API error",
+            ) from e
+        except Exception as e:
+            logger.exception("Unexpected error while updating container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
