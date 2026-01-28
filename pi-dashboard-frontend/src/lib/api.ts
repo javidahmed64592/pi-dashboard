@@ -89,10 +89,6 @@ const extractErrorMessage = (error: unknown): string => {
   return "An unexpected error occurred";
 };
 
-const isSuccessResponse = (data: { code?: number }): boolean => {
-  return data.code !== undefined && data.code >= 200 && data.code < 300;
-};
-
 // API functions
 export const getHealth = async (): Promise<HealthResponse> => {
   try {
@@ -110,13 +106,7 @@ export const login = async (apiKey: string): Promise<LoginResponse> => {
         "X-API-KEY": apiKey,
       },
     });
-    const data = response.data;
-
-    if (!isSuccessResponse(data)) {
-      throw new Error(data.message || "Login failed");
-    }
-
-    return data;
+    return response.data;
   } catch (error) {
     throw new Error(extractErrorMessage(error));
   }
@@ -319,13 +309,9 @@ export function useHealthStatus(): HealthStatus {
 
     const checkHealth = async () => {
       try {
-        const data = await getHealth();
+        await getHealth();
         if (isMounted) {
-          if (data.status === "healthy") {
-            setStatus("online");
-          } else {
-            setStatus("offline");
-          }
+          setStatus("online");
         }
       } catch {
         if (isMounted) {

@@ -2,7 +2,6 @@
 
 // Base response types
 export interface BaseResponse {
-  code: number;
   message: string;
   timestamp: string;
 }
@@ -83,9 +82,7 @@ export interface DockerContainer {
 }
 
 // Response types
-export interface HealthResponse extends BaseResponse {
-  status: string;
-}
+export interface HealthResponse extends BaseResponse {}
 
 export interface LoginResponse extends BaseResponse {}
 
@@ -101,15 +98,19 @@ export interface GetSystemMetricsHistoryResponse extends BaseResponse {
   history: SystemMetricsHistory;
 }
 
-export interface CreateNoteRequest {
-  title: string;
-  content: string;
+export interface GetNotesResponse extends BaseResponse {
+  notes: NotesCollection;
 }
 
-export interface UpdateNoteRequest {
-  title?: string;
-  content?: string;
+export interface CreateNoteResponse extends BaseResponse {
+  note: Note;
 }
+
+export interface UpdateNoteResponse extends BaseResponse {
+  note: Note;
+}
+
+export interface DeleteNoteResponse extends BaseResponse {}
 
 export interface GetWeatherResponse extends BaseResponse {
   weather: WeatherData;
@@ -130,22 +131,18 @@ export interface ContainerActionResponse extends BaseResponse {
 }
 
 // Request types
-export interface GetNotesResponse extends BaseResponse {
-  notes: NotesCollection;
-}
-
-export interface CreateNoteResponse extends BaseResponse {
-  note: Note;
-}
-
-export interface UpdateNoteResponse extends BaseResponse {
-  note: Note;
-}
-
-export interface DeleteNoteResponse extends BaseResponse {}
-
 export interface GetSystemMetricsHistoryRequest {
   last_n_seconds: number;
+}
+
+export interface CreateNoteRequest {
+  title: string;
+  content: string;
+}
+
+export interface UpdateNoteRequest {
+  title?: string;
+  content?: string;
 }
 
 export interface UpdateWeatherLocationRequest {

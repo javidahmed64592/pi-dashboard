@@ -117,10 +117,8 @@ describe("API Tests", () => {
   describe("health", () => {
     it("should fetch health status successfully", async () => {
       const mockHealth: HealthResponse = {
-        code: 200,
         message: "Server is healthy",
         timestamp: "2023-01-01T00:00:00Z",
-        status: "healthy",
       };
 
       mockGetHealth.mockResolvedValue(mockHealth);
@@ -129,7 +127,6 @@ describe("API Tests", () => {
 
       expect(mockGetHealth).toHaveBeenCalled();
       expect(health).toEqual(mockHealth);
-      expect(health.status).toBe("healthy");
     });
 
     it("should handle health check error", async () => {
@@ -151,7 +148,6 @@ describe("API Tests", () => {
   describe("login", () => {
     it("should successfully login with valid API key", async () => {
       const mockResponse: LoginResponse = {
-        code: 200,
         message: "Login successful.",
         timestamp: "2023-01-01T00:00:00Z",
       };
@@ -206,7 +202,6 @@ describe("API Tests", () => {
     describe("getNotes", () => {
       it("should fetch notes successfully", async () => {
         const mockResponse: GetNotesResponse = {
-          code: 200,
           message: "Retrieved notes successfully",
           timestamp: "2024-01-01T00:00:00Z",
           notes: { notes: [mockNote1, mockNote2] },
@@ -232,7 +227,6 @@ describe("API Tests", () => {
     describe("createNote", () => {
       it("should create a note successfully", async () => {
         const mockResponse: CreateNoteResponse = {
-          code: 200,
           message: "Created note successfully",
           timestamp: "2024-01-01T00:00:00Z",
           note: mockNote1,
@@ -269,7 +263,6 @@ describe("API Tests", () => {
       it("should update a note successfully", async () => {
         const updatedNote = { ...mockNote1, title: "Updated Title" };
         const mockResponse: UpdateNoteResponse = {
-          code: 200,
           message: "Updated note successfully",
           timestamp: "2024-01-01T00:00:00Z",
           note: updatedNote,
@@ -288,7 +281,6 @@ describe("API Tests", () => {
       it("should update note content only", async () => {
         const updatedNote = { ...mockNote1, content: "New content" };
         const mockResponse: UpdateNoteResponse = {
-          code: 200,
           message: "Updated note successfully",
           timestamp: "2024-01-01T00:00:00Z",
           note: updatedNote,
@@ -315,7 +307,6 @@ describe("API Tests", () => {
     describe("deleteNote", () => {
       it("should delete a note successfully", async () => {
         const mockResponse: DeleteNoteResponse = {
-          code: 200,
           message: "Deleted note successfully",
           timestamp: "2024-01-01T00:00:00Z",
         };
@@ -368,7 +359,6 @@ describe("API Tests", () => {
     describe("getWeather", () => {
       it("should fetch weather data successfully", async () => {
         const mockResponse: GetWeatherResponse = {
-          code: 200,
           message: "Retrieved weather successfully",
           timestamp: "2024-01-01T00:00:00Z",
           weather: mockWeatherData,
@@ -396,7 +386,6 @@ describe("API Tests", () => {
     describe("getWeatherLocation", () => {
       it("should fetch weather location successfully", async () => {
         const mockResponse: GetWeatherLocationResponse = {
-          code: 200,
           message: "Retrieved location successfully",
           timestamp: "2024-01-01T00:00:00Z",
           location_name: "Test Location",
@@ -426,7 +415,6 @@ describe("API Tests", () => {
     describe("updateWeatherLocation", () => {
       it("should update weather location successfully", async () => {
         const mockResponse: GetWeatherLocationResponse = {
-          code: 200,
           message: "Updated location successfully",
           timestamp: "2024-01-01T00:00:00Z",
           location_name: "New Location",
@@ -484,7 +472,6 @@ describe("API Tests", () => {
       describe("getContainers", () => {
         it("should fetch containers successfully", async () => {
           const mockResponse: GetContainersResponse = {
-            code: 200,
             message: "Retrieved containers successfully",
             timestamp: "2024-01-01T00:00:00Z",
             containers: mockContainers,
@@ -511,7 +498,6 @@ describe("API Tests", () => {
       describe("refreshContainers", () => {
         it("should refresh containers successfully", async () => {
           const mockResponse: GetContainersResponse = {
-            code: 200,
             message: "Refreshed containers successfully",
             timestamp: "2024-01-01T00:00:00Z",
             containers: mockContainers,
@@ -537,7 +523,6 @@ describe("API Tests", () => {
       describe("startContainer", () => {
         it("should start container successfully", async () => {
           const mockResponse: ContainerActionResponse = {
-            code: 200,
             message: "Container started successfully",
             timestamp: "2024-01-01T00:00:00Z",
             container_id: "abc123",
@@ -563,7 +548,6 @@ describe("API Tests", () => {
       describe("stopContainer", () => {
         it("should stop container successfully", async () => {
           const mockResponse: ContainerActionResponse = {
-            code: 200,
             message: "Container stopped successfully",
             timestamp: "2024-01-01T00:00:00Z",
             container_id: "abc123",
@@ -589,7 +573,6 @@ describe("API Tests", () => {
       describe("restartContainer", () => {
         it("should restart container successfully", async () => {
           const mockResponse: ContainerActionResponse = {
-            code: 200,
             message: "Container restarted successfully",
             timestamp: "2024-01-01T00:00:00Z",
             container_id: "abc123",
@@ -617,7 +600,6 @@ describe("API Tests", () => {
       describe("updateContainer", () => {
         it("should update container successfully", async () => {
           const mockResponse: ContainerActionResponse = {
-            code: 200,
             message: "Container updated successfully",
             timestamp: "2024-01-01T00:00:00Z",
             container_id: "abc123",
