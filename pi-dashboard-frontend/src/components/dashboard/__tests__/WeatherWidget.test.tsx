@@ -43,7 +43,6 @@ describe("WeatherWidget", () => {
   };
 
   const mockWeatherResponse: GetWeatherResponse = {
-    code: 200,
     message: "Retrieved weather successfully",
     timestamp: "2024-01-01T00:00:00Z",
     weather: mockWeatherData,

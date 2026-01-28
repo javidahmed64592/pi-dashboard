@@ -62,14 +62,12 @@ describe("ContainerWidget", () => {
   ];
 
   const mockContainersResponse: GetContainersResponse = {
-    code: 200,
     message: "Retrieved containers successfully",
     timestamp: "2024-01-01T00:00:00Z",
     containers: mockContainers,
   };
 
   const mockActionResponse: ContainerActionResponse = {
-    code: 200,
     message: "Action completed successfully",
     timestamp: "2024-01-01T00:00:00Z",
     container_id: "abc123",
