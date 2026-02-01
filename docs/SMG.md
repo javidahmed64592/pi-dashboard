@@ -30,9 +30,13 @@ This document outlines how to configure and setup a development environment to w
 
 ```
 pi_dashboard/
-├── main.py               # Application entry point
-├── models.py             # Pydantic models (config + API request/response)
-└── server.py             # PiDashboardServer class (extends TemplateServer)
+├── container_handler.py       # Docker containers handler
+├── main.py                    # Application entry point
+├── models.py                  # Pydantic models
+├── notes_handler.py           # Dashboard notes handler
+├── server.py                  # PiDashboardServer class (extends TemplateServer)
+├── system_metrics_handler.py  # System info and metrics handler
+└── weather_handler.py         # Weather API handler
 ```
 
 ### Installing Dependencies
@@ -54,7 +58,7 @@ uv sync --extra dev
 After installing dev dependencies, set up pre-commit hooks:
 
 ```sh
-    uv run pre-commit install
+uv run pre-commit install
 ```
 
 ### Setting Up Authentication
@@ -62,7 +66,9 @@ After installing dev dependencies, set up pre-commit hooks:
 Before running the server, you need to generate an API authentication token.
 
 ```sh
+mv .env.example .env
 uv run generate-new-token
+# Optionally edit the HOST and PORT variables
 ```
 
 This command:
@@ -76,7 +82,7 @@ This command:
 Start the FastAPI server:
 
 ```sh
-uv run python-template-server
+uv run pi-dashboard
 ```
 
 The backend will be available at `https://localhost:443/api` by default.
@@ -94,6 +100,8 @@ curl -k https://localhost:443/api/health
 curl -k -H "X-API-Key: your-token-here" https://localhost:443/api/login
 ```
 
+See the [API documentation](./API.md) for more information about the endpoints.
+
 ### Testing, Linting, and Type Checking
 
 - **Run all pre-commit checks:** `uv run pre-commit run --all-files`
@@ -101,7 +109,7 @@ curl -k -H "X-API-Key: your-token-here" https://localhost:443/api/login
 - **Format code:** `uv run ruff format .`
 - **Type check:** `uv run mypy .`
 - **Run tests:** `uv run pytest`
-- **Security scan:** `uv run bandit -r python_template_server/`
+- **Security scan:** `uv run bandit -r pi_dashboard/`
 - **Audit dependencies:** `uv run pip-audit`
 
 ## Frontend (TypeScript)
@@ -120,26 +128,50 @@ curl -k -H "X-API-Key: your-token-here" https://localhost:443/api/login
 pi-dashboard-frontend/
 ├── src/
 │   ├── app/
-│   │   ├── login/                # Login page for API key authentication
+│   │   ├── dashboard/
+│   │   │   └── page.tsx          # Dashboard page with widgets
+│   │   ├── login/
+│   │   │   └── page.tsx          # Login page for API key authentication
+│   │   ├── system/
+│   │   │   └── page.tsx          # System metrics page
 │   │   ├── globals.css           # UI style configuration
 │   │   ├── layout.tsx            # Root layout with AuthProvider and navigation
 │   │   ├── not-found.tsx         # Not found page
 │   │   └── page.tsx              # Homepage
 │   ├── components/
+│   │   ├── dashboard/
+│   │   │   ├── CalendarWidget.tsx        # Calendar display widget
+│   │   │   ├── ContainerCard.tsx         # Individual container card
+│   │   │   ├── ContainerWidget.tsx       # Docker containers widget
+│   │   │   ├── MiniSystemSummary.tsx     # Compact system summary
+│   │   │   ├── NotesWidget.tsx           # Notes editor widget
+│   │   │   ├── SystemInfoWidget.tsx      # System information widget
+│   │   │   └── WeatherWidget.tsx         # Weather display widget
+│   │   ├── system/
+│   │   │   ├── MetricsGraph.tsx          # System metrics visualization
+│   │   │   ├── TimeRangeSelector.tsx     # Time range selection
+│   │   │   └── UptimeDisplay.tsx         # System uptime display
 │   │   ├── Footer.tsx            # App footer with version info
 │   │   ├── HealthIndicator.tsx   # Server health status indicator
 │   │   └── Navigation.tsx        # Main navigation bar with logout
 │   ├── contexts/
-│   │   └── AuthContext.tsx       # Authentication context and route protection
-│   ├── lib/
-│   │   ├── api.ts                # API client with authentication interceptors
-│   │   ├── auth.ts               # localStorage API key management
-│   │   └── types.ts              # TypeScript type definitions (matches backend models)
+│   │   ├── AuthContext.tsx       # Authentication context and route protection
+│   │   ├── DataContext.tsx       # Dashboard data management context
+│   │   └── SystemContext.tsx     # System metrics context
+│   └── lib/
+│       ├── api.ts                # API client with authentication interceptors
+│       ├── auth.ts               # localStorage API key management
+│       └── types.ts              # TypeScript type definitions (matches backend models)
+├── public/                       # Static assets
+├── .prettierignore               # Prettier ignore patterns
+├── .prettierrc                   # Prettier configuration
+├── eslint.config.mjs             # ESLint configuration
 ├── jest.config.js                # Jest configuration for testing
 ├── jest.setup.js                 # Jest setup for mocking and environment
 ├── next.config.ts                # Next.js configuration
 ├── package.json                  # Dependencies and scripts
-└── postcss.config.mjs            # Tailwind CSS configuration
+├── postcss.config.mjs            # Tailwind CSS configuration
+└── tsconfig.json                 # TypeScript configuration
 ```
 
 ### Installing Dependencies
