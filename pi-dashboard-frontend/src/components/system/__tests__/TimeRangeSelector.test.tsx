@@ -15,24 +15,27 @@ describe("TimeRangeSelector", () => {
 
   it("renders all time range buttons", () => {
     render(
-      <TimeRangeSelector selectedRange={60} onRangeChange={mockOnRangeChange} />
+      <TimeRangeSelector
+        selectedRange={3600}
+        onRangeChange={mockOnRangeChange}
+      />
     );
 
-    expect(screen.getByText("1m")).toBeInTheDocument();
-    expect(screen.getByText("5m")).toBeInTheDocument();
-    expect(screen.getByText("15m")).toBeInTheDocument();
-    expect(screen.getByText("30m")).toBeInTheDocument();
+    expect(screen.getByText("1h")).toBeInTheDocument();
+    expect(screen.getByText("4h")).toBeInTheDocument();
+    expect(screen.getByText("12h")).toBeInTheDocument();
+    expect(screen.getByText("24h")).toBeInTheDocument();
   });
 
   it("highlights the selected range button", () => {
     render(
       <TimeRangeSelector
-        selectedRange={300}
+        selectedRange={14400}
         onRangeChange={mockOnRangeChange}
       />
     );
 
-    const selectedButton = screen.getByText("5m");
+    const selectedButton = screen.getByText("4h");
     expect(selectedButton).toHaveClass("bg-neon-green");
     expect(selectedButton).toHaveClass("text-background");
     expect(selectedButton).toHaveClass("border-neon-green");
@@ -41,10 +44,13 @@ describe("TimeRangeSelector", () => {
 
   it("applies default styling to non-selected buttons", () => {
     render(
-      <TimeRangeSelector selectedRange={60} onRangeChange={mockOnRangeChange} />
+      <TimeRangeSelector
+        selectedRange={3600}
+        onRangeChange={mockOnRangeChange}
+      />
     );
 
-    const button = screen.getByText("5m");
+    const button = screen.getByText("4h");
     expect(button).toHaveClass("bg-background-secondary");
     expect(button).toHaveClass("text-text-primary");
     expect(button).toHaveClass("border-border");
@@ -52,36 +58,45 @@ describe("TimeRangeSelector", () => {
 
   it("calls onRangeChange when a button is clicked", () => {
     render(
-      <TimeRangeSelector selectedRange={60} onRangeChange={mockOnRangeChange} />
+      <TimeRangeSelector
+        selectedRange={3600}
+        onRangeChange={mockOnRangeChange}
+      />
     );
 
-    const button = screen.getByText("5m");
+    const button = screen.getByText("4h");
     fireEvent.click(button);
 
-    expect(mockOnRangeChange).toHaveBeenCalledWith(300);
+    expect(mockOnRangeChange).toHaveBeenCalledWith(14400);
   });
 
   it("calls onRangeChange with correct values for all buttons", () => {
     render(
-      <TimeRangeSelector selectedRange={60} onRangeChange={mockOnRangeChange} />
+      <TimeRangeSelector
+        selectedRange={3600}
+        onRangeChange={mockOnRangeChange}
+      />
     );
 
-    fireEvent.click(screen.getByText("1m"));
-    expect(mockOnRangeChange).toHaveBeenCalledWith(60);
+    fireEvent.click(screen.getByText("1h"));
+    expect(mockOnRangeChange).toHaveBeenCalledWith(3600);
 
-    fireEvent.click(screen.getByText("5m"));
-    expect(mockOnRangeChange).toHaveBeenCalledWith(300);
+    fireEvent.click(screen.getByText("4h"));
+    expect(mockOnRangeChange).toHaveBeenCalledWith(14400);
 
-    fireEvent.click(screen.getByText("15m"));
-    expect(mockOnRangeChange).toHaveBeenCalledWith(900);
+    fireEvent.click(screen.getByText("12h"));
+    expect(mockOnRangeChange).toHaveBeenCalledWith(43200);
 
-    fireEvent.click(screen.getByText("30m"));
-    expect(mockOnRangeChange).toHaveBeenCalledWith(1800);
+    fireEvent.click(screen.getByText("24h"));
+    expect(mockOnRangeChange).toHaveBeenCalledWith(86400);
   });
 
   it("applies correct styling classes to all buttons", () => {
     render(
-      <TimeRangeSelector selectedRange={60} onRangeChange={mockOnRangeChange} />
+      <TimeRangeSelector
+        selectedRange={3600}
+        onRangeChange={mockOnRangeChange}
+      />
     );
 
     const buttons = screen.getAllByRole("button");
@@ -98,49 +113,58 @@ describe("TimeRangeSelector", () => {
 
   it("changes selection when different time range is selected", () => {
     const { rerender } = render(
-      <TimeRangeSelector selectedRange={60} onRangeChange={mockOnRangeChange} />
-    );
-
-    let selectedButton = screen.getByText("1m");
-    expect(selectedButton).toHaveClass("bg-neon-green");
-
-    rerender(
       <TimeRangeSelector
-        selectedRange={900}
+        selectedRange={3600}
         onRangeChange={mockOnRangeChange}
       />
     );
 
-    selectedButton = screen.getByText("15m");
+    let selectedButton = screen.getByText("1h");
     expect(selectedButton).toHaveClass("bg-neon-green");
 
-    const unselectedButton = screen.getByText("1m");
+    rerender(
+      <TimeRangeSelector
+        selectedRange={43200}
+        onRangeChange={mockOnRangeChange}
+      />
+    );
+
+    selectedButton = screen.getByText("12h");
+    expect(selectedButton).toHaveClass("bg-neon-green");
+
+    const unselectedButton = screen.getByText("1h");
     expect(unselectedButton).not.toHaveClass("bg-neon-green");
   });
 
   it("renders buttons in correct order", () => {
     render(
-      <TimeRangeSelector selectedRange={60} onRangeChange={mockOnRangeChange} />
+      <TimeRangeSelector
+        selectedRange={3600}
+        onRangeChange={mockOnRangeChange}
+      />
     );
 
     const buttons = screen.getAllByRole("button");
-    expect(buttons[0]).toHaveTextContent("1m");
-    expect(buttons[1]).toHaveTextContent("5m");
-    expect(buttons[2]).toHaveTextContent("15m");
-    expect(buttons[3]).toHaveTextContent("30m");
+    expect(buttons[0]).toHaveTextContent("1h");
+    expect(buttons[1]).toHaveTextContent("4h");
+    expect(buttons[2]).toHaveTextContent("12h");
+    expect(buttons[3]).toHaveTextContent("24h");
   });
 
   it("maintains button state after multiple clicks", () => {
     render(
-      <TimeRangeSelector selectedRange={60} onRangeChange={mockOnRangeChange} />
+      <TimeRangeSelector
+        selectedRange={3600}
+        onRangeChange={mockOnRangeChange}
+      />
     );
 
-    const button = screen.getByText("5m");
+    const button = screen.getByText("4h");
     fireEvent.click(button);
     fireEvent.click(button);
     fireEvent.click(button);
 
     expect(mockOnRangeChange).toHaveBeenCalledTimes(3);
-    expect(mockOnRangeChange).toHaveBeenCalledWith(300);
+    expect(mockOnRangeChange).toHaveBeenCalledWith(14400);
   });
 });
