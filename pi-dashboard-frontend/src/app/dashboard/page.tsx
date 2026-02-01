@@ -20,7 +20,7 @@ export default function DashboardPage() {
         <ContainerWidget />
       </div>
 
-      <div className="lg:col-span-3">
+      <div className="lg:col-span-3 space-y-4">
         <WeatherWidget />
         <CalendarWidget />
       </div>
