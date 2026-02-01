@@ -31,7 +31,7 @@
   },
   "metrics": {
     "collection_interval": 5,
-    "max_history_duration": 1800
+    "max_history_duration": 86400
   },
   "weather": {
     "latitude": 51.5074,
