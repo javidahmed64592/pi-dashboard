@@ -4,6 +4,7 @@ interface ContainerCardProps {
   image: string;
   status: "running" | "exited" | "created" | "restarting" | "paused";
   port: string | null;
+  isLoading?: boolean;
   onStart?: (id: string) => void;
   onStop?: (id: string) => void;
   onRestart?: (id: string) => void;
@@ -16,6 +17,7 @@ export default function ContainerCard({
   image,
   status,
   port,
+  isLoading = false,
   onStart,
   onStop,
   onRestart,
@@ -25,7 +27,33 @@ export default function ContainerCard({
   const isRunning = status === "running";
 
   return (
-    <div className="bg-background-secondary border border-border rounded-lg p-4 shadow-neon hover:border-neon-green transition-all">
+    <div
+      className={`bg-background-secondary border rounded-lg p-4 shadow-neon transition-all relative ${
+        isLoading
+          ? "border-neon-blue animate-pulse"
+          : "border-border hover:border-neon-green"
+      }`}
+    >
+      {isLoading && (
+        <div
+          className="absolute inset-0 rounded-lg pointer-events-none"
+          style={{
+            background:
+              "repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 191, 255, 0.1) 2px, rgba(0, 191, 255, 0.1) 4px)",
+            animation: "scanning 2s linear infinite",
+          }}
+        />
+      )}
+      <style jsx>{`
+        @keyframes scanning {
+          0% {
+            background-position: 0 0;
+          }
+          100% {
+            background-position: 40px 0;
+          }
+        }
+      `}</style>
       <div className="flex justify-between gap-4">
         <div className="flex-1 min-w-0 flex flex-col justify-between">
           <div>
@@ -76,12 +104,12 @@ export default function ContainerCard({
           <div className="flex gap-1.5">
             <button
               className={`p-2 rounded transition-all ${
-                !isRunning
+                !isRunning && !isLoading
                   ? "text-neon-green hover:bg-neon-green hover:text-background cursor-pointer"
                   : "text-text-muted cursor-not-allowed opacity-50"
               }`}
               title="Start"
-              disabled={isRunning}
+              disabled={isRunning || isLoading}
               onClick={() => onStart?.(container_id)}
             >
               <svg
@@ -106,12 +134,12 @@ export default function ContainerCard({
             </button>
             <button
               className={`p-2 rounded transition-all ${
-                isRunning
+                isRunning && !isLoading
                   ? "text-neon-red hover:bg-neon-red hover:text-background cursor-pointer"
                   : "text-text-muted cursor-not-allowed opacity-50"
               }`}
               title="Stop"
-              disabled={!isRunning}
+              disabled={!isRunning || isLoading}
               onClick={() => onStop?.(container_id)}
             >
               <svg
@@ -136,12 +164,12 @@ export default function ContainerCard({
             </button>
             <button
               className={`p-2 rounded transition-all ${
-                isRunning
+                isRunning && !isLoading
                   ? "text-neon-blue hover:bg-neon-blue hover:text-background cursor-pointer"
                   : "text-text-muted cursor-not-allowed opacity-50"
               }`}
               title="Restart"
-              disabled={!isRunning}
+              disabled={!isRunning || isLoading}
               onClick={() => onRestart?.(container_id)}
             >
               <svg
@@ -159,8 +187,13 @@ export default function ContainerCard({
               </svg>
             </button>
             <button
-              className="p-2 text-neon-purple hover:bg-neon-purple hover:text-background rounded transition-all cursor-pointer"
+              className={`p-2 rounded transition-all ${
+                !isLoading
+                  ? "text-neon-purple hover:bg-neon-purple hover:text-background cursor-pointer"
+                  : "text-text-muted cursor-not-allowed opacity-50"
+              }`}
               title="Update"
+              disabled={isLoading}
               onClick={() => onUpdate?.(container_id)}
             >
               <svg

@@ -227,4 +227,110 @@ describe("ContainerCard", () => {
     render(<ContainerCard {...defaultProps} port={null} />);
     expect(screen.queryByText(/Port:/)).not.toBeInTheDocument();
   });
+
+  describe("Loading state", () => {
+    it("applies neon blue border when loading", () => {
+      const { container } = render(
+        <ContainerCard {...defaultProps} isLoading={true} />
+      );
+
+      const card = container.firstChild as HTMLElement;
+      expect(card).toHaveClass("border-neon-blue", "animate-pulse");
+      expect(card).not.toHaveClass("hover:border-neon-green");
+    });
+
+    it("applies normal border when not loading", () => {
+      const { container } = render(
+        <ContainerCard {...defaultProps} isLoading={false} />
+      );
+
+      const card = container.firstChild as HTMLElement;
+      expect(card).toHaveClass("border-border", "hover:border-neon-green");
+      expect(card).not.toHaveClass("border-neon-blue");
+    });
+
+    it("shows scanning overlay effect when loading", () => {
+      const { container } = render(
+        <ContainerCard {...defaultProps} isLoading={true} />
+      );
+
+      const scanningOverlay = container.querySelector(".pointer-events-none");
+      expect(scanningOverlay).toBeInTheDocument();
+      expect(scanningOverlay).toHaveAttribute("style");
+      expect(scanningOverlay?.getAttribute("style")).toContain(
+        "repeating-linear-gradient"
+      );
+    });
+
+    it("does not show scanning overlay when not loading", () => {
+      const { container } = render(
+        <ContainerCard {...defaultProps} isLoading={false} />
+      );
+
+      const scanningOverlay = container.querySelector(".pointer-events-none");
+      expect(scanningOverlay).not.toBeInTheDocument();
+    });
+
+    it("disables all buttons when loading", () => {
+      render(<ContainerCard {...defaultProps} isLoading={true} />);
+
+      expect(screen.getByTitle("Start")).toBeDisabled();
+      expect(screen.getByTitle("Stop")).toBeDisabled();
+      expect(screen.getByTitle("Restart")).toBeDisabled();
+      expect(screen.getByTitle("Update")).toBeDisabled();
+    });
+
+    it("applies disabled styling to buttons when loading", () => {
+      render(
+        <ContainerCard {...defaultProps} status="running" isLoading={true} />
+      );
+
+      const startButton = screen.getByTitle("Start");
+      const stopButton = screen.getByTitle("Stop");
+      const restartButton = screen.getByTitle("Restart");
+      const updateButton = screen.getByTitle("Update");
+
+      expect(startButton).toHaveClass("opacity-50", "cursor-not-allowed");
+      expect(stopButton).toHaveClass("opacity-50", "cursor-not-allowed");
+      expect(restartButton).toHaveClass("opacity-50", "cursor-not-allowed");
+      expect(updateButton).toHaveClass("opacity-50", "cursor-not-allowed");
+    });
+
+    it("prevents button clicks when loading", () => {
+      render(
+        <ContainerCard {...defaultProps} status="running" isLoading={true} />
+      );
+
+      const stopButton = screen.getByTitle("Stop");
+      fireEvent.click(stopButton);
+
+      expect(mockHandlers.onStop).not.toHaveBeenCalled();
+    });
+
+    it("defaults isLoading to false when not provided", () => {
+      const { container } = render(<ContainerCard {...defaultProps} />);
+
+      const card = container.firstChild as HTMLElement;
+      expect(card).toHaveClass("border-border", "hover:border-neon-green");
+      expect(card).not.toHaveClass("border-neon-blue");
+    });
+
+    it("allows interactions when loading state changes to false", () => {
+      const { rerender } = render(
+        <ContainerCard {...defaultProps} status="running" isLoading={true} />
+      );
+
+      let stopButton = screen.getByTitle("Stop");
+      expect(stopButton).toBeDisabled();
+
+      rerender(
+        <ContainerCard {...defaultProps} status="running" isLoading={false} />
+      );
+
+      stopButton = screen.getByTitle("Stop");
+      expect(stopButton).not.toBeDisabled();
+      fireEvent.click(stopButton);
+      expect(mockHandlers.onStop).toHaveBeenCalledWith("abc123");
+    });
+  });
 });
