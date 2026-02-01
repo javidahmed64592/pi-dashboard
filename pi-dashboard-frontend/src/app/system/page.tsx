@@ -99,12 +99,12 @@ export default function SystemPage() {
           color="#ff0040"
           chartType="line"
           yAxisLabel="°C"
-          yAxisDomain={[0, 70]}
+          yAxisDomain={[0, 80]}
           hasData={hasData}
           currentValue={currentMetrics?.temperature}
-          thresholds={{ low: 35, medium: 50 }}
+          thresholds={{ low: 40, medium: 60 }}
           className={
-            currentMetrics && currentMetrics.temperature > 50
+            currentMetrics && currentMetrics.temperature > 60
               ? "animate-pulse"
               : ""
           }
