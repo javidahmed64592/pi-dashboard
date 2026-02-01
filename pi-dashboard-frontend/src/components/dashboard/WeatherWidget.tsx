@@ -144,7 +144,7 @@ export default function WeatherWidget() {
         </div>
         <div className="flex justify-between">
           {weather.forecast
-            .filter((_, index) => index % 3 === 0)
+            .filter((_, index) => index % 4 === 0)
             .slice(0, 4)
             .map((hour, index) => (
               <div key={index} className="text-center">

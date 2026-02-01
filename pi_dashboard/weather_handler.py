@@ -146,19 +146,22 @@ class WeatherHandler:
                 # Get next 12 hours starting from current hour
                 forecast_hours: list[WeatherForecastHour] = []
                 current_time_str = current["time"]
+                # Truncate to the hour for comparison (hourly data is on the hour)
+                current_hour_str = current_time_str[:13] + ":00"
 
                 logger.debug("Current time from API: %s", current_time_str)
+                logger.debug("Current hour for comparison: %s", current_hour_str)
                 logger.debug("First hourly time: %s", hourly_times[0] if hourly_times else "None")
                 logger.debug("Total hourly entries: %d", len(hourly_times))
 
                 for i in range(len(hourly_times)):
-                    if len(forecast_hours) >= self.forecast_hours:
+                    # Add 1 to include the final hour (e.g., 12-hour forecast = hours 0-12 inclusive)
+                    if len(forecast_hours) >= self.forecast_hours + 1:
                         break
 
                     hourly_time_str = hourly_times[i]
                     # Compare times as strings (YYYY-MM-DDTHH:MM format)
-                    # Include current hour and next 11 hours
-                    if hourly_time_str >= current_time_str:
+                    if hourly_time_str >= current_hour_str:
                         forecast_time = datetime.fromisoformat(hourly_time_str)
                         forecast_hours.append(
                             WeatherForecastHour(
