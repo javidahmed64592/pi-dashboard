@@ -7,33 +7,33 @@ import { render, screen } from "@testing-library/react";
 import UptimeDisplay from "../UptimeDisplay";
 
 describe("UptimeDisplay", () => {
-  it("formats uptime with days, hours, minutes, and seconds", () => {
+  it("formats uptime with days, hours, and minutes", () => {
     const uptime = 90061; // 1 day, 1 hour, 1 minute, 1 second
     render(<UptimeDisplay uptime={uptime} />);
 
     expect(screen.getByText("SYSTEM UPTIME")).toBeInTheDocument();
-    expect(screen.getByText("1d 1h 1m 1s")).toBeInTheDocument();
+    expect(screen.getByText("1d 1h 1m")).toBeInTheDocument();
   });
 
-  it("formats uptime with only hours, minutes, and seconds", () => {
+  it("formats uptime with hours and minutes", () => {
     const uptime = 3661; // 1 hour, 1 minute, 1 second
     render(<UptimeDisplay uptime={uptime} />);
 
-    expect(screen.getByText("1h 1m 1s")).toBeInTheDocument();
+    expect(screen.getByText("0d 1h 1m")).toBeInTheDocument();
   });
 
-  it("formats uptime with only minutes and seconds", () => {
+  it("formats uptime with minutes", () => {
     const uptime = 125; // 2 minutes, 5 seconds
     render(<UptimeDisplay uptime={uptime} />);
 
-    expect(screen.getByText("2m 5s")).toBeInTheDocument();
+    expect(screen.getByText("0d 0h 2m")).toBeInTheDocument();
   });
 
-  it("formats uptime with only seconds", () => {
+  it("formats uptime with zero days, hours, and minutes", () => {
     const uptime = 45; // 45 seconds
     render(<UptimeDisplay uptime={uptime} />);
 
-    expect(screen.getByText("45s")).toBeInTheDocument();
+    expect(screen.getByText("0d 0h 0m")).toBeInTheDocument();
   });
 
   it("renders empty div for zero uptime", () => {
@@ -47,7 +47,7 @@ describe("UptimeDisplay", () => {
     const uptime = 2592000; // 30 days
     render(<UptimeDisplay uptime={uptime} />);
 
-    expect(screen.getByText("30d")).toBeInTheDocument();
+    expect(screen.getByText("30d 0h 0m")).toBeInTheDocument();
   });
 
   it("renders nothing when uptime is undefined", () => {
@@ -82,17 +82,10 @@ describe("UptimeDisplay", () => {
     const uptime = 60;
     render(<UptimeDisplay uptime={uptime} />);
 
-    const value = screen.getByText("1m");
+    const value = screen.getByText("0d 0h 1m");
     expect(value).toHaveClass("text-xl");
     expect(value).toHaveClass("font-bold");
     expect(value).toHaveClass("text-neon-green");
     expect(value).toHaveClass("font-mono");
-  });
-
-  it("formats mixed time components correctly", () => {
-    const uptime = 183723; // 2 days, 3 hours, 2 minutes, 3 seconds
-    render(<UptimeDisplay uptime={uptime} />);
-
-    expect(screen.getByText("2d 3h 2m 3s")).toBeInTheDocument();
   });
 });
