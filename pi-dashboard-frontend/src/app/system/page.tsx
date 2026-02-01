@@ -18,7 +18,7 @@ interface ChartData {
 export default function SystemPage() {
   const { currentMetrics, metricsHistory, systemInfo, refreshHistory } =
     useSystem();
-  const [selectedRange, setSelectedRange] = useState<TimeRange>(60);
+  const [selectedRange, setSelectedRange] = useState<TimeRange>(3600);
 
   // Poll history based on selected time range
   useEffect(() => {
