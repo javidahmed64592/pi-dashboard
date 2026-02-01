@@ -15,7 +15,7 @@ class MetricsConfig(BaseModel):
         default=5, ge=1, le=60, description="Interval in seconds between metrics collections"
     )
     max_history_duration: int = Field(
-        default=1800, ge=60, le=3600, description="Maximum duration in seconds to keep metrics history"
+        default=3600, ge=60, le=86400, description="Maximum duration in seconds to keep metrics history"
     )
 
 
