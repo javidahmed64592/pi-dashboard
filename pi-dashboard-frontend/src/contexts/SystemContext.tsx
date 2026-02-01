@@ -43,8 +43,14 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch system info once on mount
+  // Fetch system info when authenticated, clear when not
   useEffect(() => {
+    if (!isAuthenticated) {
+      setSystemInfo(null);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchSystemInfo = async () => {
       try {
         const response = await getSystemInfo();
@@ -60,7 +66,7 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
     };
 
     fetchSystemInfo();
-  }, []);
+  }, [isAuthenticated]);
 
   // Poll current metrics every 5 seconds (only when authenticated)
   useEffect(() => {
