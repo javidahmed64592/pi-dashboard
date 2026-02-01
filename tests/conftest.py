@@ -161,6 +161,7 @@ def mock_weather_forecast_hours() -> list[WeatherForecastHour]:
         WeatherForecastHour(time="9PM", temperature=19.5, weather_code=63),
         WeatherForecastHour(time="10PM", temperature=19.0, weather_code=45),
         WeatherForecastHour(time="11PM", temperature=18.5, weather_code=45),
+        WeatherForecastHour(time="12AM", temperature=25.0, weather_code=45),
     ]
 
 

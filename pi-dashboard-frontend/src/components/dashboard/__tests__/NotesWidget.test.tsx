@@ -98,49 +98,88 @@ describe("NotesWidget", () => {
   });
 
   describe("Notes List", () => {
-    it("should render dropdown with notes when notes exist", () => {
-      renderWithDefaultProps({ notes: [mockNote1, mockNote2] });
+    it("should render custom dropdown with notes when multiple notes exist", () => {
+      renderWithDefaultProps({
+        notes: [mockNote1, mockNote2],
+        selectedNote: mockNote1,
+      });
 
-      const dropdown = screen.getByRole("combobox");
-      expect(dropdown).toBeInTheDocument();
-
-      const options = screen.getAllByRole("option");
-      expect(options).toHaveLength(3); // "Select a note..." + 2 notes
+      // Should show selected note title
+      expect(screen.getByText("Test Note 1")).toBeInTheDocument();
     });
 
-    it("should display note titles in dropdown", () => {
+    it("should display note titles in dropdown when opened", () => {
+      renderWithDefaultProps({
+        notes: [mockNote1, mockNote2],
+        selectedNote: mockNote1,
+      });
+
+      // Click to open dropdown
+      const dropdownTrigger = screen.getByText("Test Note 1");
+      fireEvent.click(dropdownTrigger);
+
+      // Both notes should be visible
+      expect(screen.getAllByText("Test Note 1")).toHaveLength(2); // Trigger + dropdown item
+      expect(screen.getByText("Test Note 2")).toBeInTheDocument();
+    });
+
+    it("should auto-select first note when none is selected", () => {
       renderWithDefaultProps({ notes: [mockNote1, mockNote2] });
 
-      expect(screen.getByText("Test Note 1")).toBeInTheDocument();
-      expect(screen.getByText("Test Note 2")).toBeInTheDocument();
+      expect(mockSelectNote).toHaveBeenCalledWith(mockNote1);
     });
   });
 
   describe("Note Selection", () => {
-    it("should call selectNote when a note is selected from dropdown", () => {
-      renderWithDefaultProps({ notes: [mockNote1, mockNote2] });
+    it("should call selectNote when a note is clicked from dropdown", () => {
+      renderWithDefaultProps({
+        notes: [mockNote1, mockNote2],
+        selectedNote: mockNote1,
+      });
 
-      const dropdown = screen.getByRole("combobox");
-      fireEvent.change(dropdown, { target: { value: "1" } });
+      // Open dropdown
+      const dropdownTrigger = screen.getByText("Test Note 1");
+      fireEvent.click(dropdownTrigger);
 
-      expect(mockSelectNote).toHaveBeenCalledWith(mockNote1);
+      // Click on second note
+      const note2Option = screen.getByText("Test Note 2");
+      fireEvent.click(note2Option);
+
+      expect(mockSelectNote).toHaveBeenCalledWith(mockNote2);
     });
 
-    it("should display selected note content", () => {
+    it("should display selected note content when in view mode", () => {
       renderWithDefaultProps({
         notes: [mockNote1],
         selectedNote: mockNote1,
       });
 
-      const titleInput = screen.getByPlaceholderText(
-        "Note title..."
-      ) as HTMLInputElement;
       const contentTextarea = screen.getByPlaceholderText(
         "Write your note here..."
       ) as HTMLTextAreaElement;
 
-      expect(titleInput.value).toBe("Test Note 1");
       expect(contentTextarea.value).toBe("Content 1");
+    });
+
+    it("should close dropdown after selecting a note", () => {
+      renderWithDefaultProps({
+        notes: [mockNote1, mockNote2],
+        selectedNote: mockNote1,
+      });
+
+      // Open dropdown
+      const dropdownTrigger = screen.getByText("Test Note 1");
+      fireEvent.click(dropdownTrigger);
+
+      // Both notes should be visible
+      expect(screen.getByText("Test Note 2")).toBeInTheDocument();
+
+      // Click on second note
+      const note2Option = screen.getByText("Test Note 2");
+      fireEvent.click(note2Option);
+
+      // Note should be selected
+      expect(mockSelectNote).toHaveBeenCalledWith(mockNote2);
     });
   });
 
@@ -169,21 +208,21 @@ describe("NotesWidget", () => {
         selectedNote: mockNote1,
       });
 
-      const titleInput = screen.getByPlaceholderText("Note title...");
       const contentTextarea = screen.getByPlaceholderText(
         "Write your note here..."
       );
-      const saveButton = screen.getByRole("button", { name: /Save/i });
 
-      fireEvent.change(titleInput, { target: { value: "Updated Title" } });
+      // Change content and save
       fireEvent.change(contentTextarea, {
         target: { value: "Updated Content" },
       });
+
+      const saveButton = screen.getByRole("button", { name: /^Save$/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
         expect(mockUpdateExistingNote).toHaveBeenCalledWith("1", {
-          title: "Updated Title",
+          title: "Test Note 1",
           content: "Updated Content",
         });
       });
@@ -198,10 +237,50 @@ describe("NotesWidget", () => {
         selectedNote: mockNote1,
       });
 
-      const saveButton = screen.getByRole("button", { name: /Save/i });
+      const saveButton = screen.getByRole("button", { name: /^Save$/i });
       fireEvent.click(saveButton);
 
       expect(screen.getByRole("button", { name: /Saving.../i })).toBeDisabled();
+    });
+
+    it("should save note when Enter is pressed in edit mode", async () => {
+      mockUpdateExistingNote.mockResolvedValue(mockNote1);
+      renderWithDefaultProps({
+        notes: [mockNote1],
+        selectedNote: mockNote1,
+      });
+
+      // Enter edit mode
+      const editButton = screen.getByTitle("Edit title");
+      fireEvent.click(editButton);
+
+      const titleInput = screen.getByPlaceholderText("Note title...");
+      fireEvent.change(titleInput, { target: { value: "Updated Title" } });
+      fireEvent.keyDown(titleInput, { key: "Enter" });
+
+      await waitFor(() => {
+        expect(mockUpdateExistingNote).toHaveBeenCalled();
+      });
+    });
+
+    it("should cancel edit when Escape is pressed", async () => {
+      renderWithDefaultProps({
+        notes: [mockNote1],
+        selectedNote: mockNote1,
+      });
+
+      // Enter edit mode
+      const editButton = screen.getByTitle("Edit title");
+      fireEvent.click(editButton);
+
+      const titleInput = screen.getByPlaceholderText("Note title...");
+      fireEvent.change(titleInput, { target: { value: "Changed Title" } });
+      fireEvent.keyDown(titleInput, { key: "Escape" });
+
+      // Should exit edit mode and revert title
+      await waitFor(() => {
+        expect(screen.getByText("Test Note 1")).toBeInTheDocument();
+      });
     });
   });
 
@@ -259,11 +338,15 @@ describe("NotesWidget", () => {
   });
 
   describe("Form Inputs", () => {
-    it("should update title when typing", () => {
+    it("should update title when typing in edit mode", () => {
       renderWithDefaultProps({
         notes: [mockNote1],
         selectedNote: mockNote1,
       });
+
+      // Enter edit mode
+      const editButton = screen.getByTitle("Edit title");
+      fireEvent.click(editButton);
 
       const titleInput = screen.getByPlaceholderText(
         "Note title..."
@@ -287,6 +370,100 @@ describe("NotesWidget", () => {
       });
 
       expect(contentTextarea.value).toBe("New content");
+    });
+  });
+
+  describe("Edit Title Mode", () => {
+    it("should render edit button (pencil icon) when note is selected", () => {
+      renderWithDefaultProps({
+        notes: [mockNote1],
+        selectedNote: mockNote1,
+      });
+
+      const editButton = screen.getByTitle("Edit title");
+      expect(editButton).toBeInTheDocument();
+    });
+
+    it("should enter edit mode when pencil icon is clicked", () => {
+      renderWithDefaultProps({
+        notes: [mockNote1],
+        selectedNote: mockNote1,
+      });
+
+      const editButton = screen.getByTitle("Edit title");
+      fireEvent.click(editButton);
+
+      // Should show input with autofocus
+      const titleInput = screen.getByPlaceholderText("Note title...");
+      expect(titleInput).toBeInTheDocument();
+      expect(titleInput).toHaveFocus();
+    });
+
+    it("should exit edit mode when clicking save checkmark", async () => {
+      mockUpdateExistingNote.mockResolvedValue(mockNote1);
+      renderWithDefaultProps({
+        notes: [mockNote1],
+        selectedNote: mockNote1,
+      });
+
+      // Enter edit mode
+      const editButton = screen.getByTitle("Edit title");
+      fireEvent.click(editButton);
+
+      // Click save checkmark
+      const saveCheckmark = screen.getByTitle("Save title");
+      fireEvent.click(saveCheckmark);
+
+      await waitFor(() => {
+        expect(mockUpdateExistingNote).toHaveBeenCalled();
+      });
+    });
+
+    it("should show checkmark icon in edit mode", () => {
+      renderWithDefaultProps({
+        notes: [mockNote1],
+        selectedNote: mockNote1,
+      });
+
+      // Enter edit mode
+      const editButton = screen.getByTitle("Edit title");
+      fireEvent.click(editButton);
+
+      // Should show save checkmark button
+      const saveCheckmark = screen.getByTitle("Save title");
+      expect(saveCheckmark).toBeInTheDocument();
+    });
+  });
+
+  describe("Dropdown Toggle", () => {
+    it("should open dropdown when clicking on the note title area", () => {
+      renderWithDefaultProps({
+        notes: [mockNote1, mockNote2],
+        selectedNote: mockNote1,
+      });
+
+      const dropdownTrigger = screen.getByText("Test Note 1");
+      fireEvent.click(dropdownTrigger);
+
+      // Both notes should be visible in dropdown
+      expect(screen.getByText("Test Note 2")).toBeInTheDocument();
+    });
+
+    it("should close dropdown when clicking outside", () => {
+      renderWithDefaultProps({
+        notes: [mockNote1, mockNote2],
+        selectedNote: mockNote1,
+      });
+
+      // Open dropdown
+      const dropdownTrigger = screen.getByText("Test Note 1");
+      fireEvent.click(dropdownTrigger);
+
+      // Close by clicking trigger again
+      fireEvent.click(dropdownTrigger);
+
+      // Only one instance should remain (the trigger itself)
+      expect(screen.queryAllByText("Test Note 1")).toHaveLength(1);
     });
   });
 });

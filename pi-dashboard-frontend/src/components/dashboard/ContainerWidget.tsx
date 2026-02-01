@@ -17,6 +17,9 @@ export default function ContainerWidget() {
   const [containers, setContainers] = useState<DockerContainer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingContainers, setLoadingContainers] = useState<Set<string>>(
+    new Set()
+  );
 
   const loadContainers = async () => {
     try {
@@ -57,23 +60,59 @@ export default function ContainerWidget() {
   }, []);
 
   const handleStart = async (id: string) => {
-    await startContainer(id);
-    await loadContainers();
+    setLoadingContainers(prev => new Set(prev).add(id));
+    try {
+      await startContainer(id);
+      await loadContainers();
+    } finally {
+      setLoadingContainers(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
   };
 
   const handleStop = async (id: string) => {
-    await stopContainer(id);
-    await loadContainers();
+    setLoadingContainers(prev => new Set(prev).add(id));
+    try {
+      await stopContainer(id);
+      await loadContainers();
+    } finally {
+      setLoadingContainers(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
   };
 
   const handleRestart = async (id: string) => {
-    await restartContainer(id);
-    await loadContainers();
+    setLoadingContainers(prev => new Set(prev).add(id));
+    try {
+      await restartContainer(id);
+      await loadContainers();
+    } finally {
+      setLoadingContainers(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
   };
 
   const handleUpdate = async (id: string) => {
-    await updateContainer(id);
-    await loadContainers();
+    setLoadingContainers(prev => new Set(prev).add(id));
+    try {
+      await updateContainer(id);
+      await loadContainers();
+    } finally {
+      setLoadingContainers(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
   };
 
   const handleRefresh = async () => {
@@ -159,6 +198,7 @@ export default function ContainerWidget() {
                   | "paused"
               }
               port={container.port}
+              isLoading={loadingContainers.has(container.container_id)}
               onStart={handleStart}
               onStop={handleStop}
               onRestart={handleRestart}

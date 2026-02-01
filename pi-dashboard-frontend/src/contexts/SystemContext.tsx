@@ -19,6 +19,8 @@ import type {
   SystemMetricsHistory,
 } from "@/lib/types";
 
+import { useAuth } from "./AuthContext";
+
 interface SystemContextType {
   systemInfo: SystemInfo | null;
   currentMetrics: SystemMetrics | null;
@@ -31,6 +33,7 @@ interface SystemContextType {
 const SystemContext = createContext<SystemContextType | undefined>(undefined);
 
 export function SystemProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [currentMetrics, setCurrentMetrics] = useState<SystemMetrics | null>(
     null
@@ -40,8 +43,14 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch system info once on mount
+  // Fetch system info when authenticated, clear when not
   useEffect(() => {
+    if (!isAuthenticated) {
+      setSystemInfo(null);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchSystemInfo = async () => {
       try {
         const response = await getSystemInfo();
@@ -57,10 +66,14 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
     };
 
     fetchSystemInfo();
-  }, []);
+  }, [isAuthenticated]);
 
-  // Poll current metrics every second
+  // Poll current metrics every 5 seconds (only when authenticated)
   useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
     const fetchMetrics = async () => {
       try {
         const response = await getSystemMetrics();
@@ -76,10 +89,10 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
     // Fetch immediately
     fetchMetrics();
 
-    const interval = setInterval(fetchMetrics, 1000);
+    const interval = setInterval(fetchMetrics, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthenticated]);
 
   // Function to refresh history (called from system page)
   const refreshHistory = useCallback(async (timeRangeSeconds: number) => {

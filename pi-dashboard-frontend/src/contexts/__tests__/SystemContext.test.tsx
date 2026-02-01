@@ -6,10 +6,45 @@ import { render, screen, waitFor } from "@testing-library/react";
 
 import * as api from "@/lib/api";
 
+import { AuthProvider } from "../AuthContext";
 import { SystemProvider, useSystem } from "../SystemContext";
 
 // Mock the API module
 jest.mock("@/lib/api");
+
+// Mock auth utilities
+jest.mock("@/lib/auth", () => ({
+  getApiKey: () => "test-api-key",
+  saveApiKey: jest.fn(),
+  removeApiKey: jest.fn(),
+}));
+
+// Mock next/navigation
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+  }),
+  usePathname: () => "/dashboard/",
+}));
+
+// Mock localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => {
+      store[key] = value.toString();
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+Object.defineProperty(window, "localStorage", { value: localStorageMock });
 
 const mockSystemInfo = {
   hostname: "test-host",
@@ -72,9 +107,11 @@ describe("SystemContext", () => {
     };
 
     render(
-      <SystemProvider>
-        <TestComponent />
-      </SystemProvider>
+      <AuthProvider>
+        <SystemProvider>
+          <TestComponent />
+        </SystemProvider>
+      </AuthProvider>
     );
 
     expect(screen.getByText("Loading...")).toBeInTheDocument();
@@ -86,7 +123,7 @@ describe("SystemContext", () => {
     expect(api.getSystemInfo).toHaveBeenCalledTimes(1);
   });
 
-  it("polls current metrics every 1 second", async () => {
+  it("polls current metrics every 5 seconds", async () => {
     jest.useFakeTimers();
 
     (api.getSystemInfo as jest.Mock).mockResolvedValue({
@@ -109,17 +146,19 @@ describe("SystemContext", () => {
     };
 
     render(
-      <SystemProvider>
-        <TestComponent />
-      </SystemProvider>
+      <AuthProvider>
+        <SystemProvider>
+          <TestComponent />
+        </SystemProvider>
+      </AuthProvider>
     );
 
     await waitFor(() => {
       expect(api.getSystemMetrics).toHaveBeenCalledTimes(1);
     });
 
-    // Fast-forward 1 second
-    jest.advanceTimersByTime(1000);
+    // Fast-forward 5 seconds
+    jest.advanceTimersByTime(5000);
 
     await waitFor(() => {
       expect(api.getSystemMetrics).toHaveBeenCalledTimes(2);
@@ -161,9 +200,11 @@ describe("SystemContext", () => {
     };
 
     render(
-      <SystemProvider>
-        <TestComponent />
-      </SystemProvider>
+      <AuthProvider>
+        <SystemProvider>
+          <TestComponent />
+        </SystemProvider>
+      </AuthProvider>
     );
 
     const button = screen.getByText("Refresh");
@@ -196,9 +237,11 @@ describe("SystemContext", () => {
     };
 
     render(
-      <SystemProvider>
-        <TestComponent />
-      </SystemProvider>
+      <AuthProvider>
+        <SystemProvider>
+          <TestComponent />
+        </SystemProvider>
+      </AuthProvider>
     );
 
     await waitFor(() => {

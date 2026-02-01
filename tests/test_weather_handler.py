@@ -195,7 +195,8 @@ class TestGetWeather:
         """Test that forecast is limited to configured number of hours."""
         result = asyncio.run(mock_weather_handler.get_weather())
 
-        assert len(result.forecast) == mock_weather_handler.forecast_hours
+        # Now returns forecast_hours + 1 to include the final hour (e.g., 12-hour = 0-12 inclusive)
+        assert len(result.forecast) == mock_weather_handler.forecast_hours + 1
         # Verify first forecast entry
         assert result.forecast[0].time == mock_weather_data.forecast[0].time
         assert result.forecast[0].temperature == mock_weather_data.forecast[0].temperature

@@ -29,6 +29,7 @@ describe("WeatherWidget", () => {
     { time: "9PM", temperature: 19.5, weather_code: 63 },
     { time: "10PM", temperature: 19.0, weather_code: 45 },
     { time: "11PM", temperature: 18.5, weather_code: 45 },
+    { time: "12AM", temperature: 25.0, weather_code: 45 },
   ];
 
   const mockWeatherData: WeatherData = {
@@ -144,7 +145,7 @@ describe("WeatherWidget", () => {
     }
   });
 
-  it("should display every 3rd hour from forecast (4 slots)", async () => {
+  it("should display every 4th hour from forecast (4 slots)", async () => {
     mockGetWeather.mockResolvedValue(mockWeatherResponse);
 
     render(<WeatherWidget />);
@@ -153,17 +154,17 @@ describe("WeatherWidget", () => {
       expect(screen.getByText("Test Location")).toBeInTheDocument();
     });
 
-    // Should display hours at indices 0, 3, 6, 9
+    // Should display hours at indices 0, 4, 8, 12
     expect(screen.getByText("12PM")).toBeInTheDocument();
-    expect(screen.getByText("3PM")).toBeInTheDocument();
-    expect(screen.getByText("6PM")).toBeInTheDocument();
-    expect(screen.getByText("9PM")).toBeInTheDocument();
+    expect(screen.getByText("4PM")).toBeInTheDocument();
+    expect(screen.getByText("8PM")).toBeInTheDocument();
+    expect(screen.getByText("12AM")).toBeInTheDocument();
 
     // Should display corresponding temperatures (without degree symbol in forecast)
     expect(screen.getByText("22.5°")).toBeInTheDocument();
-    expect(screen.getByText("25°")).toBeInTheDocument();
-    expect(screen.getByText("22°")).toBeInTheDocument();
-    expect(screen.getByText("19.5°")).toBeInTheDocument();
+    expect(screen.getByText("24°")).toBeInTheDocument(); // Index 4 (4PM)
+    expect(screen.getByText("20.5°")).toBeInTheDocument(); // Index 8 (8PM)
+    expect(screen.getByText("25°")).toBeInTheDocument(); // Index 12 (12AM)
 
     // Should NOT display other hours
     expect(screen.queryByText("1PM")).not.toBeInTheDocument();

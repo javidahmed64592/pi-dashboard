@@ -87,7 +87,7 @@ export default function MiniSystemSummary() {
           label="TEMP"
           value={currentMetrics?.temperature}
           unit="°C"
-          thresholds={{ low: 35, medium: 50 }}
+          thresholds={{ low: 40, medium: 60 }}
         />
       </div>
     </div>

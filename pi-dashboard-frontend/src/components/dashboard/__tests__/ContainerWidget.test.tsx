@@ -76,6 +76,13 @@ describe("ContainerWidget", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
+    // Reset all mocks to default resolved state
+    mockGetContainers.mockResolvedValue(mockContainersResponse);
+    mockRefreshContainers.mockResolvedValue(mockContainersResponse);
+    mockStartContainer.mockResolvedValue(mockActionResponse);
+    mockStopContainer.mockResolvedValue(mockActionResponse);
+    mockRestartContainer.mockResolvedValue(mockActionResponse);
+    mockUpdateContainer.mockResolvedValue(mockActionResponse);
   });
 
   afterEach(() => {
@@ -401,5 +408,184 @@ describe("ContainerWidget", () => {
     expect(screen.getByText("Port: 443")).toBeInTheDocument();
     expect(screen.getByText("Port: 8581")).toBeInTheDocument();
     expect(screen.getByText("Port: 32400")).toBeInTheDocument();
+  });
+
+  describe("Container loading states", () => {
+    beforeEach(() => {
+      mockGetContainers.mockResolvedValue(mockContainersResponse);
+    });
+
+    it("should show loading state on start action", async () => {
+      let resolveStart: (value: ContainerActionResponse) => void;
+      mockStartContainer.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            resolveStart = resolve;
+          })
+      );
+
+      render(<ContainerWidget />);
+
+      await waitFor(() => {
+        expect(screen.getByText("plex")).toBeInTheDocument();
+      });
+
+      // Find and click start button for stopped container
+      const startButtons = screen.getAllByTitle("Start");
+      const plexStartButton = startButtons.find(
+        btn => !btn.hasAttribute("disabled")
+      );
+
+      if (plexStartButton) {
+        fireEvent.click(plexStartButton);
+      }
+
+      // Container should now have isLoading=true
+      await waitFor(() => {
+        expect(mockStartContainer).toHaveBeenCalledWith("ghi789");
+        // All buttons should be disabled during loading
+        const allButtons = screen.getAllByRole("button");
+        const containerButtons = allButtons.filter(
+          btn =>
+            btn.getAttribute("title") === "Start" ||
+            btn.getAttribute("title") === "Stop" ||
+            btn.getAttribute("title") === "Restart" ||
+            btn.getAttribute("title") === "Update"
+        );
+        // At least some buttons should be disabled
+        expect(
+          containerButtons.some(btn => btn.hasAttribute("disabled"))
+        ).toBeTruthy();
+      });
+
+      // Resolve the action
+      act(() => {
+        resolveStart!(mockActionResponse);
+      });
+    });
+
+    it("should show loading state on stop action", async () => {
+      let resolveStop: (value: ContainerActionResponse) => void;
+      mockStopContainer.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            resolveStop = resolve;
+          })
+      );
+
+      render(<ContainerWidget />);
+
+      await waitFor(() => {
+        expect(screen.getByText("pi-dashboard")).toBeInTheDocument();
+      });
+
+      const stopButtons = screen.getAllByTitle("Stop");
+      const enabledStopButton = stopButtons.find(
+        btn => !btn.hasAttribute("disabled")
+      );
+
+      if (enabledStopButton) {
+        fireEvent.click(enabledStopButton);
+      }
+
+      await waitFor(() => {
+        expect(mockStopContainer).toHaveBeenCalledWith("abc123");
+      });
+
+      // Resolve the action
+      act(() => {
+        resolveStop!(mockActionResponse);
+      });
+    });
+
+    it("should show loading state on restart action", async () => {
+      let resolveRestart: (value: ContainerActionResponse) => void;
+      mockRestartContainer.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            resolveRestart = resolve;
+          })
+      );
+
+      render(<ContainerWidget />);
+
+      await waitFor(() => {
+        expect(screen.getByText("pi-dashboard")).toBeInTheDocument();
+      });
+
+      const restartButtons = screen.getAllByTitle("Restart");
+      const enabledRestartButton = restartButtons.find(
+        btn => !btn.hasAttribute("disabled")
+      );
+
+      if (enabledRestartButton) {
+        fireEvent.click(enabledRestartButton);
+      }
+
+      await waitFor(() => {
+        expect(mockRestartContainer).toHaveBeenCalledWith("abc123");
+      });
+
+      // Resolve the action
+      act(() => {
+        resolveRestart!(mockActionResponse);
+      });
+    });
+
+    it("should show loading state on update action", async () => {
+      let resolveUpdate: (value: ContainerActionResponse) => void;
+      mockUpdateContainer.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            resolveUpdate = resolve;
+          })
+      );
+
+      render(<ContainerWidget />);
+
+      await waitFor(() => {
+        expect(screen.getByText("pi-dashboard")).toBeInTheDocument();
+      });
+
+      const updateButtons = screen.getAllByTitle("Update");
+      if (updateButtons[0]) {
+        fireEvent.click(updateButtons[0]);
+      }
+
+      await waitFor(() => {
+        expect(mockUpdateContainer).toHaveBeenCalledWith("abc123");
+      });
+
+      // Resolve the action
+      act(() => {
+        resolveUpdate!(mockActionResponse);
+      });
+    });
+
+    it("should clear loading state after action completes", async () => {
+      mockStopContainer.mockResolvedValue(mockActionResponse);
+      mockGetContainers.mockResolvedValue(mockContainersResponse);
+
+      render(<ContainerWidget />);
+
+      await waitFor(() => {
+        expect(screen.getByText("pi-dashboard")).toBeInTheDocument();
+      });
+
+      const stopButtons = screen.getAllByTitle("Stop");
+      const enabledStopButton = stopButtons.find(
+        btn => !btn.hasAttribute("disabled")
+      );
+
+      if (enabledStopButton) {
+        fireEvent.click(enabledStopButton);
+      }
+
+      // Wait for action to complete and loading state to clear
+      await waitFor(() => {
+        expect(mockStopContainer).toHaveBeenCalled();
+        expect(mockGetContainers).toHaveBeenCalledTimes(2);
+      });
+    });
   });
 });

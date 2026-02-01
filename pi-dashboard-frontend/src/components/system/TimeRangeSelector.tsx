@@ -1,4 +1,4 @@
-type TimeRange = 60 | 300 | 900 | 1800;
+type TimeRange = 3600 | 14400 | 43200 | 86400;
 
 interface TimeRangeSelectorProps {
   selectedRange: TimeRange;
@@ -6,10 +6,10 @@ interface TimeRangeSelectorProps {
 }
 
 const TIME_RANGES: { label: string; seconds: TimeRange }[] = [
-  { label: "1m", seconds: 60 },
-  { label: "5m", seconds: 300 },
-  { label: "15m", seconds: 900 },
-  { label: "30m", seconds: 1800 },
+  { label: "1h", seconds: 3600 },
+  { label: "4h", seconds: 14400 },
+  { label: "12h", seconds: 43200 },
+  { label: "24h", seconds: 86400 },
 ];
 
 export default function TimeRangeSelector({
