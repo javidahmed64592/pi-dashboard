@@ -32,7 +32,7 @@ export default function ContainerCard({
             <h3 className="text-lg font-bold text-text-primary font-mono">
               {port ? (
                 <a
-                  href={`http://localhost:${port}`}
+                  href={`https://${window.location.hostname}:${port}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 group hover:text-neon-green transition-colors"

@@ -37,7 +37,7 @@ describe("ContainerCard", () => {
     render(<ContainerCard {...defaultProps} />);
 
     const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("href", "http://localhost:443");
+    expect(link).toHaveAttribute("href", "https://localhost:443");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
 
@@ -204,7 +204,7 @@ describe("ContainerCard", () => {
     render(<ContainerCard {...defaultProps} />);
 
     const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("href", "http://localhost:443");
+    expect(link).toHaveAttribute("href", "https://localhost:443");
     expect(link.textContent).toContain("pi-dashboard");
   });
 
