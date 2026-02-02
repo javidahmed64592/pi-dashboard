@@ -25,10 +25,10 @@ export default function SystemPage() {
     // Initial fetch
     refreshHistory(selectedRange);
 
-    // Poll every 5 seconds
+    // Poll every 30 seconds
     const interval = setInterval(() => {
       refreshHistory(selectedRange);
-    }, 5000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [selectedRange, refreshHistory]);

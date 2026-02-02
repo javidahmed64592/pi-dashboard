@@ -30,7 +30,7 @@
     "media_type": "application/json; charset=utf-8"
   },
   "metrics": {
-    "collection_interval": 5,
+    "collection_interval": 10,
     "max_history_duration": 86400
   },
   "weather": {
