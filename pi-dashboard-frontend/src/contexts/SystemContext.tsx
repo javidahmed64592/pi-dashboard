@@ -99,6 +99,7 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await getSystemMetricsHistory({
         last_n_seconds: timeRangeSeconds,
+        max_data_points: 1500,
       });
       setMetricsHistory(response.history);
       setError(null);

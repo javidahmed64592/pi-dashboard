@@ -234,7 +234,7 @@ class TestGetSystemMetricsHistoryEndpoint:
     @pytest.fixture
     def mock_request_body(self) -> GetSystemMetricsHistoryRequest:
         """Provide a mock request body for system metrics history."""
-        return GetSystemMetricsHistoryRequest(last_n_seconds=300)
+        return GetSystemMetricsHistoryRequest(last_n_seconds=300, max_data_points=1500)
 
     @pytest.fixture
     def mock_request_object(self, mock_request_body: GetSystemMetricsHistoryRequest) -> MagicMock:

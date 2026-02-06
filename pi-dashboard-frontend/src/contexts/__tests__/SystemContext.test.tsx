@@ -213,6 +213,7 @@ describe("SystemContext", () => {
     await waitFor(() => {
       expect(api.getSystemMetricsHistory).toHaveBeenCalledWith({
         last_n_seconds: 60,
+        max_data_points: 1500,
       });
       expect(screen.getByText("1")).toBeInTheDocument();
     });

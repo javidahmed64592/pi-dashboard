@@ -133,6 +133,7 @@ export interface ContainerActionResponse extends BaseResponse {
 // Request types
 export interface GetSystemMetricsHistoryRequest {
   last_n_seconds: number;
+  max_data_points: number;
 }
 
 export interface CreateNoteRequest {
