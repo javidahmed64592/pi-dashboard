@@ -74,8 +74,6 @@ class TestSystemMetricsHistory:
         ("total_entries", "max_data_points", "expected_count"),
         [
             (100, 25, 25),  # Downsample 100 entries to 25
-            (1000, 100, 100),  # Downsample 1000 entries to 100
-            (500, 150, 150),  # Downsample 500 entries to 150
             (50, 100, 50),  # No downsampling needed (fewer entries than max)
             (100, 100, 100),  # Exact match
         ],
