@@ -90,15 +90,28 @@ class SystemMetricsHistory(BaseModel):
         cutoff_time = current_time - max_age_seconds
         self.history = [entry for entry in self.history if entry.timestamp >= cutoff_time]
 
-    def get_entries_since(self, seconds_ago: int, current_time: int) -> list[SystemMetricsHistoryEntry]:
-        """Get entries from the last N seconds.
+    def get_entries_since(
+        self, seconds_ago: int, current_time: int, max_data_points: int
+    ) -> list[SystemMetricsHistoryEntry]:
+        """Get entries from the last N seconds with adaptive downsampling.
 
         :param int seconds_ago: Number of seconds to look back
         :param int current_time: Current Unix timestamp
-        :return list[SystemMetricsHistoryEntry]: List of entries from the specified time range
+        :param int max_data_points: Maximum number of data points to return
+        :return list[SystemMetricsHistoryEntry]: List of entries from the specified time range (downsampled if needed)
         """
         cutoff_time = current_time - seconds_ago
-        return [entry for entry in self.history if entry.timestamp >= cutoff_time]
+        entries = [entry for entry in self.history if entry.timestamp >= cutoff_time]
+
+        # If we have fewer entries than max_data_points, return all
+        if len(entries) <= max_data_points:
+            return entries
+
+        # Calculate the interval for downsampling
+        interval = len(entries) // max_data_points
+
+        # Return every nth entry to downsample
+        return [entries[i] for i in range(0, len(entries), interval)][:max_data_points]
 
 
 # Notes models
@@ -285,6 +298,7 @@ class GetSystemMetricsHistoryRequest(BaseModel):
     """Request model for system metrics history."""
 
     last_n_seconds: int = Field(..., ge=1, description="Number of seconds to retrieve history for")
+    max_data_points: int = Field(..., ge=1, description="Maximum number of data points to return")
 
 
 class CreateNoteRequest(BaseModel):

@@ -309,6 +309,7 @@ class PiDashboardServer(TemplateServer):
         entries = self.metrics_history.get_entries_since(
             min(metrics_request.last_n_seconds, self.config.metrics.max_history_duration),
             PiDashboardServer._current_timestamp_int(),
+            metrics_request.max_data_points,
         )
         return GetSystemMetricsHistoryResponse(
             message="Retrieved system metrics history successfully",
