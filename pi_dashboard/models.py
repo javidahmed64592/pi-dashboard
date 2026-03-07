@@ -107,11 +107,17 @@ class SystemMetricsHistory(BaseModel):
         if len(entries) <= max_data_points:
             return entries
 
-        # Calculate the interval for downsampling
-        interval = len(entries) // max_data_points
+        # Calculate the interval for downsampling (use float division for precision)
+        interval = len(entries) / max_data_points
 
-        # Return every nth entry to downsample
-        return [entries[i] for i in range(0, len(entries), interval)][:max_data_points]
+        # Sample evenly across the time range, always including the most recent entry
+        sampled_indices = [int(i * interval) for i in range(max_data_points - 1)]
+        sampled_entries = [entries[idx] for idx in sampled_indices]
+
+        # Always include the most recent entry to ensure we show current data
+        sampled_entries.append(entries[-1])
+
+        return sampled_entries
 
 
 # Notes models
