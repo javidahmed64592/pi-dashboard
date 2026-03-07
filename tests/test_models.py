@@ -113,7 +113,7 @@ class TestSystemMetricsHistory:
         if total_entries > max_data_points:
             # Check that we're getting evenly distributed samples
             assert entries[0].timestamp == history.history[0].timestamp  # First entry
-            assert entries[-1].timestamp <= history.history[-1].timestamp  # Last or near-last entry
+            assert entries[-1].timestamp == history.history[-1].timestamp  # Last entry (most recent)
 
 
 # Notes models
