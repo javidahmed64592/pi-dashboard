@@ -1,8 +1,9 @@
-[![python](https://img.shields.io/badge/Python-3.13-3776AB.svg?style=flat&logo=python&logoColor=ffd343)](https://docs.python.org/3.13/)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=flat-square&logo=python&logoColor=ffd343)](https://docs.python.org/3.13/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Latest-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![CI](https://img.shields.io/github/actions/workflow/status/javidahmed64592/pi-dashboard/ci.yml?branch=main&style=flat-square&label=CI&logo=github)](https://github.com/javidahmed64592/pi-dashboard/actions/workflows/ci.yml)
 [![Build](https://img.shields.io/github/actions/workflow/status/javidahmed64592/pi-dashboard/build.yml?branch=main&style=flat-square&label=Build&logo=github)](https://github.com/javidahmed64592/pi-dashboard/actions/workflows/build.yml)
+[![Docs](https://img.shields.io/github/actions/workflow/status/javidahmed64592/pi-dashboard/docs.yml?branch=main&style=flat-square&label=Docs&logo=github)](https://github.com/javidahmed64592/pi-dashboard/actions/workflows/docs.yml)
 [![Docker](https://img.shields.io/github/actions/workflow/status/javidahmed64592/pi-dashboard/docker.yml?branch=main&style=flat-square&label=Docker&logo=github)](https://github.com/javidahmed64592/pi-dashboard/actions/workflows/docker.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -18,8 +19,6 @@ A FastAPI-based dashboard for monitoring on a Raspberry Pi.
   - [Installation](#installation)
   - [Configuration](#configuration)
   - [Managing the Container](#managing-the-container)
-- [Links](#links)
-- [Documentation](#documentation)
 - [License](#license)
 
 ## Prerequisites
@@ -61,19 +60,6 @@ docker compose logs -f pi-dashboard
 ```sh
 sudo usermod -aG docker ${USER}
 ```
-
-## Links
-
-- Access the web application: https://localhost:443
-- Server runs at: https://localhost:443/api
-- Swagger UI: https://localhost:443/api/docs
-- Redoc: https://localhost:443/api/redoc
-
-## Documentation
-
-- **[API Documentation](./docs/API.md)**: API architecture and endpoints
-- **[Software Maintenance Guide](./docs/SMG.md)**: Development setup, configuration
-- **[Workflows](./docs/WORKFLOWS.md)**: CI/CD pipeline details
 
 ## License
 
