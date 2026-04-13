@@ -18,18 +18,22 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 dependencies = [
-    "python-template-server @ git+https://github.com/javidahmed64592/python-template-server.git",
-    "psutil>=7.2.2",
     "docker>=7.1.0",
+    "psutil>=7.2.2",
+    "python-template-server @ git+https://github.com/javidahmed64592/python-template-server.git",
 ]
 
 [project.optional-dependencies]
 dev = [
     "python-template-server[dev] @ git+https://github.com/javidahmed64592/python-template-server.git",
 ]
+docs = [
+    "python-template-server[docs] @ git+https://github.com/javidahmed64592/python-template-server.git",
+]
 
 [project.urls]
 repository = "https://github.com/javidahmed64592/pi-dashboard"
+documentation = "https://javidahmed64592.github.io/pi-dashboard"
 
 [project.scripts]
 pi-dashboard = "pi_dashboard.main:run"
@@ -169,5 +173,6 @@ module = [
     "docker.*",
     "psutil.*",
     "python_template_server.*",
+    "template_python.*",
 ]
 ignore_missing_imports = true
