@@ -55,7 +55,7 @@ class PiDashboardServer(TemplateServer):
         """
         self.config: PiDashboardConfig
         super().__init__(
-            package_name="pi_dashboard",
+            package_name="pi-dashboard",
             config=config,
         )
 
