@@ -284,7 +284,6 @@ class PiDashboardServer(TemplateServer):
         info = get_system_info()
         return GetSystemInfoResponse(
             message="Retrieved system info successfully",
-            timestamp=GetSystemInfoResponse.current_timestamp(),
             info=info,
         )
 
@@ -296,7 +295,6 @@ class PiDashboardServer(TemplateServer):
         metrics = get_system_metrics()
         return GetSystemMetricsResponse(
             message="Retrieved system metrics successfully",
-            timestamp=GetSystemMetricsResponse.current_timestamp(),
             metrics=metrics,
         )
 
@@ -313,7 +311,6 @@ class PiDashboardServer(TemplateServer):
         )
         return GetSystemMetricsHistoryResponse(
             message="Retrieved system metrics history successfully",
-            timestamp=GetSystemMetricsHistoryResponse.current_timestamp(),
             history=SystemMetricsHistory(history=entries),
         )
 
@@ -324,7 +321,6 @@ class PiDashboardServer(TemplateServer):
         """
         return GetNotesResponse(
             message="Retrieved notes successfully",
-            timestamp=GetNotesResponse.current_timestamp(),
             notes=self.notes_handler.get_all_notes(),
         )
 
@@ -334,11 +330,11 @@ class PiDashboardServer(TemplateServer):
         :return CreateNoteResponse: Response containing the created note
         """
         note_request = CreateNoteRequest.model_validate(await request.json())
-        current_timestamp = CreateNoteResponse.current_timestamp()
         return CreateNoteResponse(
             message="Created note successfully",
-            timestamp=current_timestamp,
-            note=self.notes_handler.create_note(note_request.title, note_request.content, current_timestamp),
+            note=self.notes_handler.create_note(
+                note_request.title, note_request.content, CreateNoteResponse.current_timestamp()
+            ),
         )
 
     async def update_note(self, request: Request, note_id: str) -> UpdateNoteResponse:
@@ -349,13 +345,13 @@ class PiDashboardServer(TemplateServer):
         :raises HTTPException: If the note is not found (404)
         """
         update_request = UpdateNoteRequest.model_validate(await request.json())
-        current_timestamp = UpdateNoteResponse.current_timestamp()
-        note = self.notes_handler.update_note(note_id, current_timestamp, update_request.title, update_request.content)
+        note = self.notes_handler.update_note(
+            note_id, UpdateNoteResponse.current_timestamp(), update_request.title, update_request.content
+        )
         if note is None:
             raise HTTPException(status_code=ResponseCode.NOT_FOUND, detail=f"Note not found: {note_id}")
         return UpdateNoteResponse(
             message="Updated note successfully",
-            timestamp=current_timestamp,
             note=note,
         )
 
@@ -371,7 +367,6 @@ class PiDashboardServer(TemplateServer):
             raise HTTPException(status_code=ResponseCode.NOT_FOUND, detail=f"Note not found: {note_id}")
         return DeleteNoteResponse(
             message="Deleted note successfully",
-            timestamp=DeleteNoteResponse.current_timestamp(),
         )
 
     async def get_weather(self, request: Request) -> GetWeatherResponse:
@@ -384,7 +379,6 @@ class PiDashboardServer(TemplateServer):
             weather_data = await self.weather_handler.get_weather()
             return GetWeatherResponse(
                 message="Retrieved weather data successfully",
-                timestamp=GetWeatherResponse.current_timestamp(),
                 weather=weather_data,
             )
         except Exception as e:
@@ -400,7 +394,6 @@ class PiDashboardServer(TemplateServer):
         """
         return GetWeatherLocationResponse(
             message="Retrieved weather location successfully",
-            timestamp=GetWeatherLocationResponse.current_timestamp(),
             latitude=self.config.weather.latitude,
             longitude=self.config.weather.longitude,
             location_name=self.config.weather.location_name,
@@ -441,7 +434,6 @@ class PiDashboardServer(TemplateServer):
 
         return GetWeatherLocationResponse(
             message="Updated weather location successfully",
-            timestamp=GetWeatherLocationResponse.current_timestamp(),
             latitude=self.config.weather.latitude,
             longitude=self.config.weather.longitude,
             location_name=self.config.weather.location_name,
@@ -456,7 +448,6 @@ class PiDashboardServer(TemplateServer):
             containers = self.container_handler.list_containers()
             return ContainerListResponse(
                 message=f"Retrieved {len(containers)} containers",
-                timestamp=ContainerListResponse.current_timestamp(),
                 containers=containers,
             )
         except Exception as e:
@@ -475,7 +466,6 @@ class PiDashboardServer(TemplateServer):
             containers = self.container_handler.list_containers()
             return ContainerListResponse(
                 message=f"Retrieved {len(containers)} containers",
-                timestamp=ContainerListResponse.current_timestamp(),
                 containers=containers,
             )
         except Exception as e:
@@ -495,7 +485,6 @@ class PiDashboardServer(TemplateServer):
             container_name = self.container_handler.start_container(container_id=container_id)
             return ContainerActionResponse(
                 message=f"Container {container_name} started successfully",
-                timestamp=ContainerActionResponse.current_timestamp(),
                 container_id=container_id,
                 action="start",
             )
@@ -528,7 +517,6 @@ class PiDashboardServer(TemplateServer):
             container_name = self.container_handler.stop_container(container_id=container_id, timeout=10)
             return ContainerActionResponse(
                 message=f"Container {container_name} stopped successfully",
-                timestamp=ContainerActionResponse.current_timestamp(),
                 container_id=container_id,
                 action="stop",
             )
@@ -561,7 +549,6 @@ class PiDashboardServer(TemplateServer):
             container_name = self.container_handler.restart_container(container_id=container_id, timeout=10)
             return ContainerActionResponse(
                 message=f"Container {container_name} restarted successfully",
-                timestamp=ContainerActionResponse.current_timestamp(),
                 container_id=container_id,
                 action="restart",
             )
@@ -596,7 +583,6 @@ class PiDashboardServer(TemplateServer):
             )
             return ContainerActionResponse(
                 message=f"Container {container_name} updated successfully",
-                timestamp=ContainerActionResponse.current_timestamp(),
                 container_id=new_container_id,
                 action="update",
             )
