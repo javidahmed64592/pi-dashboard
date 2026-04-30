@@ -159,122 +159,137 @@ class PiDashboardServer(TemplateServer):
     def setup_routes(self) -> None:
         """Set up API routes."""
         # System routes
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/system/info",
             handler_function=self.get_system_info,
             response_model=GetSystemInfoResponse,
             methods=["GET"],
             limited=True,
+            authentication_required=True,
         )
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/system/metrics",
             handler_function=self.get_system_metrics,
             response_model=GetSystemMetricsResponse,
             methods=["GET"],
             limited=False,
+            authentication_required=True,
         )
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/system/metrics/history",
             handler_function=self.get_system_metrics_history,
             response_model=GetSystemMetricsHistoryResponse,
             methods=["POST"],
             limited=False,
+            authentication_required=True,
         )
         # Notes routes
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/notes",
             handler_function=self.get_notes,
             response_model=GetNotesResponse,
             methods=["GET"],
             limited=True,
+            authentication_required=True,
         )
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/notes",
             handler_function=self.create_note,
             response_model=CreateNoteResponse,
             methods=["POST"],
             limited=True,
+            authentication_required=True,
         )
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/notes/{note_id}",
             handler_function=self.update_note,
             response_model=UpdateNoteResponse,
             methods=["PUT"],
             limited=True,
+            authentication_required=True,
         )
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/notes/{note_id}",
             handler_function=self.delete_note,
             response_model=DeleteNoteResponse,
             methods=["DELETE"],
             limited=True,
+            authentication_required=True,
         )
         # Weather routes
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/weather",
             handler_function=self.get_weather,
             response_model=GetWeatherResponse,
             methods=["GET"],
             limited=True,
+            authentication_required=True,
         )
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/weather/location",
             handler_function=self.get_weather_location,
             response_model=GetWeatherLocationResponse,
             methods=["GET"],
             limited=True,
+            authentication_required=True,
         )
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/weather/location",
             handler_function=self.update_weather_location,
             response_model=GetWeatherLocationResponse,
             methods=["PUT"],
             limited=True,
+            authentication_required=True,
         )
         # Container routes
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/containers",
             handler_function=self.list_containers,
             response_model=ContainerListResponse,
             methods=["GET"],
             limited=True,
+            authentication_required=True,
         )
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/containers/refresh",
             handler_function=self.refresh_containers,
             response_model=ContainerListResponse,
             methods=["POST"],
             limited=True,
+            authentication_required=True,
         )
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/containers/{container_id}/start",
             handler_function=self.start_container,
             response_model=ContainerActionResponse,
             methods=["POST"],
             limited=True,
+            authentication_required=True,
         )
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/containers/{container_id}/stop",
             handler_function=self.stop_container,
             response_model=ContainerActionResponse,
             methods=["POST"],
             limited=True,
+            authentication_required=True,
         )
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/containers/{container_id}/restart",
             handler_function=self.restart_container,
             response_model=ContainerActionResponse,
             methods=["POST"],
             limited=True,
+            authentication_required=True,
         )
-        self.add_authenticated_route(
+        self.add_route(
             endpoint="/containers/{container_id}/update",
             handler_function=self.update_container,
             response_model=ContainerActionResponse,
             methods=["POST"],
             limited=True,
+            authentication_required=True,
         )
-        super().setup_routes()
 
     async def get_system_info(self, request: Request) -> GetSystemInfoResponse:
         """Get system information.
