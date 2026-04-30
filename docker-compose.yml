@@ -1,5 +1,4 @@
 services:
-  # Pi Dashboard
   pi-dashboard:
     image: ${IMAGE:-ghcr.io/javidahmed64592/pi-dashboard:latest}
     build:
@@ -11,16 +10,13 @@ services:
     environment:
       - HOST=${HOST:-0.0.0.0}
       - PORT=${PORT:-443}
-      # Load API token hash from .env file (optional - will be generated if missing)
       - API_TOKEN_HASH=${API_TOKEN_HASH:-}
-      # Point to host filesystem for metrics collection
       - HOST_ROOT=/host
     volumes:
       - ./.env:/app/.env
-      - data:/app/data
-      - certs:/app/certs
-      - logs:/app/logs
-      # Mount host directories for system metrics collection
+      - ./certs:/app/certs
+      - ./logs:/app/logs
+      - ./data:/app/data
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/host:ro
@@ -33,14 +29,11 @@ services:
           "CMD",
           "sh",
           "-c",
-          'python -c "import urllib.request; urllib.request.urlopen(''https://localhost:$PORT/api/health'', context=__import__(''ssl'')._create_unverified_context()).read()"',
+          "python -c \"import urllib.request;
+            urllib.request.urlopen('https://localhost:$PORT/api/health',
+            context=__import__('ssl')._create_unverified_context()).read()\"",
         ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-
-volumes:
-  data:
-  certs:
-  logs:
