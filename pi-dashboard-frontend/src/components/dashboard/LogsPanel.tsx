@@ -5,18 +5,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getContainerLogs } from "@/lib/api";
 import type { LogSource } from "@/lib/types";
 
-// ─── Constants ────────────────────────────────────────────────────────────
-
 const LINE_OPTIONS = [100, 250, 500, 1000] as const;
 const AUTO_REFRESH_INTERVAL_MS = 10_000;
-
-// ─── Props ────────────────────────────────────────────────────────────────
 
 interface LogsPanelProps {
   source: LogSource | null;
 }
-
-// ─── Component ────────────────────────────────────────────────────────────
 
 export default function LogsPanel({ source }: LogsPanelProps) {
   const [lines, setLines] = useState<number>(100);
@@ -25,7 +19,6 @@ export default function LogsPanel({ source }: LogsPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const logAreaRef = useRef<HTMLDivElement>(null);
 
-  // ── Fetch logs for the given source ────────────────────────────────────
   const fetchLogs = useCallback(
     async (logSource: LogSource, lineCount: number) => {
       setIsLoadingLogs(true);
@@ -75,7 +68,6 @@ export default function LogsPanel({ source }: LogsPanelProps) {
     return () => clearInterval(interval);
   }, [source, lines, fetchLogs]);
 
-  // ── Handlers ───────────────────────────────────────────────────────────
   const handleRefresh = () => {
     if (source) fetchLogs(source, lines);
   };
@@ -85,21 +77,19 @@ export default function LogsPanel({ source }: LogsPanelProps) {
     setLines(value);
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="bg-background-secondary border border-border rounded-lg shadow-neon flex flex-col h-full min-h-64">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
-        <div className="flex flex-col min-w-0">
-          <h2 className="text-sm font-bold text-neon-green font-mono tracking-widest uppercase">
-            Logs
-          </h2>
+        <h2 className="text-sm font-bold text-neon-green font-mono tracking-widest uppercase truncate min-w-0">
+          Logs
           {source && (
-            <span className="text-xs text-text-muted font-mono truncate">
-              {source.containerName}
+            <span className="text-text-muted normal-case tracking-normal font-normal">
+              {" "}
+              — {source.containerName}
             </span>
           )}
-        </div>
+        </h2>
         <div className="flex items-center gap-2 flex-shrink-0">
           <div className="flex gap-1">
             {LINE_OPTIONS.map(n => (

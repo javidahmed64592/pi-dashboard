@@ -64,7 +64,9 @@ describe("LogsPanel", () => {
   it("should display the source name in the header when a source is provided", async () => {
     render(<LogsPanel source={mockDockerSource} />);
     await waitFor(() => {
-      expect(screen.getByText("pi-dashboard")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: /pi-dashboard/i })
+      ).toBeInTheDocument();
     });
   });
 
