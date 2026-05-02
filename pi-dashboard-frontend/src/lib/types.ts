@@ -76,6 +76,25 @@ export interface ContainerActionResponse extends BaseResponse {
   container_id: string;
 }
 
+export interface ContainerLogsResponse extends BaseResponse {
+  container_id: string;
+  logs: string[];
+}
+
+// Log source types
+// Designed to be extended: add more source types here as they become available
+// (e.g. "systemd" for journald logs, "file" for plain log files, etc.)
+export type LogSourceType = "docker";
+
+export interface DockerLogSource {
+  type: "docker";
+  containerId: string;
+  containerName: string;
+}
+
+// Union type — add new source shapes here when extending the log panel
+export type LogSource = DockerLogSource;
+
 // Request types
 export interface GetSystemMetricsHistoryRequest {
   last_n_seconds: number;

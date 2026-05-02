@@ -111,3 +111,14 @@ class TestUpdateContainer:
         mock_container.stop.assert_called_once_with(timeout=10)
         mock_container.remove.assert_called_once()
         mock_container_handler.client.containers.run.assert_called_once()
+
+
+class TestGetContainerLogs:
+    """Tests for getting Docker container logs."""
+
+    def test_get_container_logs(self, mock_container_handler: ContainerHandler, mock_container: MagicMock) -> None:
+        """Test successfully getting container logs."""
+        logs = mock_container_handler.get_container_logs("abc123", 100)
+
+        assert logs == ["log line 1", "log line 2", "log line 3"]
+        mock_container.logs.assert_called_once_with(tail=100, timestamps=False, stream=False)

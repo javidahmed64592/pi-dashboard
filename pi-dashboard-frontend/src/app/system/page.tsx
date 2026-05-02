@@ -68,7 +68,7 @@ export default function SystemPage() {
   const hasData = cpuData.length > 0;
 
   return (
-    <div className="space-y-5">
+    <div className="h-full overflow-y-auto space-y-5">
       {/* Uptime and Time Range Selector Row */}
       <div className="flex justify-between items-center">
         <UptimeDisplay uptime={currentMetrics?.uptime} />

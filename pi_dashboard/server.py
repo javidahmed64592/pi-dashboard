@@ -6,9 +6,10 @@ from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
+from typing import Annotated
 
 from docker.errors import APIError, NotFound
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from python_template_server.constants import ROOT_DIR
 from python_template_server.models import ResponseCode
 from python_template_server.template_server import TemplateServer
@@ -18,6 +19,7 @@ from pi_dashboard.models import (
     BaseResponse,
     ContainerActionResponse,
     ContainerListResponse,
+    ContainerLogsResponse,
     GetSystemInfoResponse,
     GetSystemMetricsHistoryRequest,
     GetSystemMetricsHistoryResponse,
@@ -211,6 +213,14 @@ class PiDashboardServer(TemplateServer):
             handler_function=self.update_container,
             response_model=ContainerActionResponse,
             methods=["POST"],
+            limited=True,
+            authentication_required=True,
+        )
+        self.add_route(
+            endpoint="/containers/{container_id}/logs",
+            handler_function=self.get_container_logs,
+            response_model=ContainerLogsResponse,
+            methods=["GET"],
             limited=True,
             authentication_required=True,
         )
@@ -414,6 +424,44 @@ class PiDashboardServer(TemplateServer):
             ) from e
         except Exception as e:
             logger.exception("Unexpected error while updating container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
+
+    async def get_container_logs(
+        self,
+        request: Request,
+        container_id: str,
+        lines: Annotated[int, Query(ge=1, le=1000)],
+    ) -> ContainerLogsResponse:
+        """Get logs for a Docker container.
+
+        :param str container_id: The container ID
+        :param int lines: Number of log lines to retrieve (1-1000)
+        :return ContainerLogsResponse: Response containing log lines
+        """
+        try:
+            log_lines = self.container_handler.get_container_logs(container_id=container_id, lines=lines)
+            return ContainerLogsResponse(
+                message=f"Retrieved {len(log_lines)} log lines for container {container_id}",
+                container_id=container_id,
+                logs=log_lines,
+            )
+        except NotFound as e:
+            logger.exception("Container not found: %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.NOT_FOUND,
+                detail=f"Container not found: {container_id}",
+            ) from e
+        except APIError as e:
+            logger.exception("Docker API error while fetching logs for container %s", container_id)
+            raise HTTPException(
+                status_code=ResponseCode.SERVICE_UNAVAILABLE,
+                detail="Docker API error",
+            ) from e
+        except Exception as e:
+            logger.exception("Unexpected error while fetching logs for container %s", container_id)
             raise HTTPException(
                 status_code=ResponseCode.INTERNAL_SERVER_ERROR,
                 detail="Unexpected error",

@@ -173,13 +173,14 @@ describe("ContainerCard", () => {
     });
   });
 
-  it("renders all four action buttons", () => {
+  it("renders all five action buttons", () => {
     render(<ContainerCard {...defaultProps} />);
 
     expect(screen.getByTitle("Start")).toBeInTheDocument();
     expect(screen.getByTitle("Stop")).toBeInTheDocument();
     expect(screen.getByTitle("Restart")).toBeInTheDocument();
     expect(screen.getByTitle("Update")).toBeInTheDocument();
+    expect(screen.getByTitle("View Logs")).toBeInTheDocument();
   });
 
   it("applies hover styles to the card", () => {
@@ -331,6 +332,22 @@ describe("ContainerCard", () => {
       expect(stopButton).not.toBeDisabled();
       fireEvent.click(stopButton);
       expect(mockHandlers.onStop).toHaveBeenCalledWith("abc123");
+    });
+  });
+
+  describe("View Logs button", () => {
+    it("calls onViewLogs when view logs button is clicked", () => {
+      const onViewLogs = jest.fn();
+      render(<ContainerCard {...defaultProps} onViewLogs={onViewLogs} />);
+      fireEvent.click(screen.getByTitle("View Logs"));
+      expect(onViewLogs).toHaveBeenCalledWith("abc123");
+    });
+
+    it("does not throw when view logs button is clicked without handler", () => {
+      render(<ContainerCard {...defaultProps} />);
+      expect(() =>
+        fireEvent.click(screen.getByTitle("View Logs"))
+      ).not.toThrow();
     });
   });
 });

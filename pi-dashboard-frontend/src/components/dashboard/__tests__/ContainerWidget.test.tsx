@@ -588,4 +588,25 @@ describe("ContainerWidget", () => {
       });
     });
   });
+
+  it("should call onViewLogs with the correct source when View Logs is clicked", async () => {
+    const onViewLogs = jest.fn();
+
+    render(<ContainerWidget onViewLogs={onViewLogs} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("pi-dashboard")).toBeInTheDocument();
+    });
+
+    const viewLogsButtons = screen.getAllByTitle("View Logs");
+    if (viewLogsButtons[0]) {
+      fireEvent.click(viewLogsButtons[0]);
+    }
+
+    expect(onViewLogs).toHaveBeenCalledWith({
+      type: "docker",
+      containerId: "abc123",
+      containerName: "pi-dashboard",
+    });
+  });
 });

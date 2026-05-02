@@ -11,6 +11,7 @@ import type {
   GetSystemMetricsHistoryResponse,
   GetContainersResponse,
   ContainerActionResponse,
+  ContainerLogsResponse,
 } from "@/lib/types";
 
 // Determine the base URL based on environment
@@ -202,6 +203,21 @@ export const updateContainer = async (
   try {
     const response = await api.post<ContainerActionResponse>(
       `/containers/${containerId}/update`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
+
+export const getContainerLogs = async (
+  containerId: string,
+  lines: number = 100
+): Promise<ContainerLogsResponse> => {
+  try {
+    const response = await api.get<ContainerLogsResponse>(
+      `/containers/${containerId}/logs`,
+      { params: { lines } }
     );
     return response.data;
   } catch (error) {
