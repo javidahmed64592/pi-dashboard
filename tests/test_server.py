@@ -14,21 +14,13 @@ from python_template_server.models import ResponseCode
 
 from pi_dashboard.container_handler import ContainerHandler
 from pi_dashboard.models import (
-    CreateNoteRequest,
     GetSystemMetricsHistoryRequest,
-    Note,
     PiDashboardConfig,
     SystemInfo,
     SystemMetrics,
     SystemMetricsHistory,
-    UpdateNoteRequest,
-    UpdateWeatherLocationRequest,
-    WeatherConfig,
-    WeatherData,
 )
-from pi_dashboard.notes_handler import NotesHandler
 from pi_dashboard.server import PiDashboardServer
-from pi_dashboard.weather_handler import WeatherHandler
 
 
 @pytest.fixture(autouse=True)
@@ -65,24 +57,11 @@ def mock_get_system_metrics(mock_system_metrics: SystemMetrics) -> Generator[Mag
 
 
 @pytest.fixture
-def mock_weather_handler(mock_weather_data: WeatherData) -> Generator[MagicMock]:
-    """Mock the WeatherHandler class."""
-    with patch("pi_dashboard.server.WeatherHandler") as mock_handler_class:
-        mock_handler_instance = MagicMock(spec=WeatherHandler)
-        mock_handler_instance.get_weather = AsyncMock(return_value=mock_weather_data)
-        mock_handler_class.return_value = mock_handler_instance
-        mock_handler_class.geocode_location = AsyncMock(return_value=(51.5074, -0.1278))
-        yield mock_handler_class
-
-
-@pytest.fixture
 def mock_server(
     mock_pi_dashboard_config: PiDashboardConfig,
     mock_get_system_info: MagicMock,
     mock_get_system_metrics: MagicMock,
     mock_system_metrics_history: SystemMetricsHistory,
-    mock_notes_handler: NotesHandler,
-    mock_weather_handler: MagicMock,
     mock_container_handler: ContainerHandler,
 ) -> Generator[PiDashboardServer]:
     """Provide a PiDashboardServer instance for testing."""
@@ -97,7 +76,6 @@ def mock_server(
         patch.object(PiDashboardServer, "_verify_api_key", new=fake_verify_api_key),
         patch("pi_dashboard.server.PiDashboardConfig.save_to_file"),
         patch("pi_dashboard.server.SystemMetricsHistory", return_value=mock_system_metrics_history),
-        patch("pi_dashboard.server.NotesHandler", return_value=mock_notes_handler),
         patch("pi_dashboard.server.ContainerHandler", return_value=mock_container_handler),
     ):
         server = PiDashboardServer(config=mock_pi_dashboard_config)
@@ -154,10 +132,6 @@ class TestPiDashboardServerRoutes:
             "/system/info",
             "/system/metrics",
             "/system/metrics/history",
-            "/notes",
-            "/notes/{note_id}",
-            "/weather",
-            "/weather/location",
             "/containers",
             "/containers/refresh",
             "/containers/{container_id}/start",
@@ -251,234 +225,6 @@ class TestGetSystemMetricsHistoryEndpoint:
     ) -> None:
         """Test /system/metrics/history endpoint returns 200."""
         response = mock_client.post("/system/metrics/history", json=mock_request_body.model_dump())
-        assert response.status_code == ResponseCode.OK
-
-
-class TestGetNotesEndpoint:
-    """Integration and unit tests for the /notes endpoint."""
-
-    @pytest.fixture
-    def mock_request_object(self) -> MagicMock:
-        """Provide a mock Request object with JSON data."""
-        return MagicMock(spec=Request)
-
-    def test_get_notes(
-        self, mock_server: PiDashboardServer, mock_request_object: MagicMock, mock_notes_handler: NotesHandler
-    ) -> None:
-        """Test the /notes method handles valid JSON."""
-        response = asyncio.run(mock_server.get_notes(mock_request_object))
-
-        assert response.message == "Retrieved notes successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
-        assert response.notes == mock_notes_handler.get_all_notes()
-
-    def test_get_notes_endpoint(self, mock_client: TestClient) -> None:
-        """Test /notes endpoint returns 200."""
-        response = mock_client.get("/notes")
-        assert response.status_code == ResponseCode.OK
-
-
-class TestCreateNoteEndpoint:
-    """Integration and unit tests for the /notes endpoint."""
-
-    @pytest.fixture
-    def mock_request_body(self) -> CreateNoteRequest:
-        """Provide a mock request body for creating a note."""
-        return CreateNoteRequest(title="Test Note", content="This is a test note.")
-
-    @pytest.fixture
-    def mock_request_object(self, mock_request_body: CreateNoteRequest) -> MagicMock:
-        """Provide a mock Request object with JSON data."""
-        request = MagicMock(spec=Request)
-        request.json = AsyncMock(return_value=mock_request_body.model_dump())
-        return request
-
-    def test_create_note(self, mock_server: PiDashboardServer, mock_request_object: MagicMock) -> None:
-        """Test the /notes method handles valid JSON and returns a model reply."""
-        response = asyncio.run(mock_server.create_note(mock_request_object))
-
-        assert response.message == "Created note successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
-        assert response.note.title == mock_request_object.json.return_value["title"]
-        assert response.note.content == mock_request_object.json.return_value["content"]
-
-        created_note = mock_server.notes_handler.collection.get_note_by_id(response.note.id)
-        assert created_note is not None
-        assert created_note.title == mock_request_object.json.return_value["title"]
-        assert created_note.content == mock_request_object.json.return_value["content"]
-
-    def test_create_note_endpoint(self, mock_client: TestClient, mock_request_body: CreateNoteRequest) -> None:
-        """Test /notes endpoint returns 200."""
-        response = mock_client.post("/notes", json=mock_request_body.model_dump())
-        assert response.status_code == ResponseCode.OK
-
-        response_body = response.json()
-        assert response_body["message"] == "Created note successfully"
-        assert isinstance(response_body["timestamp"], str)
-        assert response_body["note"]["title"] == mock_request_body.title
-        assert response_body["note"]["content"] == mock_request_body.content
-
-
-class TestUpdateNoteEndpoint:
-    """Integration and unit tests for the /notes/{note_id} endpoint."""
-
-    @pytest.fixture
-    def mock_request_body(self) -> UpdateNoteRequest:
-        """Provide a mock request body for updating a note."""
-        return UpdateNoteRequest(title="Updated Test Note", content="This is an updated test note.")
-
-    @pytest.fixture
-    def mock_request_object(self, mock_request_body: UpdateNoteRequest) -> MagicMock:
-        """Provide a mock Request object with JSON data."""
-        request = MagicMock(spec=Request)
-        request.json = AsyncMock(return_value=mock_request_body.model_dump())
-        return request
-
-    def test_update_note(self, mock_server: PiDashboardServer, mock_request_object: MagicMock, mock_note: Note) -> None:
-        """Test the /notes/{note_id} method handles valid JSON and returns a model reply."""
-        response = asyncio.run(mock_server.update_note(mock_request_object, mock_note.id))
-
-        assert response.message == "Updated note successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
-        assert response.note.title == mock_request_object.json.return_value["title"]
-        assert response.note.content == mock_request_object.json.return_value["content"]
-
-        updated_note = mock_server.notes_handler.collection.get_note_by_id(mock_note.id)
-        assert updated_note is not None
-        assert updated_note.title == mock_request_object.json.return_value["title"]
-        assert updated_note.content == mock_request_object.json.return_value["content"]
-
-    def test_update_note_endpoint(
-        self, mock_client: TestClient, mock_request_body: UpdateNoteRequest, mock_note: Note
-    ) -> None:
-        """Test /notes/{note_id} endpoint returns 200."""
-        response = mock_client.put(f"/notes/{mock_note.id}", json=mock_request_body.model_dump())
-        assert response.status_code == ResponseCode.OK
-
-
-class TestDeleteNoteEndpoint:
-    """Integration and unit tests for the /notes/{note_id} endpoint."""
-
-    @pytest.fixture
-    def mock_request_object(self) -> MagicMock:
-        """Provide a mock Request object with JSON data."""
-        return MagicMock(spec=Request)
-
-    def test_delete_note(self, mock_server: PiDashboardServer, mock_request_object: MagicMock, mock_note: Note) -> None:
-        """Test the /notes/{note_id} method handles valid JSON."""
-        response = asyncio.run(mock_server.delete_note(mock_request_object, mock_note.id))
-
-        assert response.message == "Deleted note successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
-
-        deleted_note = mock_server.notes_handler.collection.get_note_by_id(mock_note.id)
-        assert deleted_note is None
-
-    def test_delete_note_endpoint(self, mock_client: TestClient, mock_note: Note) -> None:
-        """Test /notes/{note_id} endpoint returns 200."""
-        response = mock_client.delete(f"/notes/{mock_note.id}")
-        assert response.status_code == ResponseCode.OK
-
-
-class TestGetWeatherEndpoint:
-    """Integration and unit tests for the /weather endpoint."""
-
-    @pytest.fixture
-    def mock_request_object(self) -> MagicMock:
-        """Provide a mock Request object with JSON data."""
-        return MagicMock(spec=Request)
-
-    def test_get_weather(
-        self, mock_server: PiDashboardServer, mock_request_object: MagicMock, mock_weather_data: WeatherData
-    ) -> None:
-        """Test the /weather method handles valid request."""
-        response = asyncio.run(mock_server.get_weather(mock_request_object))
-
-        assert response.message == "Retrieved weather data successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
-        assert response.weather == mock_weather_data
-
-    def test_get_weather_endpoint(self, mock_client: TestClient) -> None:
-        """Test /weather endpoint returns 200."""
-        response = mock_client.get("/weather")
-        assert response.status_code == ResponseCode.OK
-
-
-class TestGetWeatherLocationEndpoint:
-    """Integration and unit tests for the /weather/location endpoint."""
-
-    @pytest.fixture
-    def mock_request_object(self) -> MagicMock:
-        """Provide a mock Request object with JSON data."""
-        return MagicMock(spec=Request)
-
-    def test_get_weather_location(
-        self,
-        mock_server: PiDashboardServer,
-        mock_request_object: MagicMock,
-        mock_pi_dashboard_config: PiDashboardConfig,
-    ) -> None:
-        """Test the /weather/location method returns configured location."""
-        response = asyncio.run(mock_server.get_weather_location(mock_request_object))
-
-        assert response.message == "Retrieved weather location successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
-        assert response.location_name == mock_pi_dashboard_config.weather.location_name
-        assert response.latitude == mock_pi_dashboard_config.weather.latitude
-        assert response.longitude == mock_pi_dashboard_config.weather.longitude
-
-    def test_get_weather_location_endpoint(self, mock_client: TestClient) -> None:
-        """Test /weather/location endpoint returns 200 and includes location info."""
-        response = mock_client.get("/weather/location")
-        assert response.status_code == ResponseCode.OK
-
-
-class TestUpdateWeatherLocationEndpoint:
-    """Integration and unit tests for the /weather/location PUT endpoint."""
-
-    @pytest.fixture
-    def mock_request_body(self) -> UpdateWeatherLocationRequest:
-        """Provide a mock request body for updating weather location."""
-        return UpdateWeatherLocationRequest(location="London")
-
-    @pytest.fixture
-    def mock_request_object(self, mock_request_body: UpdateWeatherLocationRequest) -> MagicMock:
-        """Provide a mock Request object with JSON data."""
-        request = MagicMock(spec=Request)
-        request.json = AsyncMock(return_value=mock_request_body.model_dump())
-        return request
-
-    def test_update_weather_location(
-        self,
-        mock_server: PiDashboardServer,
-        mock_request_object: MagicMock,
-        mock_weather_handler: MagicMock,
-        mock_weather_config: WeatherConfig,
-    ) -> None:
-        """Test the /weather/location PUT method updates location and reinitializes handler."""
-        response = asyncio.run(mock_server.update_weather_location(mock_request_object))
-
-        assert response.message == "Updated weather location successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
-        assert response.latitude == mock_weather_config.latitude
-        assert response.longitude == mock_weather_config.longitude
-        assert response.location_name == mock_weather_config.location_name
-
-        # Verify WeatherHandler.geocode_location was called
-        mock_weather_handler.geocode_location.assert_called_once_with("London")
-
-    def test_update_weather_location_endpoint(
-        self, mock_client: TestClient, mock_request_body: UpdateWeatherLocationRequest
-    ) -> None:
-        """Test /weather/location PUT endpoint returns 200."""
-        response = mock_client.put("/weather/location", json=mock_request_body.model_dump())
         assert response.status_code == ResponseCode.OK
 
 

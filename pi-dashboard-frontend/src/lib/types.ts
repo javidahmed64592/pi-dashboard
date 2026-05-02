@@ -42,36 +42,6 @@ export interface SystemMetricsHistory {
   history: SystemMetricsHistoryEntry[];
 }
 
-// Notes types
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface NotesCollection {
-  notes: Note[];
-}
-
-// Weather types
-export interface WeatherForecastHour {
-  time: string;
-  temperature: number;
-  weather_code: number;
-}
-
-export interface WeatherData {
-  location_name: string;
-  temperature: number;
-  weather_code: number;
-  high: number;
-  low: number;
-  humidity: number;
-  wind_speed: number;
-  forecast: WeatherForecastHour[];
-}
 // Container types
 export interface DockerContainer {
   container_id: string;
@@ -98,30 +68,6 @@ export interface GetSystemMetricsHistoryResponse extends BaseResponse {
   history: SystemMetricsHistory;
 }
 
-export interface GetNotesResponse extends BaseResponse {
-  notes: NotesCollection;
-}
-
-export interface CreateNoteResponse extends BaseResponse {
-  note: Note;
-}
-
-export interface UpdateNoteResponse extends BaseResponse {
-  note: Note;
-}
-
-export interface DeleteNoteResponse extends BaseResponse {}
-
-export interface GetWeatherResponse extends BaseResponse {
-  weather: WeatherData;
-}
-
-export interface GetWeatherLocationResponse extends BaseResponse {
-  location_name: string;
-  latitude: number;
-  longitude: number;
-}
-
 export interface GetContainersResponse extends BaseResponse {
   containers: DockerContainer[];
 }
@@ -134,18 +80,4 @@ export interface ContainerActionResponse extends BaseResponse {
 export interface GetSystemMetricsHistoryRequest {
   last_n_seconds: number;
   max_data_points: number;
-}
-
-export interface CreateNoteRequest {
-  title: string;
-  content: string;
-}
-
-export interface UpdateNoteRequest {
-  title?: string;
-  content?: string;
-}
-
-export interface UpdateWeatherLocationRequest {
-  location: string;
 }
