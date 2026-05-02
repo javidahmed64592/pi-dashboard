@@ -11,9 +11,13 @@ import {
   restartContainer,
   updateContainer,
 } from "@/lib/api";
-import type { DockerContainer } from "@/lib/types";
+import type { DockerContainer, LogSource } from "@/lib/types";
 
-export default function ContainerWidget() {
+interface ContainerWidgetProps {
+  onViewLogs?: (source: LogSource) => void;
+}
+
+export default function ContainerWidget({ onViewLogs }: ContainerWidgetProps) {
   const [containers, setContainers] = useState<DockerContainer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -198,6 +202,13 @@ export default function ContainerWidget() {
                   | "paused"
               }
               port={container.port}
+              onViewLogs={() =>
+                onViewLogs?.({
+                  type: "docker",
+                  containerId: container.container_id,
+                  containerName: container.name,
+                })
+              }
               isLoading={loadingContainers.has(container.container_id)}
               onStart={handleStart}
               onStop={handleStop}
