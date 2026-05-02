@@ -170,3 +170,17 @@ class ContainerHandler:
 
         logger.info("Container updated successfully: %s (%s)", container_name, new_container.short_id)
         return container_name, new_container.short_id
+
+    def get_container_logs(self, container_id: str, lines: int) -> list[str]:
+        """Get logs for a Docker container.
+
+        :param str container_id: The container ID
+        :param int lines: Number of log lines to retrieve (tail)
+        :return list[str]: List of log lines
+        """
+        self._check_docker_available()
+
+        container = self.client.containers.get(container_id)
+        raw_logs: bytes | str = container.logs(tail=lines, timestamps=False, stream=False)
+        decoded = raw_logs.decode("utf-8", errors="replace") if isinstance(raw_logs, bytes) else str(raw_logs)
+        return [line for line in decoded.splitlines() if line]

@@ -152,6 +152,13 @@ class ContainerActionResponse(BaseResponse):
     action: str = Field(..., description="Action that was performed")
 
 
+class ContainerLogsResponse(BaseResponse):
+    """Response model for container logs."""
+
+    container_id: str = Field(..., description="Container ID whose logs were retrieved")
+    logs: list[str] = Field(..., description="Log lines from the container")
+
+
 # Request models
 class GetSystemMetricsHistoryRequest(BaseModel):
     """Request model for system metrics history."""
