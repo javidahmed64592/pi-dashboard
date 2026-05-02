@@ -284,8 +284,7 @@ class TestStartContainerEndpoint:
 
     def test_start_container_endpoint(self, mock_client: TestClient) -> None:
         """Test /containers/{container_id}/start endpoint returns 200 and starts container."""
-        container_id = "container_short_id"
-        response = mock_client.post(f"/containers/{container_id}/start")
+        response = mock_client.post("/containers/container_short_id/start")
         assert response.status_code == ResponseCode.OK
 
 
@@ -308,8 +307,7 @@ class TestStopContainerEndpoint:
 
     def test_stop_container_endpoint(self, mock_client: TestClient) -> None:
         """Test /containers/{container_id}/stop endpoint returns 200 and stops container."""
-        container_id = "container_short_id"
-        response = mock_client.post(f"/containers/{container_id}/stop")
+        response = mock_client.post("/containers/container_short_id/stop")
         assert response.status_code == ResponseCode.OK
 
 
@@ -336,8 +334,7 @@ class TestRestartContainerEndpoint:
 
     def test_restart_container_endpoint(self, mock_client: TestClient) -> None:
         """Test /containers/{container_id}/restart endpoint returns 200 and restarts container."""
-        container_id = "container_short_id"
-        response = mock_client.post(f"/containers/{container_id}/restart")
+        response = mock_client.post("/containers/container_short_id/restart")
         assert response.status_code == ResponseCode.OK
 
 
@@ -363,8 +360,7 @@ class TestUpdateContainerEndpoint:
 
     def test_update_container_endpoint(self, mock_client: TestClient) -> None:
         """Test /containers/{container_id}/update endpoint returns 200 and updates container."""
-        container_id = "container_short_id"
-        response = mock_client.post(f"/containers/{container_id}/update")
+        response = mock_client.post("/containers/container_short_id/update")
         assert response.status_code == ResponseCode.OK
 
 
@@ -391,6 +387,5 @@ class TestGetContainerLogsEndpoint:
 
     def test_get_container_logs_endpoint(self, mock_client: TestClient) -> None:
         """Test /containers/{container_id}/logs endpoint returns 200."""
-        container_id = "container_short_id"
-        response = mock_client.get(f"/containers/{container_id}/logs?lines=100")
+        response = mock_client.get("/containers/container_short_id/logs?lines=100")
         assert response.status_code == ResponseCode.OK
