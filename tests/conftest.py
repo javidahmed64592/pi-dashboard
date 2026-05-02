@@ -1,7 +1,5 @@
 """Pytest fixtures for the application's unit tests."""
 
-from collections.abc import Generator
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,18 +7,12 @@ import pytest
 from pi_dashboard.container_handler import ContainerHandler
 from pi_dashboard.models import (
     MetricsConfig,
-    Note,
-    NotesCollection,
     PiDashboardConfig,
     SystemInfo,
     SystemMetrics,
     SystemMetricsHistory,
     SystemMetricsHistoryEntry,
-    WeatherConfig,
-    WeatherData,
-    WeatherForecastHour,
 )
-from pi_dashboard.notes_handler import NotesHandler
 
 
 # Pi Dashboard server configuration fixtures
@@ -31,24 +23,11 @@ def mock_metrics_config() -> MetricsConfig:
 
 
 @pytest.fixture
-def mock_weather_config() -> WeatherConfig:
-    """Provide a WeatherConfig instance for testing."""
-    return WeatherConfig.model_validate(
-        {
-            "latitude": 12.34,
-            "longitude": 56.78,
-            "location_name": "Test Location",
-            "forecast_hours": 12,
-        }
-    )
-
-
-@pytest.fixture
 def mock_pi_dashboard_config(
-    mock_metrics_config: MetricsConfig, mock_weather_config: WeatherConfig
+    mock_metrics_config: MetricsConfig,
 ) -> PiDashboardConfig:
     """Provide a PiDashboardConfig instance for testing."""
-    return PiDashboardConfig(metrics=mock_metrics_config, weather=mock_weather_config)
+    return PiDashboardConfig(metrics=mock_metrics_config)
 
 
 # General model fixtures
@@ -105,81 +84,6 @@ def mock_system_metrics_history(mock_system_metrics_history_entry: SystemMetrics
         )
         history.add_entry(entry)
     return history
-
-
-# Notes model fixtures
-@pytest.fixture
-def mock_note() -> Note:
-    """Provide a Note instance for testing."""
-    return Note.model_validate(
-        {
-            "id": "123e4567-e89b-12d3-a456-426614174000",
-            "title": "Test Note",
-            "content": "This is a test note.",
-            "created_at": "2026-01-01T12:00:00Z",
-            "updated_at": "2026-01-01T12:00:00Z",
-        }
-    )
-
-
-@pytest.fixture
-def mock_notes_collection(mock_note: Note) -> NotesCollection:
-    """Provide a NotesCollection instance for testing."""
-    return NotesCollection.model_validate(
-        {
-            "notes": [mock_note.model_dump()],
-        }
-    )
-
-
-@pytest.fixture
-def mock_notes_handler(tmp_path: Path, mock_notes_collection: NotesCollection) -> Generator[NotesHandler]:
-    """Provide a NotesHandler instance for testing."""
-    with (
-        patch.object(NotesHandler, "_load_or_create_notes_file"),
-        patch.object(NotesHandler, "_write_notes"),
-    ):
-        handler = NotesHandler(tmp_path)
-        handler.collection = mock_notes_collection
-        yield handler
-
-
-# Weather model fixtures
-@pytest.fixture
-def mock_weather_forecast_hours() -> list[WeatherForecastHour]:
-    """Provide a list of WeatherForecastHour instances for testing."""
-    return [
-        WeatherForecastHour(time="12PM", temperature=22.5, weather_code=1),
-        WeatherForecastHour(time="1PM", temperature=23.0, weather_code=1),
-        WeatherForecastHour(time="2PM", temperature=24.5, weather_code=2),
-        WeatherForecastHour(time="3PM", temperature=25.0, weather_code=2),
-        WeatherForecastHour(time="4PM", temperature=24.0, weather_code=3),
-        WeatherForecastHour(time="5PM", temperature=23.5, weather_code=3),
-        WeatherForecastHour(time="6PM", temperature=22.0, weather_code=61),
-        WeatherForecastHour(time="7PM", temperature=21.0, weather_code=61),
-        WeatherForecastHour(time="8PM", temperature=20.5, weather_code=63),
-        WeatherForecastHour(time="9PM", temperature=19.5, weather_code=63),
-        WeatherForecastHour(time="10PM", temperature=19.0, weather_code=45),
-        WeatherForecastHour(time="11PM", temperature=18.5, weather_code=45),
-        WeatherForecastHour(time="12AM", temperature=25.0, weather_code=45),
-    ]
-
-
-@pytest.fixture
-def mock_weather_data(mock_weather_forecast_hours: list[WeatherForecastHour]) -> WeatherData:
-    """Provide a WeatherData instance for testing."""
-    return WeatherData.model_validate(
-        {
-            "location_name": "Test Location",
-            "temperature": 22.5,
-            "weather_code": 1,
-            "high": 25.0,
-            "low": 17.5,
-            "humidity": 65,
-            "wind_speed": 12.5,
-            "forecast": [hour.model_dump() for hour in mock_weather_forecast_hours],
-        }
-    )
 
 
 # Docker fixtures

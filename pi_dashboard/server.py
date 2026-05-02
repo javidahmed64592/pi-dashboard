@@ -18,29 +18,18 @@ from pi_dashboard.models import (
     BaseResponse,
     ContainerActionResponse,
     ContainerListResponse,
-    CreateNoteRequest,
-    CreateNoteResponse,
-    DeleteNoteResponse,
-    GetNotesResponse,
     GetSystemInfoResponse,
     GetSystemMetricsHistoryRequest,
     GetSystemMetricsHistoryResponse,
     GetSystemMetricsResponse,
-    GetWeatherLocationResponse,
-    GetWeatherResponse,
     PiDashboardConfig,
     SystemMetricsHistory,
     SystemMetricsHistoryEntry,
-    UpdateNoteRequest,
-    UpdateNoteResponse,
-    UpdateWeatherLocationRequest,
 )
-from pi_dashboard.notes_handler import NotesHandler
 from pi_dashboard.system_metrics_handler import (
     get_system_info,
     get_system_metrics,
 )
-from pi_dashboard.weather_handler import WeatherHandler
 
 logger = logging.getLogger(__name__)
 
@@ -64,13 +53,6 @@ class PiDashboardServer(TemplateServer):
             self.data_dir.mkdir(parents=True, exist_ok=True)
 
         self.metrics_history = SystemMetricsHistory()
-        self.notes_handler = NotesHandler(self.data_dir)
-        self.weather_handler = WeatherHandler(
-            self.config.weather.latitude,
-            self.config.weather.longitude,
-            self.config.weather.location_name,
-            self.config.weather.forecast_hours,
-        )
         self.container_handler = ContainerHandler()
 
     @property
@@ -183,64 +165,6 @@ class PiDashboardServer(TemplateServer):
             limited=False,
             authentication_required=True,
         )
-        # Notes routes
-        self.add_route(
-            endpoint="/notes",
-            handler_function=self.get_notes,
-            response_model=GetNotesResponse,
-            methods=["GET"],
-            limited=True,
-            authentication_required=True,
-        )
-        self.add_route(
-            endpoint="/notes",
-            handler_function=self.create_note,
-            response_model=CreateNoteResponse,
-            methods=["POST"],
-            limited=True,
-            authentication_required=True,
-        )
-        self.add_route(
-            endpoint="/notes/{note_id}",
-            handler_function=self.update_note,
-            response_model=UpdateNoteResponse,
-            methods=["PUT"],
-            limited=True,
-            authentication_required=True,
-        )
-        self.add_route(
-            endpoint="/notes/{note_id}",
-            handler_function=self.delete_note,
-            response_model=DeleteNoteResponse,
-            methods=["DELETE"],
-            limited=True,
-            authentication_required=True,
-        )
-        # Weather routes
-        self.add_route(
-            endpoint="/weather",
-            handler_function=self.get_weather,
-            response_model=GetWeatherResponse,
-            methods=["GET"],
-            limited=True,
-            authentication_required=True,
-        )
-        self.add_route(
-            endpoint="/weather/location",
-            handler_function=self.get_weather_location,
-            response_model=GetWeatherLocationResponse,
-            methods=["GET"],
-            limited=True,
-            authentication_required=True,
-        )
-        self.add_route(
-            endpoint="/weather/location",
-            handler_function=self.update_weather_location,
-            response_model=GetWeatherLocationResponse,
-            methods=["PUT"],
-            limited=True,
-            authentication_required=True,
-        )
         # Container routes
         self.add_route(
             endpoint="/containers",
@@ -327,131 +251,6 @@ class PiDashboardServer(TemplateServer):
         return GetSystemMetricsHistoryResponse(
             message="Retrieved system metrics history successfully",
             history=SystemMetricsHistory(history=entries),
-        )
-
-    async def get_notes(self, request: Request) -> GetNotesResponse:
-        """Get all notes.
-
-        :return GetNotesResponse: Response containing all notes
-        """
-        return GetNotesResponse(
-            message="Retrieved notes successfully",
-            notes=self.notes_handler.get_all_notes(),
-        )
-
-    async def create_note(self, request: Request) -> CreateNoteResponse:
-        """Create a new note.
-
-        :return CreateNoteResponse: Response containing the created note
-        """
-        note_request = CreateNoteRequest.model_validate(await request.json())
-        return CreateNoteResponse(
-            message="Created note successfully",
-            note=self.notes_handler.create_note(
-                note_request.title, note_request.content, CreateNoteResponse.current_timestamp()
-            ),
-        )
-
-    async def update_note(self, request: Request, note_id: str) -> UpdateNoteResponse:
-        """Update an existing note.
-
-        :param str note_id: The UUID of the note to update
-        :return UpdateNoteResponse: Response containing the updated note
-        :raises HTTPException: If the note is not found (404)
-        """
-        update_request = UpdateNoteRequest.model_validate(await request.json())
-        note = self.notes_handler.update_note(
-            note_id, UpdateNoteResponse.current_timestamp(), update_request.title, update_request.content
-        )
-        if note is None:
-            raise HTTPException(status_code=ResponseCode.NOT_FOUND, detail=f"Note not found: {note_id}")
-        return UpdateNoteResponse(
-            message="Updated note successfully",
-            note=note,
-        )
-
-    async def delete_note(self, request: Request, note_id: str) -> DeleteNoteResponse:
-        """Delete a note.
-
-        :param str note_id: The UUID of the note to delete
-        :return DeleteNoteResponse: Response confirming deletion
-        :raises HTTPException: If the note is not found (404)
-        """
-        success = self.notes_handler.delete_note(note_id)
-        if not success:
-            raise HTTPException(status_code=ResponseCode.NOT_FOUND, detail=f"Note not found: {note_id}")
-        return DeleteNoteResponse(
-            message="Deleted note successfully",
-        )
-
-    async def get_weather(self, request: Request) -> GetWeatherResponse:
-        """Get current weather data.
-
-        :return GetWeatherResponse: Response containing current weather data
-        :raises HTTPException: If weather data cannot be fetched (503)
-        """
-        try:
-            weather_data = await self.weather_handler.get_weather()
-            return GetWeatherResponse(
-                message="Retrieved weather data successfully",
-                weather=weather_data,
-            )
-        except Exception as e:
-            logger.exception("Error getting weather data")
-            raise HTTPException(
-                status_code=ResponseCode.SERVICE_UNAVAILABLE, detail=f"Failed to fetch weather data: {e!s}"
-            ) from e
-
-    async def get_weather_location(self, request: Request) -> GetWeatherLocationResponse:
-        """Get the configured weather location.
-
-        :return GetWeatherLocationResponse: Response containing weather location information
-        """
-        return GetWeatherLocationResponse(
-            message="Retrieved weather location successfully",
-            latitude=self.config.weather.latitude,
-            longitude=self.config.weather.longitude,
-            location_name=self.config.weather.location_name,
-        )
-
-    async def update_weather_location(self, request: Request) -> GetWeatherLocationResponse:
-        """Update the weather location by geocoding a location name.
-
-        :return GetWeatherLocationResponse: Response containing updated weather location
-        :raises HTTPException: If geocoding fails (400) or weather is disabled (503)
-        """
-        location_request = UpdateWeatherLocationRequest.model_validate(await request.json())
-
-        # Geocode the location
-        coordinates = await WeatherHandler.geocode_location(location_request.location)
-        if coordinates is None:
-            raise HTTPException(
-                status_code=ResponseCode.BAD_REQUEST,
-                detail=f"Could not geocode location: {location_request.location}",
-            )
-
-        latitude, longitude = coordinates
-
-        # Update configuration
-        self.config.weather.latitude = latitude
-        self.config.weather.longitude = longitude
-        self.config.weather.location_name = location_request.location
-
-        # Reinitialize weather handler with new coordinates
-        self.weather_handler = WeatherHandler(
-            latitude,
-            longitude,
-            location_request.location,
-            self.config.weather.forecast_hours,
-        )
-
-        logger.info("Weather location updated to: %s (%.4f, %.4f)", location_request.location, latitude, longitude)
-
-        return GetWeatherLocationResponse(
-            message="Updated weather location successfully",
-            latitude=self.config.weather.latitude,
-            longitude=self.config.weather.longitude,
-            location_name=self.config.weather.location_name,
         )
 
     async def list_containers(self, request: Request) -> ContainerListResponse:

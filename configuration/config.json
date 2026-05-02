@@ -32,11 +32,5 @@
   "metrics": {
     "collection_interval": 10,
     "max_history_duration": 86400
-  },
-  "weather": {
-    "latitude": 51.5074,
-    "longitude": -0.1278,
-    "location_name": "London",
-    "forecast_hours": 12
   }
 }

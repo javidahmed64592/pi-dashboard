@@ -1,7 +1,6 @@
 """Pydantic models for the server."""
 
 from typing import Literal
-from uuid import uuid4
 
 from pydantic import BaseModel, Field
 from python_template_server.models import BaseResponse, TemplateServerConfig
@@ -19,22 +18,10 @@ class MetricsConfig(BaseModel):
     )
 
 
-class WeatherConfig(BaseModel):
-    """Configuration model for weather data."""
-
-    latitude: float = Field(default=51.5074, ge=-90, le=90, description="Latitude coordinate for weather location")
-    longitude: float = Field(default=-0.1278, ge=-180, le=180, description="Longitude coordinate for weather location")
-    location_name: str = Field(default="London", description="Human-readable location name")
-    forecast_hours: int = Field(
-        default=12, ge=1, le=24, description="Number of hours to include in the weather forecast"
-    )
-
-
 class PiDashboardConfig(TemplateServerConfig):
     """Configuration model for the Pi Dashboard server."""
 
     metrics: MetricsConfig = Field(default_factory=MetricsConfig, description="System metrics collection configuration")
-    weather: WeatherConfig = Field(default_factory=WeatherConfig, description="Weather configuration")
 
 
 # General models
@@ -120,102 +107,6 @@ class SystemMetricsHistory(BaseModel):
         return sampled_entries
 
 
-# Notes models
-class Note(BaseModel):
-    """Model representing a single note."""
-
-    id: str = Field(..., description="Unique identifier (UUID) for the note")
-    title: str = Field(..., description="Note title")
-    content: str = Field(..., description="Note content")
-    created_at: str = Field(..., description="Timestamp when the note was created")
-    updated_at: str = Field(..., description="Timestamp when the note was last updated")
-
-
-class NotesCollection(BaseModel):
-    """Model representing a collection of notes."""
-
-    notes: list[Note] = Field(default_factory=list, description="List of all notes")
-
-    def get_note_by_id(self, note_id: str) -> Note | None:
-        """Get a specific note by ID.
-
-        :param str note_id: The UUID of the note to retrieve
-        :return Note | None: The note if found, None otherwise
-        """
-        for note in self.notes:
-            if note.id == note_id:
-                return note
-        return None
-
-    def add_note(self, title: str, content: str, current_timestamp: str) -> Note:
-        """Add a new note to the collection.
-
-        :param str title: The title of the note
-        :param str content: The content of the note
-        :param str current_timestamp: The current timestamp for created_at and updated_at
-        :return Note: The created note with generated ID and timestamps
-        """
-        note = Note(
-            id=str(uuid4()),
-            title=title,
-            content=content,
-            created_at=current_timestamp,
-            updated_at=current_timestamp,
-        )
-        self.notes.append(note)
-        return note
-
-    def update_note(
-        self, note_id: str, current_timestamp: str, title: str | None = None, content: str | None = None
-    ) -> Note | None:
-        """Update an existing note.
-
-        :param str note_id: The UUID of the note to update
-        :param str current_timestamp: The current timestamp for updated_at
-        :param str | None title: The new title (if provided)
-        :param str | None content: The new content (if provided)
-        :return Note | None: The updated note if found, None otherwise
-        """
-        if (note := self.get_note_by_id(note_id)) is not None:
-            note.title = title or note.title
-            note.content = content or note.content
-            note.updated_at = current_timestamp
-        return note
-
-    def delete_note(self, note_id: str) -> bool:
-        """Delete a note by ID.
-
-        :param str note_id: The UUID of the note to delete
-        :return bool: True if the note was deleted, False if not found
-        """
-        if (note := self.get_note_by_id(note_id)) is not None:
-            self.notes.remove(note)
-            return True
-        return False
-
-
-# Weather models
-class WeatherForecastHour(BaseModel):
-    """Model representing a single hour in the weather forecast."""
-
-    time: str = Field(..., description="Time of forecast (e.g., '3PM')")
-    temperature: float = Field(..., description="Temperature in Celsius")
-    weather_code: int = Field(..., description="WMO weather code")
-
-
-class WeatherData(BaseModel):
-    """Model representing current weather data."""
-
-    location_name: str = Field(..., description="Human-readable location name")
-    temperature: float = Field(..., description="Current temperature in Celsius")
-    weather_code: int = Field(..., description="WMO weather code")
-    high: float = Field(..., description="High temperature for the day in Celsius")
-    low: float = Field(..., description="Low temperature for the day in Celsius")
-    humidity: int = Field(..., ge=0, le=100, description="Relative humidity percentage")
-    wind_speed: float = Field(..., ge=0, description="Wind speed in km/h")
-    forecast: list[WeatherForecastHour] = Field(..., description="12-hour forecast")
-
-
 # Docker container models
 class DockerContainer(BaseModel):
     """Model representing a Docker container."""
@@ -248,44 +139,6 @@ class GetSystemMetricsHistoryResponse(BaseResponse):
     history: SystemMetricsHistory = Field(..., description="System metrics history data")
 
 
-class GetNotesResponse(BaseResponse):
-    """Response model for listing all notes."""
-
-    notes: NotesCollection = Field(..., description="Collection of all notes")
-
-
-class CreateNoteResponse(BaseResponse):
-    """Response model for creating a note."""
-
-    note: Note = Field(..., description="The created note")
-
-
-class UpdateNoteResponse(BaseResponse):
-    """Response model for updating a note."""
-
-    note: Note = Field(..., description="The updated note")
-
-
-class DeleteNoteResponse(BaseResponse):
-    """Response model for deleting a note."""
-
-    pass
-
-
-class GetWeatherResponse(BaseResponse):
-    """Response model for weather data."""
-
-    weather: WeatherData = Field(..., description="Current weather data")
-
-
-class GetWeatherLocationResponse(BaseResponse):
-    """Response model for weather location."""
-
-    latitude: float = Field(..., description="Latitude coordinate")
-    longitude: float = Field(..., description="Longitude coordinate")
-    location_name: str = Field(..., description="Human-readable location name")
-
-
 class ContainerListResponse(BaseResponse):
     """Response model for listing containers."""
 
@@ -305,23 +158,3 @@ class GetSystemMetricsHistoryRequest(BaseModel):
 
     last_n_seconds: int = Field(..., ge=1, description="Number of seconds to retrieve history for")
     max_data_points: int = Field(..., ge=1, description="Maximum number of data points to return")
-
-
-class CreateNoteRequest(BaseModel):
-    """Request model for creating a new note."""
-
-    title: str = Field(..., min_length=1, max_length=200, description="Note title")
-    content: str = Field(..., description="Note content")
-
-
-class UpdateNoteRequest(BaseModel):
-    """Request model for updating an existing note."""
-
-    title: str | None = Field(None, min_length=1, max_length=200, description="Updated note title")
-    content: str | None = Field(None, description="Updated note content")
-
-
-class UpdateWeatherLocationRequest(BaseModel):
-    """Request model for updating weather location."""
-
-    location: str = Field(..., min_length=1, description="Location name to geocode")
