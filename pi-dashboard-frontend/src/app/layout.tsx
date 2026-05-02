@@ -42,9 +42,9 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <SystemProvider>
-            <div className="min-h-screen bg-background">
+            <div className="h-screen flex flex-col bg-background">
               <Navigation />
-              <main className="container mx-auto px-4 py-4 pb-16">
+              <main className="flex-1 overflow-hidden px-4 pt-4 pb-16">
                 {children}
               </main>
               <Footer />
