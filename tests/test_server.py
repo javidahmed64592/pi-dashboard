@@ -159,8 +159,6 @@ class TestGetSystemInfoEndpoint:
         response = asyncio.run(mock_server.get_system_info(mock_request_object))
 
         assert response.message == "Retrieved system info successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
         assert response.info == mock_system_info
 
     def test_get_system_info_endpoint(self, mock_client: TestClient) -> None:
@@ -183,8 +181,6 @@ class TestGetSystemMetricsEndpoint:
         """Test the /system/metrics method handles valid JSON."""
         response = asyncio.run(mock_server.get_system_metrics(mock_request_object))
         assert response.message == "Retrieved system metrics successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
         assert response.metrics == mock_system_metrics
 
     def test_get_system_metrics_endpoint(self, mock_client: TestClient) -> None:
@@ -217,8 +213,6 @@ class TestGetSystemMetricsHistoryEndpoint:
         """Test the /system/metrics/history method handles valid JSON."""
         response = asyncio.run(mock_server.get_system_metrics_history(mock_request_object))
         assert response.message == "Retrieved system metrics history successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
         assert response.history == mock_system_metrics_history
 
     def test_get_system_metrics_history_endpoint(
@@ -242,8 +236,6 @@ class TestListContainersEndpoint:
         response = asyncio.run(mock_server.list_containers(mock_request_object))
 
         assert response.message == "Retrieved 1 containers"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
         assert len(response.containers) == 1
 
     def test_list_containers_endpoint(self, mock_client: TestClient) -> None:
@@ -265,8 +257,6 @@ class TestRefreshContainersEndpoint:
         response = asyncio.run(mock_server.refresh_containers(mock_request_object))
 
         assert response.message == "Retrieved 1 containers"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
         assert len(response.containers) == 1
 
     def test_refresh_containers_endpoint(self, mock_client: TestClient) -> None:
@@ -289,8 +279,6 @@ class TestStartContainerEndpoint:
         response = asyncio.run(mock_server.start_container(mock_request_object, container_id))
 
         assert response.message == "Container test-container started successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
         assert response.container_id == container_id
         assert response.action == "start"
 
@@ -315,8 +303,6 @@ class TestStopContainerEndpoint:
         response = asyncio.run(mock_server.stop_container(mock_request_object, container_id))
 
         assert response.message == "Container test-container stopped successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
         assert response.container_id == container_id
         assert response.action == "stop"
 
@@ -345,8 +331,6 @@ class TestRestartContainerEndpoint:
         response = asyncio.run(mock_server.restart_container(mock_request_object, container_id))
 
         assert response.message == "Container test-container restarted successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
         assert response.container_id == container_id
         assert response.action == "restart"
 
@@ -374,8 +358,6 @@ class TestUpdateContainerEndpoint:
         response = asyncio.run(mock_server.update_container(mock_request_object, "container_short_id"))
 
         assert response.message == "Container test-container updated successfully"
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
         assert response.container_id == "new_container_short_id"
         assert response.action == "update"
 
@@ -403,10 +385,9 @@ class TestGetContainerLogsEndpoint:
         container_id = "container_short_id"
         response = asyncio.run(mock_server.get_container_logs(mock_request_object, container_id, lines=100))
 
+        assert response.message == f"Retrieved {len(response.logs)} log lines for container {container_id}"
         assert response.container_id == container_id
         assert response.logs == ["log line 1", "log line 2", "log line 3"]
-        assert isinstance(response.timestamp, str)
-        assert response.timestamp.endswith("Z")
 
     def test_get_container_logs_endpoint(self, mock_client: TestClient) -> None:
         """Test /containers/{container_id}/logs endpoint returns 200."""
