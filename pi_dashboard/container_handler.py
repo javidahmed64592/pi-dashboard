@@ -181,6 +181,6 @@ class ContainerHandler:
         self._check_docker_available()
 
         container = self.client.containers.get(container_id)
-        raw_logs: bytes | str = container.logs(tail=lines, timestamps=False, stream=False)
-        decoded = raw_logs.decode("utf-8", errors="replace") if isinstance(raw_logs, bytes) else str(raw_logs)
+        raw_logs: bytes = container.logs(tail=lines, timestamps=False, stream=False)
+        decoded = raw_logs.decode("utf-8", errors="replace")
         return [line for line in decoded.splitlines() if line]
