@@ -411,5 +411,5 @@ class TestGetContainerLogsEndpoint:
     def test_get_container_logs_endpoint(self, mock_client: TestClient) -> None:
         """Test /containers/{container_id}/logs endpoint returns 200."""
         container_id = "container_short_id"
-        response = mock_client.get(f"/containers/{container_id}/logs")
+        response = mock_client.get(f"/containers/{container_id}/logs?lines=100")
         assert response.status_code == ResponseCode.OK
