@@ -105,6 +105,9 @@ def mock_container() -> MagicMock:
     mock_image.id = "sha256:abcdef123456"
     container.image = mock_image
 
+    # Mock logs
+    container.logs.return_value = b"log line 1\nlog line 2\nlog line 3\n"
+
     # Mock attrs
     container.attrs = {
         "Created": "2024-01-01T00:00:00.000000000Z",

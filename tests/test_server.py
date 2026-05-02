@@ -138,6 +138,7 @@ class TestPiDashboardServerRoutes:
             "/containers/{container_id}/stop",
             "/containers/{container_id}/restart",
             "/containers/{container_id}/update",
+            "/containers/{container_id}/logs",
         ]
         for endpoint in expected_endpoints:
             assert endpoint in routes, f"Expected endpoint {endpoint} not found in routes"
@@ -382,4 +383,33 @@ class TestUpdateContainerEndpoint:
         """Test /containers/{container_id}/update endpoint returns 200 and updates container."""
         container_id = "container_short_id"
         response = mock_client.post(f"/containers/{container_id}/update")
+        assert response.status_code == ResponseCode.OK
+
+
+class TestGetContainerLogsEndpoint:
+    """Integration and unit tests for the /containers/{container_id}/logs endpoint."""
+
+    @pytest.fixture
+    def mock_request_object(self) -> MagicMock:
+        """Provide a mock request object for testing."""
+        return MagicMock()
+
+    def test_get_container_logs(
+        self,
+        mock_server: PiDashboardServer,
+        mock_request_object: MagicMock,
+    ) -> None:
+        """Test the /containers/{container_id}/logs method returns log lines."""
+        container_id = "container_short_id"
+        response = asyncio.run(mock_server.get_container_logs(mock_request_object, container_id, lines=100))
+
+        assert response.container_id == container_id
+        assert response.logs == ["log line 1", "log line 2", "log line 3"]
+        assert isinstance(response.timestamp, str)
+        assert response.timestamp.endswith("Z")
+
+    def test_get_container_logs_endpoint(self, mock_client: TestClient) -> None:
+        """Test /containers/{container_id}/logs endpoint returns 200."""
+        container_id = "container_short_id"
+        response = mock_client.get(f"/containers/{container_id}/logs")
         assert response.status_code == ResponseCode.OK
