@@ -1,11 +1,8 @@
 "use client";
 
-import CalendarWidget from "@/components/dashboard/CalendarWidget";
 import ContainerWidget from "@/components/dashboard/ContainerWidget";
 import MiniSystemSummary from "@/components/dashboard/MiniSystemSummary";
-import NotesWidget from "@/components/dashboard/NotesWidget";
 import SystemInfoWidget from "@/components/dashboard/SystemInfoWidget";
-import WeatherWidget from "@/components/dashboard/WeatherWidget";
 
 export default function DashboardPage() {
   return (
@@ -13,7 +10,6 @@ export default function DashboardPage() {
       <div className="lg:col-span-4 space-y-4">
         <SystemInfoWidget />
         <MiniSystemSummary />
-        <NotesWidget />
       </div>
 
       <div className="lg:col-span-4 space-y-4">
@@ -21,8 +17,12 @@ export default function DashboardPage() {
       </div>
 
       <div className="lg:col-span-2 space-y-4">
-        <WeatherWidget />
-        <CalendarWidget />
+        <div className="bg-white rounded-lg shadow p-4">
+          <h2 className="text-lg font-semibold mb-2">Placeholder Widget</h2>
+          <p className="text-gray-600">
+            This is a placeholder for future widgets or features.
+          </p>
+        </div>
       </div>
     </div>
   );

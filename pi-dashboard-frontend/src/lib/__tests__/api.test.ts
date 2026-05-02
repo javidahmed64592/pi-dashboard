@@ -3,13 +3,6 @@ import { renderHook } from "@testing-library/react";
 import {
   getHealth,
   login,
-  getNotes,
-  createNote,
-  updateNote,
-  deleteNote,
-  getWeather,
-  getWeatherLocation,
-  updateWeatherLocation,
   getContainers,
   refreshContainers,
   startContainer,
@@ -22,15 +15,6 @@ import {
 import type {
   HealthResponse,
   LoginResponse,
-  GetNotesResponse,
-  CreateNoteResponse,
-  UpdateNoteResponse,
-  DeleteNoteResponse,
-  Note,
-  GetWeatherResponse,
-  GetWeatherLocationResponse,
-  WeatherData,
-  WeatherForecastHour,
   GetContainersResponse,
   DockerContainer,
   ContainerActionResponse,
@@ -42,13 +26,6 @@ jest.mock("../api", () => {
     ...actual,
     getHealth: jest.fn(),
     login: jest.fn(),
-    getNotes: jest.fn(),
-    createNote: jest.fn(),
-    updateNote: jest.fn(),
-    deleteNote: jest.fn(),
-    getWeather: jest.fn(),
-    getWeatherLocation: jest.fn(),
-    updateWeatherLocation: jest.fn(),
     getContainers: jest.fn(),
     refreshContainers: jest.fn(),
     startContainer: jest.fn(),
@@ -63,10 +40,6 @@ global.fetch = jest.fn();
 
 const mockGetHealth = getHealth as jest.MockedFunction<typeof getHealth>;
 const mockLogin = login as jest.MockedFunction<typeof login>;
-const mockGetNotes = getNotes as jest.MockedFunction<typeof getNotes>;
-const mockCreateNote = createNote as jest.MockedFunction<typeof createNote>;
-const mockUpdateNote = updateNote as jest.MockedFunction<typeof updateNote>;
-const mockDeleteNote = deleteNote as jest.MockedFunction<typeof deleteNote>;
 const mockGetContainers = getContainers as jest.MockedFunction<
   typeof getContainers
 >;
@@ -85,29 +58,6 @@ const mockRestartContainer = restartContainer as jest.MockedFunction<
 const mockUpdateContainer = updateContainer as jest.MockedFunction<
   typeof updateContainer
 >;
-const mockGetWeather = getWeather as jest.MockedFunction<typeof getWeather>;
-const mockGetWeatherLocation = getWeatherLocation as jest.MockedFunction<
-  typeof getWeatherLocation
->;
-const mockUpdateWeatherLocation = updateWeatherLocation as jest.MockedFunction<
-  typeof updateWeatherLocation
->;
-
-const mockNote1: Note = {
-  id: "1",
-  title: "Test Note 1",
-  content: "Content 1",
-  created_at: "2024-01-01T00:00:00Z",
-  updated_at: "2024-01-01T00:00:00Z",
-};
-
-const mockNote2: Note = {
-  id: "2",
-  title: "Test Note 2",
-  content: "Content 2",
-  created_at: "2024-01-02T00:00:00Z",
-  updated_at: "2024-01-02T00:00:00Z",
-};
 
 describe("API Tests", () => {
   beforeEach(() => {
@@ -198,428 +148,172 @@ describe("API Tests", () => {
     });
   });
 
-  describe("notes", () => {
-    describe("getNotes", () => {
-      it("should fetch notes successfully", async () => {
-        const mockResponse: GetNotesResponse = {
-          message: "Retrieved notes successfully",
-          timestamp: "2024-01-01T00:00:00Z",
-          notes: { notes: [mockNote1, mockNote2] },
-        };
-
-        mockGetNotes.mockResolvedValue(mockResponse);
-
-        const result = await getNotes();
-
-        expect(mockGetNotes).toHaveBeenCalled();
-        expect(result).toEqual(mockResponse);
-        expect(result.notes.notes).toHaveLength(2);
-      });
-
-      it("should handle fetch notes error", async () => {
-        const errorMessage = "Failed to fetch notes";
-        mockGetNotes.mockRejectedValue(new Error(errorMessage));
-
-        await expect(getNotes()).rejects.toThrow(errorMessage);
-      });
-    });
-
-    describe("createNote", () => {
-      it("should create a note successfully", async () => {
-        const mockResponse: CreateNoteResponse = {
-          message: "Created note successfully",
-          timestamp: "2024-01-01T00:00:00Z",
-          note: mockNote1,
-        };
-
-        mockCreateNote.mockResolvedValue(mockResponse);
-
-        const request = { title: "Test Note 1", content: "Content 1" };
-        const result = await createNote(request);
-
-        expect(mockCreateNote).toHaveBeenCalledWith(request);
-        expect(result).toEqual(mockResponse);
-        expect(result.note.title).toBe("Test Note 1");
-      });
-
-      it("should handle create note error", async () => {
-        const errorMessage = "Failed to create note";
-        mockCreateNote.mockRejectedValue(new Error(errorMessage));
-
-        const request = { title: "Test", content: "Content" };
-        await expect(createNote(request)).rejects.toThrow(errorMessage);
-      });
-
-      it("should validate required fields", async () => {
-        const errorMessage = "Title is required";
-        mockCreateNote.mockRejectedValue(new Error(errorMessage));
-
-        const request = { title: "", content: "Content" };
-        await expect(createNote(request)).rejects.toThrow();
-      });
-    });
-
-    describe("updateNote", () => {
-      it("should update a note successfully", async () => {
-        const updatedNote = { ...mockNote1, title: "Updated Title" };
-        const mockResponse: UpdateNoteResponse = {
-          message: "Updated note successfully",
-          timestamp: "2024-01-01T00:00:00Z",
-          note: updatedNote,
-        };
-
-        mockUpdateNote.mockResolvedValue(mockResponse);
-
-        const request = { title: "Updated Title" };
-        const result = await updateNote("1", request);
-
-        expect(mockUpdateNote).toHaveBeenCalledWith("1", request);
-        expect(result).toEqual(mockResponse);
-        expect(result.note.title).toBe("Updated Title");
-      });
-
-      it("should update note content only", async () => {
-        const updatedNote = { ...mockNote1, content: "New content" };
-        const mockResponse: UpdateNoteResponse = {
-          message: "Updated note successfully",
-          timestamp: "2024-01-01T00:00:00Z",
-          note: updatedNote,
-        };
-
-        mockUpdateNote.mockResolvedValue(mockResponse);
-
-        const request = { content: "New content" };
-        const result = await updateNote("1", request);
-
-        expect(result.note.content).toBe("New content");
-        expect(result.note.title).toBe(mockNote1.title);
-      });
-
-      it("should handle update note error", async () => {
-        const errorMessage = "Note not found: 999";
-        mockUpdateNote.mockRejectedValue(new Error(errorMessage));
-
-        const request = { title: "Updated" };
-        await expect(updateNote("999", request)).rejects.toThrow(errorMessage);
-      });
-    });
-
-    describe("deleteNote", () => {
-      it("should delete a note successfully", async () => {
-        const mockResponse: DeleteNoteResponse = {
-          message: "Deleted note successfully",
-          timestamp: "2024-01-01T00:00:00Z",
-        };
-
-        mockDeleteNote.mockResolvedValue(mockResponse);
-
-        const result = await deleteNote("1");
-
-        expect(mockDeleteNote).toHaveBeenCalledWith("1");
-        expect(result).toEqual(mockResponse);
-        expect(result.message).toBe("Deleted note successfully");
-      });
-
-      it("should handle delete note error", async () => {
-        const errorMessage = "Note not found: 999";
-        mockDeleteNote.mockRejectedValue(new Error(errorMessage));
-
-        await expect(deleteNote("999")).rejects.toThrow(errorMessage);
-      });
-    });
-  });
-
-  describe("weather", () => {
-    const mockForecast: WeatherForecastHour[] = [
-      { time: "12PM", temperature: 22.5, weather_code: 1 },
-      { time: "1PM", temperature: 23.0, weather_code: 1 },
-      { time: "2PM", temperature: 24.5, weather_code: 2 },
-      { time: "3PM", temperature: 25.0, weather_code: 2 },
-      { time: "4PM", temperature: 24.0, weather_code: 3 },
-      { time: "5PM", temperature: 23.5, weather_code: 3 },
-      { time: "6PM", temperature: 22.0, weather_code: 61 },
-      { time: "7PM", temperature: 21.0, weather_code: 61 },
-      { time: "8PM", temperature: 20.5, weather_code: 63 },
-      { time: "9PM", temperature: 19.5, weather_code: 63 },
-      { time: "10PM", temperature: 19.0, weather_code: 45 },
-      { time: "11PM", temperature: 18.5, weather_code: 45 },
+  describe("containers", () => {
+    const mockContainers: DockerContainer[] = [
+      {
+        container_id: "abc123",
+        name: "pi-dashboard",
+        image: "ghcr.io/user/pi-dashboard:latest",
+        status: "running",
+        port: "443",
+      },
+      {
+        container_id: "def456",
+        name: "homebridge",
+        image: "homebridge/homebridge:latest",
+        status: "running",
+        port: "8581",
+      },
     ];
 
-    const mockWeatherData: WeatherData = {
-      location_name: "Test Location",
-      temperature: 22.5,
-      weather_code: 1,
-      high: 25.0,
-      low: 17.5,
-      humidity: 65,
-      wind_speed: 12.5,
-      forecast: mockForecast,
-    };
-
-    describe("getWeather", () => {
-      it("should fetch weather data successfully", async () => {
-        const mockResponse: GetWeatherResponse = {
-          message: "Retrieved weather successfully",
+    describe("getContainers", () => {
+      it("should fetch containers successfully", async () => {
+        const mockResponse: GetContainersResponse = {
+          message: "Retrieved containers successfully",
           timestamp: "2024-01-01T00:00:00Z",
-          weather: mockWeatherData,
+          containers: mockContainers,
         };
 
-        mockGetWeather.mockResolvedValue(mockResponse);
+        mockGetContainers.mockResolvedValue(mockResponse);
 
-        const result = await getWeather();
+        const result = await getContainers();
 
-        expect(mockGetWeather).toHaveBeenCalled();
+        expect(mockGetContainers).toHaveBeenCalled();
         expect(result).toEqual(mockResponse);
-        expect(result.weather.location_name).toBe("Test Location");
-        expect(result.weather.temperature).toBe(22.5);
-        expect(result.weather.forecast).toHaveLength(12);
+        expect(result.containers).toHaveLength(2);
+        expect(result.containers[0]?.name).toBe("pi-dashboard");
       });
 
-      it("should handle fetch weather error", async () => {
-        const errorMessage = "Failed to fetch weather";
-        mockGetWeather.mockRejectedValue(new Error(errorMessage));
+      it("should handle get containers error", async () => {
+        const errorMessage = "Failed to connect to Docker daemon";
+        mockGetContainers.mockRejectedValue(new Error(errorMessage));
 
-        await expect(getWeather()).rejects.toThrow(errorMessage);
+        await expect(getContainers()).rejects.toThrow(errorMessage);
       });
     });
 
-    describe("getWeatherLocation", () => {
-      it("should fetch weather location successfully", async () => {
-        const mockResponse: GetWeatherLocationResponse = {
-          message: "Retrieved location successfully",
+    describe("refreshContainers", () => {
+      it("should refresh containers successfully", async () => {
+        const mockResponse: GetContainersResponse = {
+          message: "Refreshed containers successfully",
           timestamp: "2024-01-01T00:00:00Z",
-          location_name: "Test Location",
-          latitude: 12.34,
-          longitude: 56.78,
+          containers: mockContainers,
         };
 
-        mockGetWeatherLocation.mockResolvedValue(mockResponse);
+        mockRefreshContainers.mockResolvedValue(mockResponse);
 
-        const result = await getWeatherLocation();
+        const result = await refreshContainers();
 
-        expect(mockGetWeatherLocation).toHaveBeenCalled();
+        expect(mockRefreshContainers).toHaveBeenCalled();
         expect(result).toEqual(mockResponse);
-        expect(result.location_name).toBe("Test Location");
-        expect(result.latitude).toBe(12.34);
-        expect(result.longitude).toBe(56.78);
+        expect(result.containers).toHaveLength(2);
       });
 
-      it("should handle fetch weather location error", async () => {
-        const errorMessage = "Failed to fetch location";
-        mockGetWeatherLocation.mockRejectedValue(new Error(errorMessage));
+      it("should handle refresh containers error", async () => {
+        const errorMessage = "Refresh failed";
+        mockRefreshContainers.mockRejectedValue(new Error(errorMessage));
 
-        await expect(getWeatherLocation()).rejects.toThrow(errorMessage);
+        await expect(refreshContainers()).rejects.toThrow(errorMessage);
       });
     });
 
-    describe("updateWeatherLocation", () => {
-      it("should update weather location successfully", async () => {
-        const mockResponse: GetWeatherLocationResponse = {
-          message: "Updated location successfully",
+    describe("startContainer", () => {
+      it("should start container successfully", async () => {
+        const mockResponse: ContainerActionResponse = {
+          message: "Container started successfully",
           timestamp: "2024-01-01T00:00:00Z",
-          location_name: "New Location",
-          latitude: 34.56,
-          longitude: 78.9,
-        };
-
-        mockUpdateWeatherLocation.mockResolvedValue(mockResponse);
-
-        const request = { location: "New Location" };
-        const result = await updateWeatherLocation(request);
-
-        expect(mockUpdateWeatherLocation).toHaveBeenCalledWith(request);
-        expect(result).toEqual(mockResponse);
-        expect(result.location_name).toBe("New Location");
-      });
-
-      it("should handle update weather location error", async () => {
-        const errorMessage = "Location not found";
-        mockUpdateWeatherLocation.mockRejectedValue(new Error(errorMessage));
-
-        const request = { location: "Invalid Location" };
-        await expect(updateWeatherLocation(request)).rejects.toThrow(
-          errorMessage
-        );
-      });
-
-      it("should validate location parameter", async () => {
-        const errorMessage = "Location is required";
-        mockUpdateWeatherLocation.mockRejectedValue(new Error(errorMessage));
-
-        const request = { location: "" };
-        await expect(updateWeatherLocation(request)).rejects.toThrow();
-      });
-    });
-
-    describe("containers", () => {
-      const mockContainers: DockerContainer[] = [
-        {
           container_id: "abc123",
-          name: "pi-dashboard",
-          image: "ghcr.io/user/pi-dashboard:latest",
-          status: "running",
-          port: "443",
-        },
-        {
-          container_id: "def456",
-          name: "homebridge",
-          image: "homebridge/homebridge:latest",
-          status: "running",
-          port: "8581",
-        },
-      ];
+        };
 
-      describe("getContainers", () => {
-        it("should fetch containers successfully", async () => {
-          const mockResponse: GetContainersResponse = {
-            message: "Retrieved containers successfully",
-            timestamp: "2024-01-01T00:00:00Z",
-            containers: mockContainers,
-          };
+        mockStartContainer.mockResolvedValue(mockResponse);
 
-          mockGetContainers.mockResolvedValue(mockResponse);
+        const result = await startContainer("abc123");
 
-          const result = await getContainers();
-
-          expect(mockGetContainers).toHaveBeenCalled();
-          expect(result).toEqual(mockResponse);
-          expect(result.containers).toHaveLength(2);
-          expect(result.containers[0]?.name).toBe("pi-dashboard");
-        });
-
-        it("should handle get containers error", async () => {
-          const errorMessage = "Failed to connect to Docker daemon";
-          mockGetContainers.mockRejectedValue(new Error(errorMessage));
-
-          await expect(getContainers()).rejects.toThrow(errorMessage);
-        });
+        expect(mockStartContainer).toHaveBeenCalledWith("abc123");
+        expect(result).toEqual(mockResponse);
+        expect(result.container_id).toBe("abc123");
       });
 
-      describe("refreshContainers", () => {
-        it("should refresh containers successfully", async () => {
-          const mockResponse: GetContainersResponse = {
-            message: "Refreshed containers successfully",
-            timestamp: "2024-01-01T00:00:00Z",
-            containers: mockContainers,
-          };
+      it("should handle start container error", async () => {
+        const errorMessage = "Container not found";
+        mockStartContainer.mockRejectedValue(new Error(errorMessage));
 
-          mockRefreshContainers.mockResolvedValue(mockResponse);
+        await expect(startContainer("invalid")).rejects.toThrow(errorMessage);
+      });
+    });
 
-          const result = await refreshContainers();
+    describe("stopContainer", () => {
+      it("should stop container successfully", async () => {
+        const mockResponse: ContainerActionResponse = {
+          message: "Container stopped successfully",
+          timestamp: "2024-01-01T00:00:00Z",
+          container_id: "abc123",
+        };
 
-          expect(mockRefreshContainers).toHaveBeenCalled();
-          expect(result).toEqual(mockResponse);
-          expect(result.containers).toHaveLength(2);
-        });
+        mockStopContainer.mockResolvedValue(mockResponse);
 
-        it("should handle refresh containers error", async () => {
-          const errorMessage = "Refresh failed";
-          mockRefreshContainers.mockRejectedValue(new Error(errorMessage));
+        const result = await stopContainer("abc123");
 
-          await expect(refreshContainers()).rejects.toThrow(errorMessage);
-        });
+        expect(mockStopContainer).toHaveBeenCalledWith("abc123");
+        expect(result).toEqual(mockResponse);
+        expect(result.container_id).toBe("abc123");
       });
 
-      describe("startContainer", () => {
-        it("should start container successfully", async () => {
-          const mockResponse: ContainerActionResponse = {
-            message: "Container started successfully",
-            timestamp: "2024-01-01T00:00:00Z",
-            container_id: "abc123",
-          };
+      it("should handle stop container error", async () => {
+        const errorMessage = "Container already stopped";
+        mockStopContainer.mockRejectedValue(new Error(errorMessage));
 
-          mockStartContainer.mockResolvedValue(mockResponse);
+        await expect(stopContainer("abc123")).rejects.toThrow(errorMessage);
+      });
+    });
 
-          const result = await startContainer("abc123");
+    describe("restartContainer", () => {
+      it("should restart container successfully", async () => {
+        const mockResponse: ContainerActionResponse = {
+          message: "Container restarted successfully",
+          timestamp: "2024-01-01T00:00:00Z",
+          container_id: "abc123",
+        };
 
-          expect(mockStartContainer).toHaveBeenCalledWith("abc123");
-          expect(result).toEqual(mockResponse);
-          expect(result.container_id).toBe("abc123");
-        });
+        mockRestartContainer.mockResolvedValue(mockResponse);
 
-        it("should handle start container error", async () => {
-          const errorMessage = "Container not found";
-          mockStartContainer.mockRejectedValue(new Error(errorMessage));
+        const result = await restartContainer("abc123");
 
-          await expect(startContainer("invalid")).rejects.toThrow(errorMessage);
-        });
+        expect(mockRestartContainer).toHaveBeenCalledWith("abc123");
+        expect(result).toEqual(mockResponse);
+        expect(result.container_id).toBe("abc123");
       });
 
-      describe("stopContainer", () => {
-        it("should stop container successfully", async () => {
-          const mockResponse: ContainerActionResponse = {
-            message: "Container stopped successfully",
-            timestamp: "2024-01-01T00:00:00Z",
-            container_id: "abc123",
-          };
+      it("should handle restart container error", async () => {
+        const errorMessage = "Container not running";
+        mockRestartContainer.mockRejectedValue(new Error(errorMessage));
 
-          mockStopContainer.mockResolvedValue(mockResponse);
+        await expect(restartContainer("abc123")).rejects.toThrow(errorMessage);
+      });
+    });
 
-          const result = await stopContainer("abc123");
+    describe("updateContainer", () => {
+      it("should update container successfully", async () => {
+        const mockResponse: ContainerActionResponse = {
+          message: "Container updated successfully",
+          timestamp: "2024-01-01T00:00:00Z",
+          container_id: "abc123",
+        };
 
-          expect(mockStopContainer).toHaveBeenCalledWith("abc123");
-          expect(result).toEqual(mockResponse);
-          expect(result.container_id).toBe("abc123");
-        });
+        mockUpdateContainer.mockResolvedValue(mockResponse);
 
-        it("should handle stop container error", async () => {
-          const errorMessage = "Container already stopped";
-          mockStopContainer.mockRejectedValue(new Error(errorMessage));
+        const result = await updateContainer("abc123");
 
-          await expect(stopContainer("abc123")).rejects.toThrow(errorMessage);
-        });
+        expect(mockUpdateContainer).toHaveBeenCalledWith("abc123");
+        expect(result).toEqual(mockResponse);
+        expect(result.container_id).toBe("abc123");
       });
 
-      describe("restartContainer", () => {
-        it("should restart container successfully", async () => {
-          const mockResponse: ContainerActionResponse = {
-            message: "Container restarted successfully",
-            timestamp: "2024-01-01T00:00:00Z",
-            container_id: "abc123",
-          };
+      it("should handle update container error", async () => {
+        const errorMessage = "Failed to pull image";
+        mockUpdateContainer.mockRejectedValue(new Error(errorMessage));
 
-          mockRestartContainer.mockResolvedValue(mockResponse);
-
-          const result = await restartContainer("abc123");
-
-          expect(mockRestartContainer).toHaveBeenCalledWith("abc123");
-          expect(result).toEqual(mockResponse);
-          expect(result.container_id).toBe("abc123");
-        });
-
-        it("should handle restart container error", async () => {
-          const errorMessage = "Container not running";
-          mockRestartContainer.mockRejectedValue(new Error(errorMessage));
-
-          await expect(restartContainer("abc123")).rejects.toThrow(
-            errorMessage
-          );
-        });
-      });
-
-      describe("updateContainer", () => {
-        it("should update container successfully", async () => {
-          const mockResponse: ContainerActionResponse = {
-            message: "Container updated successfully",
-            timestamp: "2024-01-01T00:00:00Z",
-            container_id: "abc123",
-          };
-
-          mockUpdateContainer.mockResolvedValue(mockResponse);
-
-          const result = await updateContainer("abc123");
-
-          expect(mockUpdateContainer).toHaveBeenCalledWith("abc123");
-          expect(result).toEqual(mockResponse);
-          expect(result.container_id).toBe("abc123");
-        });
-
-        it("should handle update container error", async () => {
-          const errorMessage = "Failed to pull image";
-          mockUpdateContainer.mockRejectedValue(new Error(errorMessage));
-
-          await expect(updateContainer("abc123")).rejects.toThrow(errorMessage);
-        });
+        await expect(updateContainer("abc123")).rejects.toThrow(errorMessage);
       });
     });
   });
