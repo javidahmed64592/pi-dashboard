@@ -7,6 +7,20 @@ from python_template_server.models import BaseResponse, TemplateServerConfig
 
 
 # Pi Dashboard server configuration
+class DatabaseConfig(BaseModel):
+    """Configuration for the database."""
+
+    db_directory: str = Field(
+        default="data", description="The directory where the SQLite database file will be stored."
+    )
+    db_filename: str = Field(default="dashboard.db", description="The filename for the SQLite database.")
+
+    @property
+    def db_url(self) -> str:
+        """Construct the database URL for SQLAlchemy."""
+        return f"sqlite:///{self.db_directory}/{self.db_filename}"
+
+
 class MetricsConfig(BaseModel):
     """Configuration model for system metrics collection."""
 
@@ -21,6 +35,7 @@ class MetricsConfig(BaseModel):
 class PiDashboardConfig(TemplateServerConfig):
     """Configuration model for the Pi Dashboard server."""
 
+    db: DatabaseConfig = Field(default_factory=DatabaseConfig, description="Database configuration")
     metrics: MetricsConfig = Field(default_factory=MetricsConfig, description="System metrics collection configuration")
 
 
@@ -120,6 +135,17 @@ class DockerContainer(BaseModel):
     port: str | None = Field(None, description="Primary host port")
 
 
+# Notes models
+class NoteEntry(BaseModel):
+    """Model representing a single note entry."""
+
+    id: str = Field(..., description="Unique identifier for the note entry")
+    title: str = Field(..., description="Title of the note entry")
+    content: str = Field(..., description="Content of the note entry")
+    time_created: int = Field(..., description="Unix timestamp when the note was created")
+    time_updated: int = Field(..., description="Unix timestamp when the note was last updated")
+
+
 # Response models
 class GetSystemInfoResponse(BaseResponse):
     """Response model for system information."""
@@ -156,6 +182,18 @@ class DockerContainerLogsResponse(BaseResponse):
 
     container_id: str = Field(..., description="Container ID whose logs were retrieved")
     logs: list[str] = Field(..., description="Log lines from the container")
+
+
+class NotesListResponse(BaseResponse):
+    """Response model for listing notes."""
+
+    notes: list[NoteEntry] = Field(..., description="List of note entries")
+
+
+class NotesActionResponse(BaseResponse):
+    """Response model for note actions (create/update/delete)."""
+
+    note_id: str = Field(..., description="Note ID that was acted upon")
 
 
 # Request models

@@ -5,15 +5,14 @@ import logging
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from datetime import datetime
-from pathlib import Path
 from typing import Annotated
 
 from docker.errors import APIError, NotFound
 from fastapi import FastAPI, HTTPException, Query, Request
-from python_template_server.constants import ROOT_DIR
 from python_template_server.models import ResponseCode
 from python_template_server.template_server import TemplateServer
 
+from pi_dashboard.database import DatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     BaseResponse,
@@ -50,17 +49,9 @@ class PiDashboardServer(TemplateServer):
             config=config,
         )
 
-        if not self.data_dir.exists():
-            logger.info("Creating data directory at: %s", self.data_dir)
-            self.data_dir.mkdir(parents=True, exist_ok=True)
-
+        self.database_manager = DatabaseManager(db_config=self.config.db)
         self.metrics_history = SystemMetricsHistory()
-        self.container_handler = DockerContainerHandler()
-
-    @property
-    def data_dir(self) -> Path:
-        """Get the data directory path."""
-        return ROOT_DIR / "data"  # type: ignore[no-any-return]
+        self.docker_container_handler = DockerContainerHandler()
 
     @staticmethod
     def _current_timestamp_int() -> int:
@@ -269,7 +260,7 @@ class PiDashboardServer(TemplateServer):
         :return DockerContainerListResponse: Response containing list of containers
         """
         try:
-            containers = self.container_handler.list_containers()
+            containers = self.docker_container_handler.list_containers()
             return DockerContainerListResponse(
                 message=f"Retrieved {len(containers)} containers",
                 containers=containers,
@@ -287,7 +278,7 @@ class PiDashboardServer(TemplateServer):
         :return DockerContainerListResponse: Response containing refreshed list of containers
         """
         try:
-            containers = self.container_handler.list_containers()
+            containers = self.docker_container_handler.list_containers()
             return DockerContainerListResponse(
                 message=f"Retrieved {len(containers)} containers",
                 containers=containers,
@@ -306,7 +297,7 @@ class PiDashboardServer(TemplateServer):
         :return DockerContainerActionResponse: Response indicating success or failure
         """
         try:
-            container_name = self.container_handler.start_container(container_id=container_id)
+            container_name = self.docker_container_handler.start_container(container_id=container_id)
             return DockerContainerActionResponse(
                 message=f"Container {container_name} started successfully",
                 container_id=container_id,
@@ -337,7 +328,7 @@ class PiDashboardServer(TemplateServer):
         :return DockerContainerActionResponse: Response indicating success or failure
         """
         try:
-            container_name = self.container_handler.stop_container(container_id=container_id, timeout=10)
+            container_name = self.docker_container_handler.stop_container(container_id=container_id, timeout=10)
             return DockerContainerActionResponse(
                 message=f"Container {container_name} stopped successfully",
                 container_id=container_id,
@@ -368,7 +359,7 @@ class PiDashboardServer(TemplateServer):
         :return DockerContainerActionResponse: Response indicating success or failure
         """
         try:
-            container_name = self.container_handler.restart_container(container_id=container_id, timeout=10)
+            container_name = self.docker_container_handler.restart_container(container_id=container_id, timeout=10)
             return DockerContainerActionResponse(
                 message=f"Container {container_name} restarted successfully",
                 container_id=container_id,
@@ -399,7 +390,7 @@ class PiDashboardServer(TemplateServer):
         :return DockerContainerActionResponse: Response indicating success or failure
         """
         try:
-            container_name, new_container_id = self.container_handler.update_container(
+            container_name, new_container_id = self.docker_container_handler.update_container(
                 container_id=container_id, timeout=10
             )
             return DockerContainerActionResponse(
@@ -438,7 +429,7 @@ class PiDashboardServer(TemplateServer):
         :return DockerContainerLogsResponse: Response containing log lines
         """
         try:
-            log_lines = self.container_handler.get_container_logs(container_id=container_id, lines=lines)
+            log_lines = self.docker_container_handler.get_container_logs(container_id=container_id, lines=lines)
             return DockerContainerLogsResponse(
                 message=f"Retrieved {len(log_lines)} log lines for container {container_id}",
                 container_id=container_id,

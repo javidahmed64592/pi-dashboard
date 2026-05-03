@@ -12,6 +12,7 @@ from fastapi.security import APIKeyHeader
 from fastapi.testclient import TestClient
 from python_template_server.models import ResponseCode
 
+from pi_dashboard.database import DatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     GetSystemMetricsHistoryRequest,
@@ -59,10 +60,11 @@ def mock_get_system_metrics(mock_system_metrics: SystemMetrics) -> Generator[Mag
 @pytest.fixture
 def mock_server(
     mock_pi_dashboard_config: PiDashboardConfig,
+    mock_database_manager: DatabaseManager,
     mock_get_system_info: MagicMock,
     mock_get_system_metrics: MagicMock,
     mock_system_metrics_history: SystemMetricsHistory,
-    mock_container_handler: DockerContainerHandler,
+    mock_docker_container_handler: DockerContainerHandler,
 ) -> Generator[PiDashboardServer]:
     """Provide a PiDashboardServer instance for testing."""
 
@@ -75,8 +77,9 @@ def mock_server(
     with (
         patch.object(PiDashboardServer, "_verify_api_key", new=fake_verify_api_key),
         patch("pi_dashboard.server.PiDashboardConfig.save_to_file"),
+        patch("pi_dashboard.server.DatabaseManager", return_value=mock_database_manager),
         patch("pi_dashboard.server.SystemMetricsHistory", return_value=mock_system_metrics_history),
-        patch("pi_dashboard.server.DockerContainerHandler", return_value=mock_container_handler),
+        patch("pi_dashboard.server.DockerContainerHandler", return_value=mock_docker_container_handler),
     ):
         server = PiDashboardServer(config=mock_pi_dashboard_config)
         yield server
@@ -95,12 +98,6 @@ class TestPiDashboardServer:
         """Test PiDashboardServer initialization."""
         assert isinstance(mock_server.config, PiDashboardConfig)
         assert mock_server.metrics_history == mock_system_metrics_history
-
-    def test_data_dir(self, mock_server: PiDashboardServer) -> None:
-        """Test data directory property."""
-        expected_path = mock_server.data_dir
-        assert expected_path.exists()
-        assert expected_path.is_dir()
 
     def test_current_timestamp_int(self, mock_server: PiDashboardServer) -> None:
         """Test current timestamp integer retrieval."""
