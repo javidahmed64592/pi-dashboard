@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pi_dashboard.container_handler import ContainerHandler
+from pi_dashboard.container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     MetricsConfig,
     PiDashboardConfig,
@@ -143,9 +143,9 @@ def mock_docker_client(mock_container: MagicMock) -> MagicMock:
 
 
 @pytest.fixture
-def mock_container_handler(mock_docker_client: MagicMock) -> ContainerHandler:
-    """Provide a ContainerHandler instance with mocked Docker client."""
+def mock_container_handler(mock_docker_client: MagicMock) -> DockerContainerHandler:
+    """Provide a DockerContainerHandler instance with mocked Docker client."""
     with (
         patch("docker.from_env", return_value=mock_docker_client),
     ):
-        return ContainerHandler()
+        return DockerContainerHandler()

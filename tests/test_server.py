@@ -12,7 +12,7 @@ from fastapi.security import APIKeyHeader
 from fastapi.testclient import TestClient
 from python_template_server.models import ResponseCode
 
-from pi_dashboard.container_handler import ContainerHandler
+from pi_dashboard.container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     GetSystemMetricsHistoryRequest,
     PiDashboardConfig,
@@ -62,7 +62,7 @@ def mock_server(
     mock_get_system_info: MagicMock,
     mock_get_system_metrics: MagicMock,
     mock_system_metrics_history: SystemMetricsHistory,
-    mock_container_handler: ContainerHandler,
+    mock_container_handler: DockerContainerHandler,
 ) -> Generator[PiDashboardServer]:
     """Provide a PiDashboardServer instance for testing."""
 
@@ -76,7 +76,7 @@ def mock_server(
         patch.object(PiDashboardServer, "_verify_api_key", new=fake_verify_api_key),
         patch("pi_dashboard.server.PiDashboardConfig.save_to_file"),
         patch("pi_dashboard.server.SystemMetricsHistory", return_value=mock_system_metrics_history),
-        patch("pi_dashboard.server.ContainerHandler", return_value=mock_container_handler),
+        patch("pi_dashboard.server.DockerContainerHandler", return_value=mock_container_handler),
     ):
         server = PiDashboardServer(config=mock_pi_dashboard_config)
         yield server
@@ -280,7 +280,6 @@ class TestStartContainerEndpoint:
 
         assert response.message == "Container test-container started successfully"
         assert response.container_id == container_id
-        assert response.action == "start"
 
     def test_start_container_endpoint(self, mock_client: TestClient) -> None:
         """Test /containers/{container_id}/start endpoint returns 200 and starts container."""
@@ -303,7 +302,6 @@ class TestStopContainerEndpoint:
 
         assert response.message == "Container test-container stopped successfully"
         assert response.container_id == container_id
-        assert response.action == "stop"
 
     def test_stop_container_endpoint(self, mock_client: TestClient) -> None:
         """Test /containers/{container_id}/stop endpoint returns 200 and stops container."""
@@ -330,7 +328,6 @@ class TestRestartContainerEndpoint:
 
         assert response.message == "Container test-container restarted successfully"
         assert response.container_id == container_id
-        assert response.action == "restart"
 
     def test_restart_container_endpoint(self, mock_client: TestClient) -> None:
         """Test /containers/{container_id}/restart endpoint returns 200 and restarts container."""
@@ -356,7 +353,6 @@ class TestUpdateContainerEndpoint:
 
         assert response.message == "Container test-container updated successfully"
         assert response.container_id == "new_container_short_id"
-        assert response.action == "update"
 
     def test_update_container_endpoint(self, mock_client: TestClient) -> None:
         """Test /containers/{container_id}/update endpoint returns 200 and updates container."""

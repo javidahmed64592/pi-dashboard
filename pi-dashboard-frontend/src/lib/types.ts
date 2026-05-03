@@ -72,11 +72,11 @@ export interface GetContainersResponse extends BaseResponse {
   containers: DockerContainer[];
 }
 
-export interface ContainerActionResponse extends BaseResponse {
+export interface DockerContainerActionResponse extends BaseResponse {
   container_id: string;
 }
 
-export interface ContainerLogsResponse extends BaseResponse {
+export interface DockerContainerLogsResponse extends BaseResponse {
   container_id: string;
   logs: string[];
 }

@@ -10,11 +10,11 @@ from pi_dashboard.models import DockerContainer
 logger = logging.getLogger(__name__)
 
 
-class ContainerHandler:
+class DockerContainerHandler:
     """Handler for Docker container operations."""
 
     def __init__(self) -> None:
-        """Initialize the ContainerHandler."""
+        """Initialize the DockerContainerHandler."""
         try:
             self.client = docker.from_env()
             self.client.ping()
@@ -66,7 +66,7 @@ class ContainerHandler:
 
         for container in containers:
             image_name = container.image.tags[0] if container.image.tags else container.image.id[:12]
-            primary_port = ContainerHandler._extract_primary_port(container.ports)
+            primary_port = DockerContainerHandler._extract_primary_port(container.ports)
 
             docker_containers.append(
                 DockerContainer(

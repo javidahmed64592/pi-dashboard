@@ -8,7 +8,7 @@ import {
 
 import LogsPanel from "@/components/dashboard/LogsPanel";
 import * as api from "@/lib/api";
-import type { ContainerLogsResponse, DockerLogSource } from "@/lib/types";
+import type { DockerContainerLogsResponse, DockerLogSource } from "@/lib/types";
 
 jest.mock("@/lib/api");
 
@@ -23,7 +23,7 @@ describe("LogsPanel", () => {
     containerName: "pi-dashboard",
   };
 
-  const mockLogsResponse: ContainerLogsResponse = {
+  const mockLogsResponse: DockerContainerLogsResponse = {
     message: "Retrieved 3 log lines",
     timestamp: "2024-01-01T00:00:00Z",
     container_id: "abc123",
@@ -153,7 +153,7 @@ describe("LogsPanel", () => {
       containerName: "homebridge",
     };
 
-    const newLogsResponse: ContainerLogsResponse = {
+    const newLogsResponse: DockerContainerLogsResponse = {
       ...mockLogsResponse,
       container_id: "def456",
       logs: ["[INFO] Homebridge started"],

@@ -17,7 +17,7 @@ import type {
   LoginResponse,
   GetContainersResponse,
   DockerContainer,
-  ContainerActionResponse,
+  DockerContainerActionResponse,
 } from "@/lib/types";
 
 jest.mock("../api", () => {
@@ -219,7 +219,7 @@ describe("API Tests", () => {
 
     describe("startContainer", () => {
       it("should start container successfully", async () => {
-        const mockResponse: ContainerActionResponse = {
+        const mockResponse: DockerContainerActionResponse = {
           message: "Container started successfully",
           timestamp: "2024-01-01T00:00:00Z",
           container_id: "abc123",
@@ -244,7 +244,7 @@ describe("API Tests", () => {
 
     describe("stopContainer", () => {
       it("should stop container successfully", async () => {
-        const mockResponse: ContainerActionResponse = {
+        const mockResponse: DockerContainerActionResponse = {
           message: "Container stopped successfully",
           timestamp: "2024-01-01T00:00:00Z",
           container_id: "abc123",
@@ -269,7 +269,7 @@ describe("API Tests", () => {
 
     describe("restartContainer", () => {
       it("should restart container successfully", async () => {
-        const mockResponse: ContainerActionResponse = {
+        const mockResponse: DockerContainerActionResponse = {
           message: "Container restarted successfully",
           timestamp: "2024-01-01T00:00:00Z",
           container_id: "abc123",
@@ -294,7 +294,7 @@ describe("API Tests", () => {
 
     describe("updateContainer", () => {
       it("should update container successfully", async () => {
-        const mockResponse: ContainerActionResponse = {
+        const mockResponse: DockerContainerActionResponse = {
           message: "Container updated successfully",
           timestamp: "2024-01-01T00:00:00Z",
           container_id: "abc123",

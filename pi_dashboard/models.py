@@ -24,7 +24,7 @@ class PiDashboardConfig(TemplateServerConfig):
     metrics: MetricsConfig = Field(default_factory=MetricsConfig, description="System metrics collection configuration")
 
 
-# General models
+# Metrics models
 class SystemInfo(BaseModel):
     """Model representing system information."""
 
@@ -139,20 +139,19 @@ class GetSystemMetricsHistoryResponse(BaseResponse):
     history: SystemMetricsHistory = Field(..., description="System metrics history data")
 
 
-class ContainerListResponse(BaseResponse):
+class DockerContainerListResponse(BaseResponse):
     """Response model for listing containers."""
 
     containers: list[DockerContainer] = Field(..., description="List of Docker containers")
 
 
-class ContainerActionResponse(BaseResponse):
+class DockerContainerActionResponse(BaseResponse):
     """Response model for container actions (start/stop/restart/update)."""
 
     container_id: str = Field(..., description="Container ID that was acted upon")
-    action: str = Field(..., description="Action that was performed")
 
 
-class ContainerLogsResponse(BaseResponse):
+class DockerContainerLogsResponse(BaseResponse):
     """Response model for container logs."""
 
     container_id: str = Field(..., description="Container ID whose logs were retrieved")

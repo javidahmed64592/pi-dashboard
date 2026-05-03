@@ -24,7 +24,7 @@ class TestPiDashboardConfig:
         assert mock_metrics_config.model_dump() == mock_pi_dashboard_config.model_dump()["metrics"]
 
 
-# General models
+# Metrics models
 class TestSystemMetricsHistory:
     """Unit tests for the SystemMetricsHistory class."""
 

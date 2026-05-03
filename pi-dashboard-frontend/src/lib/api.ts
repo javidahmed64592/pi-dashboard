@@ -10,8 +10,8 @@ import type {
   GetSystemMetricsHistoryRequest,
   GetSystemMetricsHistoryResponse,
   GetContainersResponse,
-  ContainerActionResponse,
-  ContainerLogsResponse,
+  DockerContainerActionResponse,
+  DockerContainerLogsResponse,
 } from "@/lib/types";
 
 // Determine the base URL based on environment
@@ -160,9 +160,9 @@ export const refreshContainers = async (): Promise<GetContainersResponse> => {
 
 export const startContainer = async (
   containerId: string
-): Promise<ContainerActionResponse> => {
+): Promise<DockerContainerActionResponse> => {
   try {
-    const response = await api.post<ContainerActionResponse>(
+    const response = await api.post<DockerContainerActionResponse>(
       `/containers/${containerId}/start`
     );
     return response.data;
@@ -173,9 +173,9 @@ export const startContainer = async (
 
 export const stopContainer = async (
   containerId: string
-): Promise<ContainerActionResponse> => {
+): Promise<DockerContainerActionResponse> => {
   try {
-    const response = await api.post<ContainerActionResponse>(
+    const response = await api.post<DockerContainerActionResponse>(
       `/containers/${containerId}/stop`
     );
     return response.data;
@@ -186,9 +186,9 @@ export const stopContainer = async (
 
 export const restartContainer = async (
   containerId: string
-): Promise<ContainerActionResponse> => {
+): Promise<DockerContainerActionResponse> => {
   try {
-    const response = await api.post<ContainerActionResponse>(
+    const response = await api.post<DockerContainerActionResponse>(
       `/containers/${containerId}/restart`
     );
     return response.data;
@@ -199,9 +199,9 @@ export const restartContainer = async (
 
 export const updateContainer = async (
   containerId: string
-): Promise<ContainerActionResponse> => {
+): Promise<DockerContainerActionResponse> => {
   try {
-    const response = await api.post<ContainerActionResponse>(
+    const response = await api.post<DockerContainerActionResponse>(
       `/containers/${containerId}/update`
     );
     return response.data;
@@ -213,9 +213,9 @@ export const updateContainer = async (
 export const getContainerLogs = async (
   containerId: string,
   lines: number = 100
-): Promise<ContainerLogsResponse> => {
+): Promise<DockerContainerLogsResponse> => {
   try {
-    const response = await api.get<ContainerLogsResponse>(
+    const response = await api.get<DockerContainerLogsResponse>(
       `/containers/${containerId}/logs`,
       { params: { lines } }
     );
