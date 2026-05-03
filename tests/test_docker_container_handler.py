@@ -1,11 +1,11 @@
-"""Unit tests for the container handler module."""
+"""Unit tests for the pi_dashboard.docker_container_handler module."""
 
 from unittest.mock import MagicMock
 
 import pytest
 from docker.errors import APIError
 
-from pi_dashboard.container_handler import DockerContainerHandler
+from pi_dashboard.docker_container_handler import DockerContainerHandler
 
 
 class TestExtractPrimaryPort:
@@ -40,7 +40,7 @@ class TestCheckDockerAvailable:
         mock_container_handler._check_docker_available()
 
     def test_docker_unavailable(self, mock_container_handler: DockerContainerHandler) -> None:
-        """Test when Docker daemon is available."""
+        """Test when Docker daemon is unavailable."""
         mock_container_handler.client = None
 
         with pytest.raises(APIError, match="Docker daemon not available"):

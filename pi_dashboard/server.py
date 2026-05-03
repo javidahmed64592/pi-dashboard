@@ -14,7 +14,7 @@ from python_template_server.constants import ROOT_DIR
 from python_template_server.models import ResponseCode
 from python_template_server.template_server import TemplateServer
 
-from pi_dashboard.container_handler import DockerContainerHandler
+from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     BaseResponse,
     DockerContainerActionResponse,
