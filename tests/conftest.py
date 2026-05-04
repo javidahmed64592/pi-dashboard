@@ -16,8 +16,6 @@ from pi_dashboard.models import (
     PiDashboardConfig,
     SystemInfo,
     SystemMetrics,
-    SystemMetricsHistory,
-    SystemMetricsHistoryEntry,
     current_timestamp_int,
 )
 
@@ -52,10 +50,12 @@ def mock_pi_dashboard_config(
 @pytest.fixture
 def mock_metrics_database_manager(
     mock_database_config: DatabaseConfig,
+    mock_system_metrics: SystemMetrics,
     mock_system_metrics_old: SystemMetrics,
 ) -> Generator[MetricsDatabaseManager]:
     """Provide a MetricsDatabaseManager instance for testing."""
     db_manager = MetricsDatabaseManager(db_config=mock_database_config)
+    db_manager.perform_metrics_action(metrics_entry=mock_system_metrics, action=DatabaseAction.CREATE)
     db_manager.perform_metrics_action(metrics_entry=mock_system_metrics_old, action=DatabaseAction.CREATE)
     yield db_manager
     db_manager.engine.dispose()
@@ -113,31 +113,6 @@ def mock_system_metrics_old(mock_database_config: DatabaseConfig) -> SystemMetri
         temperature=55.0,
         timestamp=current_timestamp_int() - ((mock_database_config.metrics_lifetime_days + 1) * 86400),
     )
-
-
-@pytest.fixture
-def mock_system_metrics_history_entry(mock_system_metrics: SystemMetrics) -> SystemMetricsHistoryEntry:
-    """Provide a SystemMetricsHistoryEntry instance for testing."""
-    return SystemMetricsHistoryEntry.model_validate(
-        {
-            "metrics": mock_system_metrics.model_dump(),
-            "timestamp": 1234,
-        }
-    )
-
-
-@pytest.fixture
-def mock_system_metrics_history(mock_system_metrics_history_entry: SystemMetricsHistoryEntry) -> SystemMetricsHistory:
-    """Provide a SystemMetricsHistory instance for testing."""
-    history = SystemMetricsHistory()
-    for i in range(10):
-        timestamp = mock_system_metrics_history_entry.timestamp + (i * 60)
-        entry = SystemMetricsHistoryEntry(
-            metrics=mock_system_metrics_history_entry.metrics,
-            timestamp=timestamp,
-        )
-        history.add_entry(entry)
-    return history
 
 
 # Notes models fixtures

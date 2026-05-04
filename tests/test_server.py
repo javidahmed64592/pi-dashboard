@@ -14,6 +14,7 @@ from fastapi.testclient import TestClient
 from python_template_server.models import ResponseCode
 
 from pi_dashboard.db import NotesDatabaseManager
+from pi_dashboard.db.metrics_database_manager import MetricsDatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     DatabaseAction,
@@ -23,7 +24,6 @@ from pi_dashboard.models import (
     PiDashboardConfig,
     SystemInfo,
     SystemMetrics,
-    SystemMetricsHistory,
 )
 from pi_dashboard.server import PiDashboardServer
 
@@ -64,10 +64,10 @@ def mock_get_system_metrics(mock_system_metrics: SystemMetrics) -> Generator[Mag
 @pytest.fixture
 def mock_server(
     mock_pi_dashboard_config: PiDashboardConfig,
+    mock_metrics_database_manager: MetricsDatabaseManager,
     mock_notes_database_manager: NotesDatabaseManager,
     mock_get_system_info: MagicMock,
     mock_get_system_metrics: MagicMock,
-    mock_system_metrics_history: SystemMetricsHistory,
     mock_docker_container_handler: DockerContainerHandler,
 ) -> Generator[PiDashboardServer]:
     """Provide a PiDashboardServer instance for testing."""
@@ -81,8 +81,8 @@ def mock_server(
     with (
         patch.object(PiDashboardServer, "_verify_api_key", new=fake_verify_api_key),
         patch("pi_dashboard.server.PiDashboardConfig.save_to_file"),
+        patch("pi_dashboard.server.MetricsDatabaseManager", return_value=mock_metrics_database_manager),
         patch("pi_dashboard.server.NotesDatabaseManager", return_value=mock_notes_database_manager),
-        patch("pi_dashboard.server.SystemMetricsHistory", return_value=mock_system_metrics_history),
         patch("pi_dashboard.server.DockerContainerHandler", return_value=mock_docker_container_handler),
     ):
         server = PiDashboardServer(config=mock_pi_dashboard_config)
@@ -98,10 +98,9 @@ def mock_client(mock_server: PiDashboardServer) -> TestClient:
 class TestPiDashboardServer:
     """Unit tests for the PiDashboardServer class."""
 
-    def test_init(self, mock_server: PiDashboardServer, mock_system_metrics_history: SystemMetricsHistory) -> None:
+    def test_init(self, mock_server: PiDashboardServer) -> None:
         """Test PiDashboardServer initialization."""
         assert isinstance(mock_server.config, PiDashboardConfig)
-        assert mock_server.metrics_history == mock_system_metrics_history
 
     def test_validate_config(self, mock_server: PiDashboardServer, mock_pi_dashboard_config: PiDashboardConfig) -> None:
         """Test configuration validation."""
@@ -207,12 +206,11 @@ class TestGetSystemMetricsHistoryEndpoint:
         self,
         mock_server: PiDashboardServer,
         mock_request_object: Request,
-        mock_system_metrics_history: SystemMetricsHistory,
     ) -> None:
         """Test the /system/metrics/history method handles valid JSON."""
         response = asyncio.run(mock_server.get_system_metrics_history(mock_request_object))
         assert response.message == "Retrieved system metrics history successfully"
-        assert response.history == mock_system_metrics_history
+        assert len(response.history) > 0
 
     def test_get_system_metrics_history_endpoint(
         self, mock_client: TestClient, mock_request_body: GetSystemMetricsHistoryRequest

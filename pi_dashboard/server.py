@@ -11,9 +11,10 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from python_template_server.models import ResponseCode
 from python_template_server.template_server import TemplateServer
 
-from pi_dashboard.db import NotesDatabaseManager
+from pi_dashboard.db import MetricsDatabaseManager, NotesDatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
+    DatabaseAction,
     DockerContainerActionResponse,
     DockerContainerListResponse,
     DockerContainerLogsResponse,
@@ -25,9 +26,6 @@ from pi_dashboard.models import (
     NotesActionResponse,
     NotesListResponse,
     PiDashboardConfig,
-    SystemMetricsHistory,
-    SystemMetricsHistoryEntry,
-    current_timestamp_int,
 )
 from pi_dashboard.system_metrics_handler import (
     get_system_info,
@@ -51,8 +49,8 @@ class PiDashboardServer(TemplateServer):
             config=config,
         )
 
+        self.metrics_database_manager = MetricsDatabaseManager(db_config=self.config.db)
         self.notes_database_manager = NotesDatabaseManager(db_config=self.config.db)
-        self.metrics_history = SystemMetricsHistory()
         self.docker_container_handler = DockerContainerHandler()
 
     @staticmethod
@@ -95,21 +93,21 @@ class PiDashboardServer(TemplateServer):
         """Background task to collect metrics at regular intervals."""
         while True:
             try:
-                timestamp = current_timestamp_int()
-
                 # Cleanup old entries
-                self.metrics_history.cleanup_old_entries(self.config.metrics.max_history_duration, timestamp)
+                self.metrics_database_manager.cleanup_old_metrics()
 
                 # Collect current metrics
                 metrics = get_system_metrics()
 
                 # Add to history
-                entry = SystemMetricsHistoryEntry(metrics=metrics, timestamp=timestamp)
-                self.metrics_history.add_entry(entry)
+                self.metrics_database_manager.perform_metrics_action(
+                    metrics_entry=metrics, action=DatabaseAction.CREATE
+                )
 
                 # Wait for next collection
                 await asyncio.sleep(self.config.metrics.collection_interval)
             except asyncio.CancelledError:
+                logger.info("Metrics collection task cancelled")
                 break
             except Exception:
                 logger.exception("Error collecting metrics")
@@ -120,7 +118,6 @@ class PiDashboardServer(TemplateServer):
 
         :param dict config_data: The configuration data to validate
         :return PiDashboardConfig: The validated configuration model
-        :raise ValidationError: If the configuration data is invalid
         """
         return PiDashboardConfig.model_validate(config_data)  # type: ignore[no-any-return]
 
@@ -257,14 +254,12 @@ class PiDashboardServer(TemplateServer):
         :return GetSystemMetricsHistoryResponse: The system metrics history response model
         """
         metrics_request = GetSystemMetricsHistoryRequest.model_validate(await request.json())
-        entries = self.metrics_history.get_entries_since(
-            min(metrics_request.last_n_seconds, self.config.metrics.max_history_duration),
-            current_timestamp_int(),
-            metrics_request.max_data_points,
+        entries = self.metrics_database_manager.get_metric_entries_since(
+            metrics_request.last_n_seconds, metrics_request.max_data_points
         )
         return GetSystemMetricsHistoryResponse(
             message="Retrieved system metrics history successfully",
-            history=SystemMetricsHistory(history=entries),
+            history=entries,
         )
 
     # Notes routes
