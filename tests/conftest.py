@@ -11,6 +11,8 @@ from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     DatabaseConfig,
     MetricsConfig,
+    NoteAction,
+    NoteEntry,
     PiDashboardConfig,
     SystemInfo,
     SystemMetrics,
@@ -42,9 +44,12 @@ def mock_pi_dashboard_config(
 
 # Database fixtures
 @pytest.fixture
-def mock_database_manager(mock_database_config: DatabaseConfig) -> Generator[DatabaseManager]:
+def mock_database_manager(
+    mock_database_config: DatabaseConfig, mock_note_entry_1: NoteEntry
+) -> Generator[DatabaseManager]:
     """Provide a DatabaseManager instance for testing."""
     db_manager = DatabaseManager(db_config=mock_database_config)
+    db_manager.perform_note_action(mock_note_entry_1, NoteAction.CREATE)
     yield db_manager
     db_manager.engine.dispose()
 
@@ -168,3 +173,28 @@ def mock_docker_container_handler(mock_docker_client: MagicMock) -> DockerContai
         patch("docker.from_env", return_value=mock_docker_client),
     ):
         return DockerContainerHandler()
+
+
+# Notes models fixtures
+@pytest.fixture
+def mock_note_entry_1() -> NoteEntry:
+    """Provide a NoteEntry instance for testing."""
+    return NoteEntry(
+        id=None,
+        title="Test note",
+        content="This is a test note entry.",
+        time_created=123,
+        time_updated=123,
+    )
+
+
+@pytest.fixture
+def mock_note_entry_2() -> NoteEntry:
+    """Provide a NoteEntry instance for testing."""
+    return NoteEntry(
+        id=None,
+        title="Test note 2",
+        content="This is another test note entry.",
+        time_created=234,
+        time_updated=234,
+    )

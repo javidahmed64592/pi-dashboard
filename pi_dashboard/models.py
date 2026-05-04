@@ -150,11 +150,19 @@ class DockerContainer(BaseModel):
 class NoteEntry(BaseModel):
     """Model representing a single note entry."""
 
-    id: str = Field(..., description="Unique identifier for the note entry")
+    id: int | None = Field(default=None, description="Unique identifier for the note entry")
     title: str = Field(..., description="Title of the note entry")
     content: str = Field(..., description="Content of the note entry")
-    time_created: int = Field(..., description="Unix timestamp when the note was created")
-    time_updated: int = Field(..., description="Unix timestamp when the note was last updated")
+    time_created: int = Field(default=0, description="Unix timestamp when the note was created")
+    time_updated: int = Field(default=0, description="Unix timestamp when the note was last updated")
+
+
+class NoteAction(StrEnum):
+    """Enumeration for note actions."""
+
+    CREATE = "create"
+    UPDATE = "update"
+    DELETE = "delete"
 
 
 # Response models
