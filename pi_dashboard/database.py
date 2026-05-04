@@ -80,7 +80,7 @@ class DatabaseManager:
         timestamp = current_timestamp_int()
         note_entry.time_created = timestamp
         note_entry.time_updated = timestamp
-        note_db = NoteEntryDB.from_note_entry(note_entry)
+        note_db = NoteEntryDB.from_note_entry(note_entry=note_entry)
         session.add(note_db)
         session.commit()
         session.refresh(note_db)
@@ -88,7 +88,7 @@ class DatabaseManager:
 
     def _update_note_entry(self, session: Session, note_entry: NoteEntry, note_db: NoteEntryDB) -> int | None:
         """Update an existing note entry in the database."""
-        note_db.update_from_note_entry(note_entry)
+        note_db.update_from_note_entry(note_entry=note_entry)
         session.add(note_db)
         session.commit()
         session.refresh(note_db)
@@ -110,7 +110,7 @@ class DatabaseManager:
         with Session(self.engine) as session:
             match action:
                 case DatabaseAction.CREATE:
-                    if not (note_id := self._create_note_entry(session, note_entry)):
+                    if not (note_id := self._create_note_entry(session=session, note_entry=note_entry)):
                         error_msg = "Failed to create note entry."
                         logger.error(error_msg)
                         raise ValueError(error_msg)
@@ -120,11 +120,13 @@ class DatabaseManager:
                         error_msg = "Note entry ID is required for update."
                         logger.error(error_msg)
                         raise ValueError(error_msg)
-                    if not (note_db := self._get_note_entry_by_id(session, note_entry.id)):
+                    if not (note_db := self._get_note_entry_by_id(session=session, note_id=note_entry.id)):
                         error_msg = f"Note entry with ID {note_entry.id} not found for update."
                         logger.error(error_msg)
                         raise ValueError(error_msg)
-                    if not (note_id := self._update_note_entry(session, note_entry, note_db)):
+                    if not (
+                        note_id := self._update_note_entry(session=session, note_entry=note_entry, note_db=note_db)
+                    ):
                         error_msg = f"Failed to update note entry with ID {note_entry.id}."
                         logger.error(error_msg)
                         raise ValueError(error_msg)
@@ -134,11 +136,11 @@ class DatabaseManager:
                         error_msg = "Note entry ID is required for deletion."
                         logger.error(error_msg)
                         raise ValueError(error_msg)
-                    if not (note_db := self._get_note_entry_by_id(session, note_entry.id)):
+                    if not (note_db := self._get_note_entry_by_id(session=session, note_id=note_entry.id)):
                         error_msg = f"Note entry with ID {note_entry.id} not found for deletion."
                         logger.error(error_msg)
                         raise ValueError(error_msg)
-                    if not (note_id := self._delete_note_entry(session, note_db)):
+                    if not (note_id := self._delete_note_entry(session=session, note_db=note_db)):
                         error_msg = f"Failed to delete note entry with ID {note_entry.id}."
                         logger.error(error_msg)
                         raise ValueError(error_msg)

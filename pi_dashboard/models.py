@@ -141,6 +141,17 @@ class SystemMetricsHistory(BaseModel):
         return sampled_entries
 
 
+# Notes models
+class NoteEntry(BaseModel):
+    """Model representing a single note entry."""
+
+    id: int | None = Field(default=None, description="Unique identifier for the note entry")
+    title: str = Field(..., description="Title of the note entry")
+    content: str = Field(..., description="Content of the note entry")
+    time_created: int = Field(default=0, description="Unix timestamp when the note was created")
+    time_updated: int = Field(default=0, description="Unix timestamp when the note was last updated")
+
+
 # Docker container models
 class DockerContainer(BaseModel):
     """Model representing a Docker container."""
@@ -152,17 +163,6 @@ class DockerContainer(BaseModel):
         ..., description="Container status"
     )
     port: str | None = Field(None, description="Primary host port")
-
-
-# Notes models
-class NoteEntry(BaseModel):
-    """Model representing a single note entry."""
-
-    id: int | None = Field(default=None, description="Unique identifier for the note entry")
-    title: str = Field(..., description="Title of the note entry")
-    content: str = Field(..., description="Content of the note entry")
-    time_created: int = Field(default=0, description="Unix timestamp when the note was created")
-    time_updated: int = Field(default=0, description="Unix timestamp when the note was last updated")
 
 
 # Response models
