@@ -193,7 +193,7 @@ class NotesListResponse(BaseResponse):
 class NotesActionResponse(BaseResponse):
     """Response model for note actions (create/update/delete)."""
 
-    note_id: str = Field(..., description="Note ID that was acted upon")
+    note_id: int = Field(..., description="Note ID that was acted upon")
 
 
 class DockerContainerListResponse(BaseResponse):
