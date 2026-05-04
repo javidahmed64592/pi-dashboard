@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pi_dashboard.db.database import DatabaseManager
+from pi_dashboard.db import NotesDatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     DatabaseAction,
@@ -44,11 +44,11 @@ def mock_pi_dashboard_config(
 
 # Database fixtures
 @pytest.fixture
-def mock_database_manager(
+def mock_notes_database_manager(
     mock_database_config: DatabaseConfig, mock_note_entry_1: NoteEntry
-) -> Generator[DatabaseManager]:
-    """Provide a DatabaseManager instance for testing."""
-    db_manager = DatabaseManager(db_config=mock_database_config)
+) -> Generator[NotesDatabaseManager]:
+    """Provide a NotesDatabaseManager instance for testing."""
+    db_manager = NotesDatabaseManager(db_config=mock_database_config)
     db_manager.perform_note_action(mock_note_entry_1, DatabaseAction.CREATE)
     yield db_manager
     db_manager.engine.dispose()

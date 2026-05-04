@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from python_template_server.models import ResponseCode
 from python_template_server.template_server import TemplateServer
 
-from pi_dashboard.db.database import DatabaseManager
+from pi_dashboard.db import NotesDatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     DockerContainerActionResponse,
@@ -51,7 +51,7 @@ class PiDashboardServer(TemplateServer):
             config=config,
         )
 
-        self.database_manager = DatabaseManager(db_config=self.config.db)
+        self.notes_database_manager = NotesDatabaseManager(db_config=self.config.db)
         self.metrics_history = SystemMetricsHistory()
         self.docker_container_handler = DockerContainerHandler()
 
@@ -274,7 +274,7 @@ class PiDashboardServer(TemplateServer):
         :return NotesListResponse: Response containing list of note entries
         """
         try:
-            notes = self.database_manager.get_all_note_entries()
+            notes = self.notes_database_manager.get_all_note_entries()
             return NotesListResponse(
                 message=f"Retrieved {len(notes)} note entries",
                 notes=notes,
@@ -293,7 +293,7 @@ class PiDashboardServer(TemplateServer):
         :return NotesActionResponse: Response indicating success or failure of the note action
         """
         try:
-            note_id = self.database_manager.perform_note_action(note_entry=body.note, action=body.action)
+            note_id = self.notes_database_manager.perform_note_action(note_entry=body.note, action=body.action)
             return NotesActionResponse(
                 message=f"Note entry {body.action.value}d successfully",
                 note_id=note_id,
