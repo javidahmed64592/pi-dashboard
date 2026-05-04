@@ -78,8 +78,17 @@ class MetricsDatabaseManager(BaseDatabaseManager):
         statement = select(MetricsEntryDB).where(MetricsEntryDB.id == metrics_id)
         return session.exec(statement).first()
 
+    def _get_metrics_entry_by_timestamp(self, session: Session, timestamp: int) -> MetricsEntryDB | None:
+        """Retrieve a MetricsEntryDB by its timestamp."""
+        statement = select(MetricsEntryDB).where(MetricsEntryDB.timestamp == timestamp)
+        return session.exec(statement).first()
+
     def _create_metrics_entry(self, session: Session, metrics_entry: SystemMetrics) -> int | None:
         """Add a new metrics entry to the database."""
+        if existing_entry := self._get_metrics_entry_by_timestamp(session=session, timestamp=metrics_entry.timestamp):
+            logger.warning("Metrics entry with timestamp %d already exists, skipping creation", metrics_entry.timestamp)
+            return existing_entry.id
+
         metrics_db = MetricsEntryDB.from_system_metrics(metrics_entry=metrics_entry)
         session.add(metrics_db)
         session.commit()
@@ -96,6 +105,24 @@ class MetricsDatabaseManager(BaseDatabaseManager):
         """Public method to retrieve all metrics entries."""
         with Session(self.engine) as session:
             return self._get_all_metrics_entries(session)
+
+    def get_metric_entries_since(self, last_n_seconds: int, max_data_points: int) -> list[SystemMetrics]:
+        """Get metrics entries from the last N seconds with adaptive downsampling."""
+        with Session(self.engine) as session:
+            cutoff_time = current_timestamp_int() - last_n_seconds
+            statement = (
+                select(MetricsEntryDB)
+                .where(col(MetricsEntryDB.timestamp) >= cutoff_time)
+                .order_by(col(MetricsEntryDB.timestamp).asc())
+            )
+            metrics_entries_db = session.exec(statement).all()
+
+            # Adaptive downsampling if there are more entries than max_data_points
+            if len(metrics_entries_db) > max_data_points:
+                step = len(metrics_entries_db) // max_data_points
+                metrics_entries_db = metrics_entries_db[::step]
+
+            return [metrics_db.to_system_metrics() for metrics_db in metrics_entries_db]
 
     def perform_metrics_action(self, metrics_entry: SystemMetrics, action: DatabaseAction) -> int:
         """Perform a metrics action (create/update/delete) on the database."""
@@ -119,7 +146,7 @@ class MetricsDatabaseManager(BaseDatabaseManager):
             stale_metrics = [m for m in all_metrics if self.is_stale(m)]
             deleted_count = 0
             for metrics in stale_metrics:
-                metrics_db = self._get_metrics_entry_by_id(session=session, metrics_id=metrics.id)
+                metrics_db = self._get_metrics_entry_by_id(session=session, metrics_id=metrics.id)  # type: ignore[arg-type]
                 if metrics_db:
                     self._delete_metrics_entry(session=session, metrics_db=metrics_db)
                     deleted_count += 1

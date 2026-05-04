@@ -25,7 +25,9 @@ class TestMetricsDatabaseManager:
     ) -> None:
         """Test creating a metrics entry."""
         initial_metrics_count = len(mock_metrics_database_manager.get_all_metrics_entries())
-        metrics_id = mock_metrics_database_manager.perform_metrics_action(mock_system_metrics, DatabaseAction.CREATE)
+
+        new_entry = mock_system_metrics.model_copy(update={"timestamp": mock_system_metrics.timestamp + 1})
+        metrics_id = mock_metrics_database_manager.perform_metrics_action(new_entry, DatabaseAction.CREATE)
         assert isinstance(metrics_id, int)
         assert len(mock_metrics_database_manager.get_all_metrics_entries()) == initial_metrics_count + 1
 
