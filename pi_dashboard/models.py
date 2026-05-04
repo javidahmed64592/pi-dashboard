@@ -32,9 +32,6 @@ class MetricsConfig(BaseModel):
     collection_interval: int = Field(
         default=5, ge=1, le=60, description="Interval in seconds between metrics collections"
     )
-    max_history_duration: int = Field(
-        default=3600, ge=60, le=86400, description="Maximum duration in seconds to keep metrics history"
-    )
 
 
 class PiDashboardConfig(TemplateServerConfig):
@@ -86,66 +83,6 @@ class SystemMetrics(BaseModel):
     timestamp: int = Field(..., description="Unix timestamp of when the metrics were collected")
 
 
-class SystemMetricsHistoryEntry(BaseModel):
-    """Model representing a single entry in system metrics history."""
-
-    metrics: SystemMetrics = Field(..., description="System metrics data")
-    timestamp: int = Field(..., description="Unix timestamp of the metrics entry")
-
-
-class SystemMetricsHistory(BaseModel):
-    """Model representing system metrics history."""
-
-    history: list[SystemMetricsHistoryEntry] = Field(
-        default_factory=list, description="List of system metrics history entries"
-    )
-
-    def add_entry(self, entry: SystemMetricsHistoryEntry) -> None:
-        """Add a new entry to the metrics history.
-
-        :param SystemMetricsHistoryEntry entry: The metrics history entry to add
-        """
-        self.history.append(entry)
-
-    def cleanup_old_entries(self, max_age_seconds: int, current_time: int) -> None:
-        """Remove entries older than the specified age.
-
-        :param int max_age_seconds: Maximum age of entries to keep in seconds
-        :param int current_time: Current Unix timestamp
-        """
-        cutoff_time = current_time - max_age_seconds
-        self.history = [entry for entry in self.history if entry.timestamp >= cutoff_time]
-
-    def get_entries_since(
-        self, seconds_ago: int, current_time: int, max_data_points: int
-    ) -> list[SystemMetricsHistoryEntry]:
-        """Get entries from the last N seconds with adaptive downsampling.
-
-        :param int seconds_ago: Number of seconds to look back
-        :param int current_time: Current Unix timestamp
-        :param int max_data_points: Maximum number of data points to return
-        :return list[SystemMetricsHistoryEntry]: List of entries from the specified time range (downsampled if needed)
-        """
-        cutoff_time = current_time - seconds_ago
-        entries = [entry for entry in self.history if entry.timestamp >= cutoff_time]
-
-        # If we have fewer entries than max_data_points, return all
-        if len(entries) <= max_data_points:
-            return entries
-
-        # Calculate the interval for downsampling (use float division for precision)
-        interval = len(entries) / max_data_points
-
-        # Sample evenly across the time range, always including the most recent entry
-        sampled_indices = [int(i * interval) for i in range(max_data_points - 1)]
-        sampled_entries = [entries[idx] for idx in sampled_indices]
-
-        # Always include the most recent entry to ensure we show current data
-        sampled_entries.append(entries[-1])
-
-        return sampled_entries
-
-
 # Notes models
 class NoteEntry(BaseModel):
     """Model representing a single note entry."""
@@ -186,7 +123,7 @@ class GetSystemMetricsResponse(BaseResponse):
 class GetSystemMetricsHistoryResponse(BaseResponse):
     """Response model for system metrics history."""
 
-    history: SystemMetricsHistory = Field(..., description="System metrics history data")
+    history: list[SystemMetrics] = Field(..., description="System metrics history data")
 
 
 class NotesListResponse(BaseResponse):

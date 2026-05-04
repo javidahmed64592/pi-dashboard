@@ -31,10 +31,11 @@
   },
   "db": {
     "db_directory": "data",
+    "metrics_db_filename": "metrics.db",
+    "metrics_lifetime_days": 7,
     "notes_db_filename": "notes.db"
   },
   "metrics": {
-    "collection_interval": 10,
-    "max_history_duration": 86400
+    "collection_interval": 10
   }
 }
