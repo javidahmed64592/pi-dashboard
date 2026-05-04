@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pi_dashboard.db import NotesDatabaseManager
+from pi_dashboard.db import MetricsDatabaseManager, NotesDatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     DatabaseAction,
@@ -18,6 +18,7 @@ from pi_dashboard.models import (
     SystemMetrics,
     SystemMetricsHistory,
     SystemMetricsHistoryEntry,
+    current_timestamp_int,
 )
 
 
@@ -25,7 +26,12 @@ from pi_dashboard.models import (
 @pytest.fixture
 def mock_database_config(tmp_path: Path) -> DatabaseConfig:
     """Provide a DatabaseConfig instance for testing."""
-    return DatabaseConfig(db_directory=str(tmp_path / "data"), notes_db_filename="test.db")
+    return DatabaseConfig(
+        db_directory=str(tmp_path / "data"),
+        metrics_db_filename="test_metrics.db",
+        metrics_lifetime_days=7,
+        notes_db_filename="test_notes.db",
+    )
 
 
 @pytest.fixture
@@ -44,12 +50,24 @@ def mock_pi_dashboard_config(
 
 # Database fixtures
 @pytest.fixture
+def mock_metrics_database_manager(
+    mock_database_config: DatabaseConfig,
+    mock_system_metrics_old: SystemMetrics,
+) -> Generator[MetricsDatabaseManager]:
+    """Provide a MetricsDatabaseManager instance for testing."""
+    db_manager = MetricsDatabaseManager(db_config=mock_database_config)
+    db_manager.perform_metrics_action(metrics_entry=mock_system_metrics_old, action=DatabaseAction.CREATE)
+    yield db_manager
+    db_manager.engine.dispose()
+
+
+@pytest.fixture
 def mock_notes_database_manager(
     mock_database_config: DatabaseConfig, mock_note_entry_1: NoteEntry
 ) -> Generator[NotesDatabaseManager]:
     """Provide a NotesDatabaseManager instance for testing."""
     db_manager = NotesDatabaseManager(db_config=mock_database_config)
-    db_manager.perform_note_action(mock_note_entry_1, DatabaseAction.CREATE)
+    db_manager.perform_note_action(note_entry=mock_note_entry_1, action=DatabaseAction.CREATE)
     yield db_manager
     db_manager.engine.dispose()
 
@@ -58,30 +76,42 @@ def mock_notes_database_manager(
 @pytest.fixture
 def mock_system_info() -> SystemInfo:
     """Provide a SystemInfo instance for testing."""
-    return SystemInfo.model_validate(
-        {
-            "hostname": "test-host",
-            "system": "test-system",
-            "release": "1.2.3",
-            "version": "test-version",
-            "machine": "test-machine",
-            "memory_total": 8.0,
-            "disk_total": 256.0,
-        }
+    return SystemInfo(
+        hostname="test-host",
+        system="test-system",
+        release="1.2.3",
+        version="test-version",
+        machine="test-machine",
+        memory_total=8.0,
+        disk_total=256.0,
     )
 
 
 @pytest.fixture
 def mock_system_metrics() -> SystemMetrics:
     """Provide a SystemMetrics instance for testing."""
-    return SystemMetrics.model_validate(
-        {
-            "cpu_usage": 45.5,
-            "memory_usage": 60.2,
-            "disk_usage": 70.1,
-            "uptime": 123456,
-            "temperature": 55.0,
-        }
+    return SystemMetrics(
+        id=None,
+        cpu_usage=45.5,
+        memory_usage=60.2,
+        disk_usage=70.1,
+        uptime=123456,
+        temperature=55.0,
+        timestamp=current_timestamp_int(),
+    )
+
+
+@pytest.fixture
+def mock_system_metrics_old(mock_database_config: DatabaseConfig) -> SystemMetrics:
+    """Provide an old SystemMetrics instance for testing."""
+    return SystemMetrics(
+        id=None,
+        cpu_usage=45.5,
+        memory_usage=60.2,
+        disk_usage=70.1,
+        uptime=123456,
+        temperature=55.0,
+        timestamp=current_timestamp_int() - ((mock_database_config.metrics_lifetime_days + 1) * 86400),
     )
 
 

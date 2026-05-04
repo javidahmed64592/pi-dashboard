@@ -15,6 +15,10 @@ class DatabaseConfig(BaseModel):
     db_directory: str = Field(
         default="data", description="The directory where the SQLite database files will be stored."
     )
+    metrics_db_filename: str = Field(default="metrics.db", description="The filename for the metrics database.")
+    metrics_lifetime_days: int = Field(
+        default=7, ge=1, le=365, description="Number of days to keep metrics history in the database."
+    )
     notes_db_filename: str = Field(default="notes.db", description="The filename for the notes database.")
 
     def db_url(self, filename: str) -> str:
@@ -73,11 +77,13 @@ class SystemInfo(BaseModel):
 class SystemMetrics(BaseModel):
     """Model representing system metrics."""
 
+    id: int | None = Field(default=None, description="Unique identifier for the metrics entry")
     cpu_usage: float = Field(..., ge=0, le=100, description="CPU usage percentage")
     memory_usage: float = Field(..., ge=0, le=100, description="Memory usage percentage")
     disk_usage: float = Field(..., ge=0, le=100, description="Disk usage percentage")
     uptime: int = Field(..., description="System uptime in seconds")
     temperature: float = Field(..., description="System temperature in Celsius")
+    timestamp: int = Field(..., description="Unix timestamp of when the metrics were collected")
 
 
 class SystemMetricsHistoryEntry(BaseModel):
