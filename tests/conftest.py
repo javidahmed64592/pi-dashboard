@@ -110,6 +110,31 @@ def mock_system_metrics_history(mock_system_metrics_history_entry: SystemMetrics
     return history
 
 
+# Notes models fixtures
+@pytest.fixture
+def mock_note_entry_1() -> NoteEntry:
+    """Provide a NoteEntry instance for testing."""
+    return NoteEntry(
+        id=None,
+        title="Test note",
+        content="This is a test note entry.",
+        time_created=123,
+        time_updated=123,
+    )
+
+
+@pytest.fixture
+def mock_note_entry_2() -> NoteEntry:
+    """Provide a NoteEntry instance for testing."""
+    return NoteEntry(
+        id=None,
+        title="Test note 2",
+        content="This is another test note entry.",
+        time_created=234,
+        time_updated=234,
+    )
+
+
 # Docker fixtures
 @pytest.fixture
 def mock_container() -> MagicMock:
@@ -173,28 +198,3 @@ def mock_docker_container_handler(mock_docker_client: MagicMock) -> DockerContai
         patch("docker.from_env", return_value=mock_docker_client),
     ):
         return DockerContainerHandler()
-
-
-# Notes models fixtures
-@pytest.fixture
-def mock_note_entry_1() -> NoteEntry:
-    """Provide a NoteEntry instance for testing."""
-    return NoteEntry(
-        id=None,
-        title="Test note",
-        content="This is a test note entry.",
-        time_created=123,
-        time_updated=123,
-    )
-
-
-@pytest.fixture
-def mock_note_entry_2() -> NoteEntry:
-    """Provide a NoteEntry instance for testing."""
-    return NoteEntry(
-        id=None,
-        title="Test note 2",
-        content="This is another test note entry.",
-        time_created=234,
-        time_updated=234,
-    )
