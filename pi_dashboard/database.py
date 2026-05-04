@@ -60,9 +60,14 @@ class DatabaseManager:
         logger.info("Using database directory: %s", self.db_config.db_directory)
         Path(self.db_config.db_directory).mkdir(parents=True, exist_ok=True)
 
-        logger.info("Initializing database with URL: %s", self.db_config.db_url)
-        self.engine = create_engine(self.db_config.db_url, echo=False)
+        logger.info("Initializing database with URL: %s", self.db_url)
+        self.engine = create_engine(self.db_url, echo=False)
         SQLModel.metadata.create_all(self.engine)
+
+    @property
+    def db_url(self) -> str:
+        """Get the database URL."""
+        return self.db_config.db_url(self.db_config.db_filename)
 
     def _get_all_note_entries(self, session: Session) -> list[NoteEntry]:
         """Retrieve all note entries from the database."""

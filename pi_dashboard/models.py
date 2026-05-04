@@ -17,10 +17,9 @@ class DatabaseConfig(BaseModel):
     )
     db_filename: str = Field(default="dashboard.db", description="The filename for the SQLite database.")
 
-    @property
-    def db_url(self) -> str:
+    def db_url(self, filename: str) -> str:
         """Construct the database URL for SQLAlchemy."""
-        return f"sqlite:///{self.db_directory}/{self.db_filename}"
+        return f"sqlite:///{self.db_directory}/{filename}"
 
 
 class MetricsConfig(BaseModel):
