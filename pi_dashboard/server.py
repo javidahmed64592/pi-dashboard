@@ -4,7 +4,6 @@ import asyncio
 import logging
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
-from datetime import datetime
 from typing import Annotated
 
 from docker.errors import APIError, NotFound
@@ -22,6 +21,9 @@ from pi_dashboard.models import (
     GetSystemMetricsHistoryRequest,
     GetSystemMetricsHistoryResponse,
     GetSystemMetricsResponse,
+    NotesActionRequest,
+    NotesActionResponse,
+    NotesListResponse,
     PiDashboardConfig,
     SystemMetricsHistory,
     SystemMetricsHistoryEntry,
@@ -149,6 +151,25 @@ class PiDashboardServer(TemplateServer):
             limited=False,
             authentication_required=True,
         )
+
+        # Notes routes
+        self.add_route(
+            endpoint="/notes",
+            handler_function=self.get_notes,
+            response_model=NotesListResponse,
+            methods=["GET"],
+            limited=True,
+            authentication_required=True,
+        )
+        self.add_route(
+            endpoint="/notes/action",
+            handler_function=self.perform_note_action,
+            response_model=NotesActionResponse,
+            methods=["POST"],
+            limited=True,
+            authentication_required=True,
+        )
+
         # Container routes
         self.add_route(
             endpoint="/containers",
@@ -207,6 +228,7 @@ class PiDashboardServer(TemplateServer):
             authentication_required=True,
         )
 
+    # System routes
     async def get_system_info(self, request: Request) -> GetSystemInfoResponse:
         """Get system information.
 
@@ -245,6 +267,51 @@ class PiDashboardServer(TemplateServer):
             history=SystemMetricsHistory(history=entries),
         )
 
+    # Notes routes
+    async def get_notes(self, request: Request) -> NotesListResponse:
+        """Get all note entries.
+
+        :return NotesListResponse: Response containing list of note entries
+        """
+        try:
+            notes = self.database_manager.get_all_note_entries()
+            return NotesListResponse(
+                message=f"Retrieved {len(notes)} note entries",
+                notes=notes,
+            )
+        except Exception as e:
+            logger.exception("Unexpected error while retrieving notes")
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
+
+    async def perform_note_action(self, request: Request, body: NotesActionRequest) -> NotesActionResponse:
+        """Perform a note action (create/update/delete).
+
+        :param NotesActionRequest body: The note action request containing the action and note entry data
+        :return NotesActionResponse: Response indicating success or failure of the note action
+        """
+        try:
+            note_id = self.database_manager.perform_note_action(note_entry=body.note, action=body.action)
+            return NotesActionResponse(
+                message=f"Note entry {body.action.value}d successfully",
+                note_id=note_id,
+            )
+        except ValueError as e:
+            logger.exception("Note entry not found for action %s", body.action.value)
+            raise HTTPException(
+                status_code=ResponseCode.NOT_FOUND,
+                detail=str(e),
+            ) from e
+        except Exception as e:
+            logger.exception("Unexpected error while performing note action %s", body.action.value)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
+
+    # Container routes
     async def list_containers(self, request: Request) -> DockerContainerListResponse:
         """List all Docker containers.
 
@@ -275,7 +342,7 @@ class PiDashboardServer(TemplateServer):
                 containers=containers,
             )
         except Exception as e:
-            logger.exception("Unexpected error while listing containers")
+            logger.exception("Unexpected error while refreshing containers")
             raise HTTPException(
                 status_code=ResponseCode.INTERNAL_SERVER_ERROR,
                 detail="Unexpected error",

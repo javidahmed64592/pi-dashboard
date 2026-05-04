@@ -8,15 +8,6 @@ from pydantic import BaseModel, Field
 from python_template_server.models import BaseResponse, TemplateServerConfig
 
 
-# General
-def current_timestamp_int() -> int:
-    """Get the current Unix timestamp as an integer.
-
-    :return int: The current Unix timestamp
-    """
-    return int(datetime.fromisoformat(BaseResponse.current_timestamp().rstrip("Z")).timestamp())
-
-
 # Pi Dashboard server configuration
 class DatabaseConfig(BaseModel):
     """Configuration for the database."""
@@ -48,6 +39,23 @@ class PiDashboardConfig(TemplateServerConfig):
 
     db: DatabaseConfig = Field(default_factory=DatabaseConfig, description="Database configuration")
     metrics: MetricsConfig = Field(default_factory=MetricsConfig, description="System metrics collection configuration")
+
+
+# Database
+def current_timestamp_int() -> int:
+    """Get the current Unix timestamp as an integer.
+
+    :return int: The current Unix timestamp
+    """
+    return int(datetime.fromisoformat(BaseResponse.current_timestamp().rstrip("Z")).timestamp())
+
+
+class DatabaseAction(StrEnum):
+    """Enumeration for note actions."""
+
+    CREATE = "create"
+    UPDATE = "update"
+    DELETE = "delete"
 
 
 # Metrics models
@@ -157,14 +165,6 @@ class NoteEntry(BaseModel):
     time_updated: int = Field(default=0, description="Unix timestamp when the note was last updated")
 
 
-class NoteAction(StrEnum):
-    """Enumeration for note actions."""
-
-    CREATE = "create"
-    UPDATE = "update"
-    DELETE = "delete"
-
-
 # Response models
 class GetSystemInfoResponse(BaseResponse):
     """Response model for system information."""
@@ -182,6 +182,18 @@ class GetSystemMetricsHistoryResponse(BaseResponse):
     """Response model for system metrics history."""
 
     history: SystemMetricsHistory = Field(..., description="System metrics history data")
+
+
+class NotesListResponse(BaseResponse):
+    """Response model for listing notes."""
+
+    notes: list[NoteEntry] = Field(..., description="List of note entries")
+
+
+class NotesActionResponse(BaseResponse):
+    """Response model for note actions (create/update/delete)."""
+
+    note_id: str = Field(..., description="Note ID that was acted upon")
 
 
 class DockerContainerListResponse(BaseResponse):
@@ -203,21 +215,16 @@ class DockerContainerLogsResponse(BaseResponse):
     logs: list[str] = Field(..., description="Log lines from the container")
 
 
-class NotesListResponse(BaseResponse):
-    """Response model for listing notes."""
-
-    notes: list[NoteEntry] = Field(..., description="List of note entries")
-
-
-class NotesActionResponse(BaseResponse):
-    """Response model for note actions (create/update/delete)."""
-
-    note_id: str = Field(..., description="Note ID that was acted upon")
-
-
 # Request models
 class GetSystemMetricsHistoryRequest(BaseModel):
     """Request model for system metrics history."""
 
     last_n_seconds: int = Field(..., ge=1, description="Number of seconds to retrieve history for")
     max_data_points: int = Field(..., ge=1, description="Maximum number of data points to return")
+
+
+class NotesActionRequest(BaseModel):
+    """Request model for performing a note action."""
+
+    action: DatabaseAction = Field(..., description="The action to perform on the note entry")
+    note: NoteEntry = Field(..., description="The note entry data for the action")

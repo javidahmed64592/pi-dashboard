@@ -5,7 +5,7 @@ from pathlib import Path
 
 from sqlmodel import Field, Session, SQLModel, col, create_engine, select
 
-from pi_dashboard.models import DatabaseConfig, NoteAction, NoteEntry, current_timestamp_int
+from pi_dashboard.models import DatabaseAction, DatabaseConfig, NoteEntry, current_timestamp_int
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class DatabaseManager:
         statement = select(NoteEntryDB).where(NoteEntryDB.id == note_id)
         return session.exec(statement).first()
 
-    def _create_note_entry(self, session: Session, note_entry: NoteEntry) -> int:
+    def _create_note_entry(self, session: Session, note_entry: NoteEntry) -> int | None:
         """Add a new note entry to the database."""
         timestamp = current_timestamp_int()
         note_entry.time_created = timestamp
@@ -86,7 +86,7 @@ class DatabaseManager:
         session.refresh(note_db)
         return note_db.id
 
-    def _update_note_entry(self, session: Session, note_entry: NoteEntry, note_db: NoteEntryDB) -> int:
+    def _update_note_entry(self, session: Session, note_entry: NoteEntry, note_db: NoteEntryDB) -> int | None:
         """Update an existing note entry in the database."""
         note_db.update_from_note_entry(note_entry)
         session.add(note_db)
@@ -94,7 +94,7 @@ class DatabaseManager:
         session.refresh(note_db)
         return note_db.id
 
-    def _delete_note_entry(self, session: Session, note_db: NoteEntryDB) -> int:
+    def _delete_note_entry(self, session: Session, note_db: NoteEntryDB) -> int | None:
         """Delete a note entry from the database."""
         session.delete(note_db)
         session.commit()
@@ -105,21 +105,41 @@ class DatabaseManager:
         with Session(self.engine) as session:
             return self._get_all_note_entries(session)
 
-    def perform_note_action(self, note_entry: NoteEntry, action: NoteAction) -> int:
+    def perform_note_action(self, note_entry: NoteEntry, action: DatabaseAction) -> int:
         """Perform a note action (create/update/delete) on the database."""
         with Session(self.engine) as session:
             match action:
-                case NoteAction.CREATE:
-                    return self._create_note_entry(session, note_entry)
-                case NoteAction.UPDATE:
+                case DatabaseAction.CREATE:
+                    if not (note_id := self._create_note_entry(session, note_entry)):
+                        error_msg = "Failed to create note entry."
+                        logger.error(error_msg)
+                        raise ValueError(error_msg)
+                    return note_id
+                case DatabaseAction.UPDATE:
+                    if not note_entry.id:
+                        error_msg = "Note entry ID is required for update."
+                        logger.error(error_msg)
+                        raise ValueError(error_msg)
                     if not (note_db := self._get_note_entry_by_id(session, note_entry.id)):
                         error_msg = f"Note entry with ID {note_entry.id} not found for update."
                         logger.error(error_msg)
                         raise ValueError(error_msg)
-                    return self._update_note_entry(session, note_entry, note_db)
-                case NoteAction.DELETE:
+                    if not (note_id := self._update_note_entry(session, note_entry, note_db)):
+                        error_msg = f"Failed to update note entry with ID {note_entry.id}."
+                        logger.error(error_msg)
+                        raise ValueError(error_msg)
+                    return note_id
+                case DatabaseAction.DELETE:
+                    if not note_entry.id:
+                        error_msg = "Note entry ID is required for deletion."
+                        logger.error(error_msg)
+                        raise ValueError(error_msg)
                     if not (note_db := self._get_note_entry_by_id(session, note_entry.id)):
                         error_msg = f"Note entry with ID {note_entry.id} not found for deletion."
                         logger.error(error_msg)
                         raise ValueError(error_msg)
-                    return self._delete_note_entry(session, note_db)
+                    if not (note_id := self._delete_note_entry(session, note_db)):
+                        error_msg = f"Failed to delete note entry with ID {note_entry.id}."
+                        logger.error(error_msg)
+                        raise ValueError(error_msg)
+                    return note_id

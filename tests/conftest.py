@@ -9,9 +9,9 @@ import pytest
 from pi_dashboard.database import DatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
+    DatabaseAction,
     DatabaseConfig,
     MetricsConfig,
-    NoteAction,
     NoteEntry,
     PiDashboardConfig,
     SystemInfo,
@@ -49,7 +49,7 @@ def mock_database_manager(
 ) -> Generator[DatabaseManager]:
     """Provide a DatabaseManager instance for testing."""
     db_manager = DatabaseManager(db_config=mock_database_config)
-    db_manager.perform_note_action(mock_note_entry_1, NoteAction.CREATE)
+    db_manager.perform_note_action(mock_note_entry_1, DatabaseAction.CREATE)
     yield db_manager
     db_manager.engine.dispose()
 
