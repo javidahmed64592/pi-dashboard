@@ -1,11 +1,11 @@
-"""SQLModel database module."""
+"""Notes database manager."""
 
 import logging
-from pathlib import Path
 
-from sqlmodel import Field, Session, SQLModel, col, create_engine, select
+from sqlmodel import Field, Session, SQLModel, col, select
 
-from pi_dashboard.models import DatabaseAction, DatabaseConfig, NoteEntry, current_timestamp_int
+from pi_dashboard.db.database import BaseDatabaseManager
+from pi_dashboard.models import DatabaseAction, NoteEntry, current_timestamp_int
 
 logger = logging.getLogger(__name__)
 
@@ -51,18 +51,13 @@ class NoteEntryDB(SQLModel, table=True):
 
 
 # Database manager class
-class DatabaseManager:
-    """Manager class for database operations."""
+class NotesDatabaseManager(BaseDatabaseManager):
+    """Manager class for notes database operations."""
 
-    def __init__(self, db_config: DatabaseConfig) -> None:
-        """Initialize the database manager."""
-        self.db_config = db_config
-        logger.info("Using database directory: %s", self.db_config.db_directory)
-        Path(self.db_config.db_directory).mkdir(parents=True, exist_ok=True)
-
-        logger.info("Initializing database with URL: %s", self.db_config.db_url)
-        self.engine = create_engine(self.db_config.db_url, echo=False)
-        SQLModel.metadata.create_all(self.engine)
+    @property
+    def db_url(self) -> str:
+        """Get the database URL."""
+        return self.db_config.db_url(self.db_config.notes_db_filename)
 
     def _get_all_note_entries(self, session: Session) -> list[NoteEntry]:
         """Retrieve all note entries from the database."""

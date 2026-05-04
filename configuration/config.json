@@ -29,6 +29,10 @@
     "indent": null,
     "media_type": "application/json; charset=utf-8"
   },
+  "db": {
+    "db_directory": "data",
+    "notes_db_filename": "notes.db"
+  },
   "metrics": {
     "collection_interval": 10,
     "max_history_duration": 86400

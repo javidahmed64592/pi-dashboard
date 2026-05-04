@@ -13,7 +13,7 @@ from fastapi.security import APIKeyHeader
 from fastapi.testclient import TestClient
 from python_template_server.models import ResponseCode
 
-from pi_dashboard.database import DatabaseManager
+from pi_dashboard.db import NotesDatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     DatabaseAction,
@@ -64,7 +64,7 @@ def mock_get_system_metrics(mock_system_metrics: SystemMetrics) -> Generator[Mag
 @pytest.fixture
 def mock_server(
     mock_pi_dashboard_config: PiDashboardConfig,
-    mock_database_manager: DatabaseManager,
+    mock_notes_database_manager: NotesDatabaseManager,
     mock_get_system_info: MagicMock,
     mock_get_system_metrics: MagicMock,
     mock_system_metrics_history: SystemMetricsHistory,
@@ -81,7 +81,7 @@ def mock_server(
     with (
         patch.object(PiDashboardServer, "_verify_api_key", new=fake_verify_api_key),
         patch("pi_dashboard.server.PiDashboardConfig.save_to_file"),
-        patch("pi_dashboard.server.DatabaseManager", return_value=mock_database_manager),
+        patch("pi_dashboard.server.NotesDatabaseManager", return_value=mock_notes_database_manager),
         patch("pi_dashboard.server.SystemMetricsHistory", return_value=mock_system_metrics_history),
         patch("pi_dashboard.server.DockerContainerHandler", return_value=mock_docker_container_handler),
     ):

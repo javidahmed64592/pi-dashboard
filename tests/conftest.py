@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pi_dashboard.database import DatabaseManager
+from pi_dashboard.db import NotesDatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     DatabaseAction,
@@ -25,7 +25,7 @@ from pi_dashboard.models import (
 @pytest.fixture
 def mock_database_config(tmp_path: Path) -> DatabaseConfig:
     """Provide a DatabaseConfig instance for testing."""
-    return DatabaseConfig(db_directory=str(tmp_path / "data"), db_filename="test.db")
+    return DatabaseConfig(db_directory=str(tmp_path / "data"), notes_db_filename="test.db")
 
 
 @pytest.fixture
@@ -44,11 +44,11 @@ def mock_pi_dashboard_config(
 
 # Database fixtures
 @pytest.fixture
-def mock_database_manager(
+def mock_notes_database_manager(
     mock_database_config: DatabaseConfig, mock_note_entry_1: NoteEntry
-) -> Generator[DatabaseManager]:
-    """Provide a DatabaseManager instance for testing."""
-    db_manager = DatabaseManager(db_config=mock_database_config)
+) -> Generator[NotesDatabaseManager]:
+    """Provide a NotesDatabaseManager instance for testing."""
+    db_manager = NotesDatabaseManager(db_config=mock_database_config)
     db_manager.perform_note_action(mock_note_entry_1, DatabaseAction.CREATE)
     yield db_manager
     db_manager.engine.dispose()
@@ -108,6 +108,31 @@ def mock_system_metrics_history(mock_system_metrics_history_entry: SystemMetrics
         )
         history.add_entry(entry)
     return history
+
+
+# Notes models fixtures
+@pytest.fixture
+def mock_note_entry_1() -> NoteEntry:
+    """Provide a NoteEntry instance for testing."""
+    return NoteEntry(
+        id=None,
+        title="Test note",
+        content="This is a test note entry.",
+        time_created=123,
+        time_updated=123,
+    )
+
+
+@pytest.fixture
+def mock_note_entry_2() -> NoteEntry:
+    """Provide a NoteEntry instance for testing."""
+    return NoteEntry(
+        id=None,
+        title="Test note 2",
+        content="This is another test note entry.",
+        time_created=234,
+        time_updated=234,
+    )
 
 
 # Docker fixtures
@@ -173,28 +198,3 @@ def mock_docker_container_handler(mock_docker_client: MagicMock) -> DockerContai
         patch("docker.from_env", return_value=mock_docker_client),
     ):
         return DockerContainerHandler()
-
-
-# Notes models fixtures
-@pytest.fixture
-def mock_note_entry_1() -> NoteEntry:
-    """Provide a NoteEntry instance for testing."""
-    return NoteEntry(
-        id=None,
-        title="Test note",
-        content="This is a test note entry.",
-        time_created=123,
-        time_updated=123,
-    )
-
-
-@pytest.fixture
-def mock_note_entry_2() -> NoteEntry:
-    """Provide a NoteEntry instance for testing."""
-    return NoteEntry(
-        id=None,
-        title="Test note 2",
-        content="This is another test note entry.",
-        time_created=234,
-        time_updated=234,
-    )
