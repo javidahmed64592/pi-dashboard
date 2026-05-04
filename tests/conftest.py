@@ -25,7 +25,7 @@ from pi_dashboard.models import (
 @pytest.fixture
 def mock_database_config(tmp_path: Path) -> DatabaseConfig:
     """Provide a DatabaseConfig instance for testing."""
-    return DatabaseConfig(db_directory=str(tmp_path / "data"), db_filename="test.db")
+    return DatabaseConfig(db_directory=str(tmp_path / "data"), notes_db_filename="test.db")
 
 
 @pytest.fixture

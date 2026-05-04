@@ -13,9 +13,9 @@ class DatabaseConfig(BaseModel):
     """Configuration for the database."""
 
     db_directory: str = Field(
-        default="data", description="The directory where the SQLite database file will be stored."
+        default="data", description="The directory where the SQLite database files will be stored."
     )
-    db_filename: str = Field(default="dashboard.db", description="The filename for the SQLite database.")
+    notes_db_filename: str = Field(default="notes.db", description="The filename for the notes database.")
 
     def db_url(self, filename: str) -> str:
         """Construct the database URL for SQLAlchemy."""

@@ -57,7 +57,7 @@ class NotesDatabaseManager(BaseDatabaseManager):
     @property
     def db_url(self) -> str:
         """Get the database URL."""
-        return self.db_config.db_url(self.db_config.db_filename)
+        return self.db_config.db_url(self.db_config.notes_db_filename)
 
     def _get_all_note_entries(self, session: Session) -> list[NoteEntry]:
         """Retrieve all note entries from the database."""
