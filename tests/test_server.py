@@ -129,6 +129,7 @@ class TestPiDashboardServerRoutes:
             "/system/info",
             "/system/metrics",
             "/system/metrics/history",
+            "/notes",
             "/containers",
             "/containers/refresh",
             "/containers/{container_id}/start",
@@ -244,7 +245,7 @@ class TestGetNotesEndpoint:
 
 
 class TestPerformNoteActionEndpoint:
-    """Integration and unit tests for the /notes/action endpoint."""
+    """Integration and unit tests for the /notes endpoint."""
 
     @pytest.fixture
     def mock_request_object(self) -> Request:
@@ -258,7 +259,7 @@ class TestPerformNoteActionEndpoint:
         mock_note_entry_1: NoteEntry,
         mock_note_entry_2: NoteEntry,
     ) -> None:
-        """Test the /notes/action method handles valid JSON."""
+        """Test the /notes method handles valid JSON."""
         # Create note
         create_response = asyncio.run(
             mock_server.perform_note_action(
@@ -322,23 +323,23 @@ class TestPerformNoteActionEndpoint:
         assert not any(note.id == deleted_note_id for note in all_notes)
 
     def test_perform_note_action_endpoint(self, mock_client: TestClient, mock_note_entry_2: NoteEntry) -> None:
-        """Test /notes/action endpoint returns 200."""
+        """Test /notes endpoint returns 200."""
         # Create note
         create_response = mock_client.post(
-            "/notes/action", json=NotesActionRequest(action=DatabaseAction.CREATE, note=mock_note_entry_2).model_dump()
+            "/notes", json=NotesActionRequest(action=DatabaseAction.CREATE, note=mock_note_entry_2).model_dump()
         )
         assert create_response.status_code == ResponseCode.OK
 
         # Update note
         mock_note_entry_2.id = create_response.json()["note_id"]
         update_response = mock_client.post(
-            "/notes/action", json=NotesActionRequest(action=DatabaseAction.UPDATE, note=mock_note_entry_2).model_dump()
+            "/notes", json=NotesActionRequest(action=DatabaseAction.UPDATE, note=mock_note_entry_2).model_dump()
         )
         assert update_response.status_code == ResponseCode.OK
 
         # Delete note
         delete_response = mock_client.post(
-            "/notes/action", json=NotesActionRequest(action=DatabaseAction.DELETE, note=mock_note_entry_2).model_dump()
+            "/notes", json=NotesActionRequest(action=DatabaseAction.DELETE, note=mock_note_entry_2).model_dump()
         )
         assert delete_response.status_code == ResponseCode.OK
 

@@ -162,7 +162,7 @@ class PiDashboardServer(TemplateServer):
             authentication_required=True,
         )
         self.add_route(
-            endpoint="/notes/action",
+            endpoint="/notes",
             handler_function=self.perform_note_action,
             response_model=NotesActionResponse,
             methods=["POST"],
