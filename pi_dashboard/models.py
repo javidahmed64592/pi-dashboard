@@ -1,9 +1,20 @@
 """Pydantic models for the server."""
 
+from datetime import datetime
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field
 from python_template_server.models import BaseResponse, TemplateServerConfig
+
+
+# General
+def current_timestamp_int() -> int:
+    """Get the current Unix timestamp as an integer.
+
+    :return int: The current Unix timestamp
+    """
+    return int(datetime.fromisoformat(BaseResponse.current_timestamp().rstrip("Z")).timestamp())
 
 
 # Pi Dashboard server configuration

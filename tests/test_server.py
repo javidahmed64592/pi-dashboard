@@ -99,10 +99,6 @@ class TestPiDashboardServer:
         assert isinstance(mock_server.config, PiDashboardConfig)
         assert mock_server.metrics_history == mock_system_metrics_history
 
-    def test_current_timestamp_int(self, mock_server: PiDashboardServer) -> None:
-        """Test current timestamp integer retrieval."""
-        assert isinstance(mock_server._current_timestamp_int(), int)
-
     def test_validate_config(self, mock_server: PiDashboardServer, mock_pi_dashboard_config: PiDashboardConfig) -> None:
         """Test configuration validation."""
         config_dict = mock_pi_dashboard_config.model_dump()

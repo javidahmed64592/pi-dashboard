@@ -15,7 +15,6 @@ from python_template_server.template_server import TemplateServer
 from pi_dashboard.database import DatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
-    BaseResponse,
     DockerContainerActionResponse,
     DockerContainerListResponse,
     DockerContainerLogsResponse,
@@ -26,6 +25,7 @@ from pi_dashboard.models import (
     PiDashboardConfig,
     SystemMetricsHistory,
     SystemMetricsHistoryEntry,
+    current_timestamp_int,
 )
 from pi_dashboard.system_metrics_handler import (
     get_system_info,
@@ -52,15 +52,6 @@ class PiDashboardServer(TemplateServer):
         self.database_manager = DatabaseManager(db_config=self.config.db)
         self.metrics_history = SystemMetricsHistory()
         self.docker_container_handler = DockerContainerHandler()
-
-    @staticmethod
-    def _current_timestamp_int() -> int:
-        """Get the current Unix timestamp as an integer.
-
-        :return int: The current Unix timestamp
-        """
-        timestamp_str = BaseResponse.current_timestamp()
-        return int(datetime.fromisoformat(timestamp_str.rstrip("Z")).timestamp())
 
     @staticmethod
     def _start_task(task_method: Callable, task_name: str) -> asyncio.Task:
@@ -102,7 +93,7 @@ class PiDashboardServer(TemplateServer):
         """Background task to collect metrics at regular intervals."""
         while True:
             try:
-                timestamp = PiDashboardServer._current_timestamp_int()
+                timestamp = current_timestamp_int()
 
                 # Cleanup old entries
                 self.metrics_history.cleanup_old_entries(self.config.metrics.max_history_duration, timestamp)
@@ -246,7 +237,7 @@ class PiDashboardServer(TemplateServer):
         metrics_request = GetSystemMetricsHistoryRequest.model_validate(await request.json())
         entries = self.metrics_history.get_entries_since(
             min(metrics_request.last_n_seconds, self.config.metrics.max_history_duration),
-            PiDashboardServer._current_timestamp_int(),
+            current_timestamp_int(),
             metrics_request.max_data_points,
         )
         return GetSystemMetricsHistoryResponse(
