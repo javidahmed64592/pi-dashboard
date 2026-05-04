@@ -1,11 +1,11 @@
-"""Unit tests for the container handler module."""
+"""Unit tests for the pi_dashboard.docker_container_handler module."""
 
 from unittest.mock import MagicMock
 
 import pytest
 from docker.errors import APIError
 
-from pi_dashboard.container_handler import ContainerHandler
+from pi_dashboard.docker_container_handler import DockerContainerHandler
 
 
 class TestExtractPrimaryPort:
@@ -26,33 +26,35 @@ class TestExtractPrimaryPort:
         ],
     )
     def test_extract_primary_port_standard(
-        self, mock_container_handler: ContainerHandler, ports: dict, expected: str | None
+        self, mock_docker_container_handler: DockerContainerHandler, ports: dict, expected: str | None
     ) -> None:
         """Test extracting port from standard port mappings."""
-        assert mock_container_handler._extract_primary_port(ports) == expected
+        assert mock_docker_container_handler._extract_primary_port(ports) == expected
 
 
 class TestCheckDockerAvailable:
     """Tests for checking Docker daemon availability."""
 
-    def test_docker_available(self, mock_container_handler: ContainerHandler) -> None:
+    def test_docker_available(self, mock_docker_container_handler: DockerContainerHandler) -> None:
         """Test when Docker daemon is available."""
-        mock_container_handler._check_docker_available()
+        mock_docker_container_handler._check_docker_available()
 
-    def test_docker_unavailable(self, mock_container_handler: ContainerHandler) -> None:
-        """Test when Docker daemon is available."""
-        mock_container_handler.client = None
+    def test_docker_unavailable(self, mock_docker_container_handler: DockerContainerHandler) -> None:
+        """Test when Docker daemon is unavailable."""
+        mock_docker_container_handler.client = None
 
         with pytest.raises(APIError, match="Docker daemon not available"):
-            mock_container_handler._check_docker_available()
+            mock_docker_container_handler._check_docker_available()
 
 
 class TestListContainers:
     """Tests for listing Docker containers."""
 
-    def test_list_containers(self, mock_container_handler: ContainerHandler, mock_container: MagicMock) -> None:
+    def test_list_containers(
+        self, mock_docker_container_handler: DockerContainerHandler, mock_container: MagicMock
+    ) -> None:
         """Test successfully listing containers."""
-        containers = mock_container_handler.list_containers()
+        containers = mock_docker_container_handler.list_containers()
 
         assert len(containers) == 1
 
@@ -67,9 +69,11 @@ class TestListContainers:
 class TestStartContainer:
     """Tests for starting Docker containers."""
 
-    def test_start_container(self, mock_container_handler: ContainerHandler, mock_container: MagicMock) -> None:
+    def test_start_container(
+        self, mock_docker_container_handler: DockerContainerHandler, mock_container: MagicMock
+    ) -> None:
         """Test successfully starting a container."""
-        container_name = mock_container_handler.start_container("abc123")
+        container_name = mock_docker_container_handler.start_container("abc123")
         assert container_name == "test-container"
         mock_container.start.assert_called_once()
 
@@ -77,9 +81,11 @@ class TestStartContainer:
 class TestStopContainer:
     """Tests for stopping Docker containers."""
 
-    def test_stop_container(self, mock_container_handler: ContainerHandler, mock_container: MagicMock) -> None:
+    def test_stop_container(
+        self, mock_docker_container_handler: DockerContainerHandler, mock_container: MagicMock
+    ) -> None:
         """Test successfully stopping a container."""
-        container_name = mock_container_handler.stop_container(container_id="abc123", timeout=10)
+        container_name = mock_docker_container_handler.stop_container(container_id="abc123", timeout=10)
         assert container_name == "test-container"
         mock_container.stop.assert_called_once_with(timeout=10)
 
@@ -87,9 +93,11 @@ class TestStopContainer:
 class TestRestartContainer:
     """Tests for restarting Docker containers."""
 
-    def test_restart_container(self, mock_container_handler: ContainerHandler, mock_container: MagicMock) -> None:
+    def test_restart_container(
+        self, mock_docker_container_handler: DockerContainerHandler, mock_container: MagicMock
+    ) -> None:
         """Test successfully restarting a container."""
-        container_name = mock_container_handler.restart_container(container_id="abc123", timeout=10)
+        container_name = mock_docker_container_handler.restart_container(container_id="abc123", timeout=10)
         assert container_name == "test-container"
         mock_container.restart.assert_called_once_with(timeout=10)
 
@@ -98,27 +106,31 @@ class TestUpdateContainer:
     """Tests for updating Docker containers."""
 
     def test_update_container_success(
-        self, mock_container_handler: ContainerHandler, mock_container: MagicMock
+        self, mock_docker_container_handler: DockerContainerHandler, mock_container: MagicMock
     ) -> None:
         """Test successfully updating a container."""
-        container_name, new_container_id = mock_container_handler.update_container(container_id="abc123", timeout=10)
+        container_name, new_container_id = mock_docker_container_handler.update_container(
+            container_id="abc123", timeout=10
+        )
 
         assert container_name == "test-container"
         assert new_container_id == "new_container_short_id"
 
         # Verify the update process
-        mock_container_handler.client.images.pull.assert_called_once_with("test/image:latest")
+        mock_docker_container_handler.client.images.pull.assert_called_once_with("test/image:latest")
         mock_container.stop.assert_called_once_with(timeout=10)
         mock_container.remove.assert_called_once()
-        mock_container_handler.client.containers.run.assert_called_once()
+        mock_docker_container_handler.client.containers.run.assert_called_once()
 
 
 class TestGetContainerLogs:
     """Tests for getting Docker container logs."""
 
-    def test_get_container_logs(self, mock_container_handler: ContainerHandler, mock_container: MagicMock) -> None:
+    def test_get_container_logs(
+        self, mock_docker_container_handler: DockerContainerHandler, mock_container: MagicMock
+    ) -> None:
         """Test successfully getting container logs."""
-        logs = mock_container_handler.get_container_logs("abc123", 100)
+        logs = mock_docker_container_handler.get_container_logs("abc123", 100)
 
         assert logs == ["log line 1", "log line 2", "log line 3"]
         mock_container.logs.assert_called_once_with(tail=100, timestamps=False, stream=False)

@@ -26,6 +26,11 @@ const Navigation = () => {
       href: "/system",
       active: pathname === "/system/",
     },
+    {
+      name: "Notes",
+      href: "/notes",
+      active: pathname === "/notes/",
+    },
   ];
 
   const toggleMenu = () => {

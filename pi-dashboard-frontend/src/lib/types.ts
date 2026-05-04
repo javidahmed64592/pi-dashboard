@@ -14,6 +14,13 @@ export interface AuthContextType {
   logout: () => void;
 }
 
+// Database
+export enum DatabaseAction {
+  CREATE = "create",
+  UPDATE = "update",
+  DELETE = "delete",
+}
+
 // System types
 export interface SystemInfo {
   hostname: string;
@@ -42,12 +49,29 @@ export interface SystemMetricsHistory {
   history: SystemMetricsHistoryEntry[];
 }
 
+// Note types
+export interface NoteEntry {
+  id: number | null;
+  title: string;
+  content: string;
+  time_created: number;
+  time_updated: number;
+}
+
 // Container types
+export type DockerContainerStatus =
+  | "running"
+  | "stopped"
+  | "restarting"
+  | "exited"
+  | "paused"
+  | "dead";
+
 export interface DockerContainer {
   container_id: string;
   name: string;
   image: string;
-  status: string;
+  status: DockerContainerStatus;
   port: string | null;
 }
 
@@ -68,15 +92,23 @@ export interface GetSystemMetricsHistoryResponse extends BaseResponse {
   history: SystemMetricsHistory;
 }
 
+export interface NotesListResponse extends BaseResponse {
+  notes: NoteEntry[];
+}
+
+export interface NotesActionResponse extends BaseResponse {
+  note_id: number;
+}
+
 export interface GetContainersResponse extends BaseResponse {
   containers: DockerContainer[];
 }
 
-export interface ContainerActionResponse extends BaseResponse {
+export interface DockerContainerActionResponse extends BaseResponse {
   container_id: string;
 }
 
-export interface ContainerLogsResponse extends BaseResponse {
+export interface DockerContainerLogsResponse extends BaseResponse {
   container_id: string;
   logs: string[];
 }
@@ -99,4 +131,9 @@ export type LogSource = DockerLogSource;
 export interface GetSystemMetricsHistoryRequest {
   last_n_seconds: number;
   max_data_points: number;
+}
+
+export interface NotesActionRequest {
+  action: DatabaseAction;
+  note: NoteEntry;
 }

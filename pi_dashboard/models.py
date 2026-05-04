@@ -1,5 +1,7 @@
 """Pydantic models for the server."""
 
+from datetime import datetime
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -7,6 +9,20 @@ from python_template_server.models import BaseResponse, TemplateServerConfig
 
 
 # Pi Dashboard server configuration
+class DatabaseConfig(BaseModel):
+    """Configuration for the database."""
+
+    db_directory: str = Field(
+        default="data", description="The directory where the SQLite database file will be stored."
+    )
+    db_filename: str = Field(default="dashboard.db", description="The filename for the SQLite database.")
+
+    @property
+    def db_url(self) -> str:
+        """Construct the database URL for SQLAlchemy."""
+        return f"sqlite:///{self.db_directory}/{self.db_filename}"
+
+
 class MetricsConfig(BaseModel):
     """Configuration model for system metrics collection."""
 
@@ -21,10 +37,28 @@ class MetricsConfig(BaseModel):
 class PiDashboardConfig(TemplateServerConfig):
     """Configuration model for the Pi Dashboard server."""
 
+    db: DatabaseConfig = Field(default_factory=DatabaseConfig, description="Database configuration")
     metrics: MetricsConfig = Field(default_factory=MetricsConfig, description="System metrics collection configuration")
 
 
-# General models
+# Database
+def current_timestamp_int() -> int:
+    """Get the current Unix timestamp as an integer.
+
+    :return int: The current Unix timestamp
+    """
+    return int(datetime.fromisoformat(BaseResponse.current_timestamp().rstrip("Z")).timestamp())
+
+
+class DatabaseAction(StrEnum):
+    """Enumeration for note actions."""
+
+    CREATE = "create"
+    UPDATE = "update"
+    DELETE = "delete"
+
+
+# Metrics models
 class SystemInfo(BaseModel):
     """Model representing system information."""
 
@@ -107,6 +141,17 @@ class SystemMetricsHistory(BaseModel):
         return sampled_entries
 
 
+# Notes models
+class NoteEntry(BaseModel):
+    """Model representing a single note entry."""
+
+    id: int | None = Field(default=None, description="Unique identifier for the note entry")
+    title: str = Field(..., description="Title of the note entry")
+    content: str = Field(..., description="Content of the note entry")
+    time_created: int = Field(default=0, description="Unix timestamp when the note was created")
+    time_updated: int = Field(default=0, description="Unix timestamp when the note was last updated")
+
+
 # Docker container models
 class DockerContainer(BaseModel):
     """Model representing a Docker container."""
@@ -139,20 +184,31 @@ class GetSystemMetricsHistoryResponse(BaseResponse):
     history: SystemMetricsHistory = Field(..., description="System metrics history data")
 
 
-class ContainerListResponse(BaseResponse):
+class NotesListResponse(BaseResponse):
+    """Response model for listing notes."""
+
+    notes: list[NoteEntry] = Field(..., description="List of note entries")
+
+
+class NotesActionResponse(BaseResponse):
+    """Response model for note actions (create/update/delete)."""
+
+    note_id: int = Field(..., description="Note ID that was acted upon")
+
+
+class DockerContainerListResponse(BaseResponse):
     """Response model for listing containers."""
 
     containers: list[DockerContainer] = Field(..., description="List of Docker containers")
 
 
-class ContainerActionResponse(BaseResponse):
+class DockerContainerActionResponse(BaseResponse):
     """Response model for container actions (start/stop/restart/update)."""
 
     container_id: str = Field(..., description="Container ID that was acted upon")
-    action: str = Field(..., description="Action that was performed")
 
 
-class ContainerLogsResponse(BaseResponse):
+class DockerContainerLogsResponse(BaseResponse):
     """Response model for container logs."""
 
     container_id: str = Field(..., description="Container ID whose logs were retrieved")
@@ -165,3 +221,10 @@ class GetSystemMetricsHistoryRequest(BaseModel):
 
     last_n_seconds: int = Field(..., ge=1, description="Number of seconds to retrieve history for")
     max_data_points: int = Field(..., ge=1, description="Maximum number of data points to return")
+
+
+class NotesActionRequest(BaseModel):
+    """Request model for performing a note action."""
+
+    action: DatabaseAction = Field(..., description="The action to perform on the note entry")
+    note: NoteEntry = Field(..., description="The note entry data for the action")

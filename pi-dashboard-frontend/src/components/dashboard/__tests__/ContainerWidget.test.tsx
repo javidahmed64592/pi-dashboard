@@ -11,7 +11,7 @@ import * as api from "@/lib/api";
 import type {
   GetContainersResponse,
   DockerContainer,
-  ContainerActionResponse,
+  DockerContainerActionResponse,
 } from "@/lib/types";
 
 // Mock the API
@@ -67,7 +67,7 @@ describe("ContainerWidget", () => {
     containers: mockContainers,
   };
 
-  const mockActionResponse: ContainerActionResponse = {
+  const mockActionResponse: DockerContainerActionResponse = {
     message: "Action completed successfully",
     timestamp: "2024-01-01T00:00:00Z",
     container_id: "abc123",
@@ -416,7 +416,7 @@ describe("ContainerWidget", () => {
     });
 
     it("should show loading state on start action", async () => {
-      let resolveStart: (value: ContainerActionResponse) => void;
+      let resolveStart: (value: DockerContainerActionResponse) => void;
       mockStartContainer.mockImplementation(
         () =>
           new Promise(resolve => {
@@ -465,7 +465,7 @@ describe("ContainerWidget", () => {
     });
 
     it("should show loading state on stop action", async () => {
-      let resolveStop: (value: ContainerActionResponse) => void;
+      let resolveStop: (value: DockerContainerActionResponse) => void;
       mockStopContainer.mockImplementation(
         () =>
           new Promise(resolve => {
@@ -499,7 +499,7 @@ describe("ContainerWidget", () => {
     });
 
     it("should show loading state on restart action", async () => {
-      let resolveRestart: (value: ContainerActionResponse) => void;
+      let resolveRestart: (value: DockerContainerActionResponse) => void;
       mockRestartContainer.mockImplementation(
         () =>
           new Promise(resolve => {
@@ -533,7 +533,7 @@ describe("ContainerWidget", () => {
     });
 
     it("should show loading state on update action", async () => {
-      let resolveUpdate: (value: ContainerActionResponse) => void;
+      let resolveUpdate: (value: DockerContainerActionResponse) => void;
       mockUpdateContainer.mockImplementation(
         () =>
           new Promise(resolve => {

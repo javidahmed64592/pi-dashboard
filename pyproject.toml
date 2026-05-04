@@ -21,6 +21,7 @@ dependencies = [
     "docker>=7.1.0",
     "psutil>=7.2.2",
     "python-template-server @ git+https://github.com/javidahmed64592/python-template-server.git",
+    "sqlmodel>=0.0.38",
 ]
 
 [project.optional-dependencies]

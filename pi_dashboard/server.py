@@ -4,29 +4,30 @@ import asyncio
 import logging
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
-from datetime import datetime
-from pathlib import Path
 from typing import Annotated
 
 from docker.errors import APIError, NotFound
 from fastapi import FastAPI, HTTPException, Query, Request
-from python_template_server.constants import ROOT_DIR
 from python_template_server.models import ResponseCode
 from python_template_server.template_server import TemplateServer
 
-from pi_dashboard.container_handler import ContainerHandler
+from pi_dashboard.database import DatabaseManager
+from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
-    BaseResponse,
-    ContainerActionResponse,
-    ContainerListResponse,
-    ContainerLogsResponse,
+    DockerContainerActionResponse,
+    DockerContainerListResponse,
+    DockerContainerLogsResponse,
     GetSystemInfoResponse,
     GetSystemMetricsHistoryRequest,
     GetSystemMetricsHistoryResponse,
     GetSystemMetricsResponse,
+    NotesActionRequest,
+    NotesActionResponse,
+    NotesListResponse,
     PiDashboardConfig,
     SystemMetricsHistory,
     SystemMetricsHistoryEntry,
+    current_timestamp_int,
 )
 from pi_dashboard.system_metrics_handler import (
     get_system_info,
@@ -50,26 +51,9 @@ class PiDashboardServer(TemplateServer):
             config=config,
         )
 
-        if not self.data_dir.exists():
-            logger.info("Creating data directory at: %s", self.data_dir)
-            self.data_dir.mkdir(parents=True, exist_ok=True)
-
+        self.database_manager = DatabaseManager(db_config=self.config.db)
         self.metrics_history = SystemMetricsHistory()
-        self.container_handler = ContainerHandler()
-
-    @property
-    def data_dir(self) -> Path:
-        """Get the data directory path."""
-        return ROOT_DIR / "data"  # type: ignore[no-any-return]
-
-    @staticmethod
-    def _current_timestamp_int() -> int:
-        """Get the current Unix timestamp as an integer.
-
-        :return int: The current Unix timestamp
-        """
-        timestamp_str = BaseResponse.current_timestamp()
-        return int(datetime.fromisoformat(timestamp_str.rstrip("Z")).timestamp())
+        self.docker_container_handler = DockerContainerHandler()
 
     @staticmethod
     def _start_task(task_method: Callable, task_name: str) -> asyncio.Task:
@@ -111,7 +95,7 @@ class PiDashboardServer(TemplateServer):
         """Background task to collect metrics at regular intervals."""
         while True:
             try:
-                timestamp = PiDashboardServer._current_timestamp_int()
+                timestamp = current_timestamp_int()
 
                 # Cleanup old entries
                 self.metrics_history.cleanup_old_entries(self.config.metrics.max_history_duration, timestamp)
@@ -167,11 +151,30 @@ class PiDashboardServer(TemplateServer):
             limited=False,
             authentication_required=True,
         )
+
+        # Notes routes
+        self.add_route(
+            endpoint="/notes",
+            handler_function=self.get_notes,
+            response_model=NotesListResponse,
+            methods=["GET"],
+            limited=True,
+            authentication_required=True,
+        )
+        self.add_route(
+            endpoint="/notes",
+            handler_function=self.perform_note_action,
+            response_model=NotesActionResponse,
+            methods=["POST"],
+            limited=True,
+            authentication_required=True,
+        )
+
         # Container routes
         self.add_route(
             endpoint="/containers",
             handler_function=self.list_containers,
-            response_model=ContainerListResponse,
+            response_model=DockerContainerListResponse,
             methods=["GET"],
             limited=True,
             authentication_required=True,
@@ -179,7 +182,7 @@ class PiDashboardServer(TemplateServer):
         self.add_route(
             endpoint="/containers/refresh",
             handler_function=self.refresh_containers,
-            response_model=ContainerListResponse,
+            response_model=DockerContainerListResponse,
             methods=["POST"],
             limited=True,
             authentication_required=True,
@@ -187,7 +190,7 @@ class PiDashboardServer(TemplateServer):
         self.add_route(
             endpoint="/containers/{container_id}/start",
             handler_function=self.start_container,
-            response_model=ContainerActionResponse,
+            response_model=DockerContainerActionResponse,
             methods=["POST"],
             limited=True,
             authentication_required=True,
@@ -195,7 +198,7 @@ class PiDashboardServer(TemplateServer):
         self.add_route(
             endpoint="/containers/{container_id}/stop",
             handler_function=self.stop_container,
-            response_model=ContainerActionResponse,
+            response_model=DockerContainerActionResponse,
             methods=["POST"],
             limited=True,
             authentication_required=True,
@@ -203,7 +206,7 @@ class PiDashboardServer(TemplateServer):
         self.add_route(
             endpoint="/containers/{container_id}/restart",
             handler_function=self.restart_container,
-            response_model=ContainerActionResponse,
+            response_model=DockerContainerActionResponse,
             methods=["POST"],
             limited=True,
             authentication_required=True,
@@ -211,7 +214,7 @@ class PiDashboardServer(TemplateServer):
         self.add_route(
             endpoint="/containers/{container_id}/update",
             handler_function=self.update_container,
-            response_model=ContainerActionResponse,
+            response_model=DockerContainerActionResponse,
             methods=["POST"],
             limited=True,
             authentication_required=True,
@@ -219,12 +222,13 @@ class PiDashboardServer(TemplateServer):
         self.add_route(
             endpoint="/containers/{container_id}/logs",
             handler_function=self.get_container_logs,
-            response_model=ContainerLogsResponse,
+            response_model=DockerContainerLogsResponse,
             methods=["GET"],
             limited=True,
             authentication_required=True,
         )
 
+    # System routes
     async def get_system_info(self, request: Request) -> GetSystemInfoResponse:
         """Get system information.
 
@@ -255,7 +259,7 @@ class PiDashboardServer(TemplateServer):
         metrics_request = GetSystemMetricsHistoryRequest.model_validate(await request.json())
         entries = self.metrics_history.get_entries_since(
             min(metrics_request.last_n_seconds, self.config.metrics.max_history_duration),
-            PiDashboardServer._current_timestamp_int(),
+            current_timestamp_int(),
             metrics_request.max_data_points,
         )
         return GetSystemMetricsHistoryResponse(
@@ -263,14 +267,59 @@ class PiDashboardServer(TemplateServer):
             history=SystemMetricsHistory(history=entries),
         )
 
-    async def list_containers(self, request: Request) -> ContainerListResponse:
+    # Notes routes
+    async def get_notes(self, request: Request) -> NotesListResponse:
+        """Get all note entries.
+
+        :return NotesListResponse: Response containing list of note entries
+        """
+        try:
+            notes = self.database_manager.get_all_note_entries()
+            return NotesListResponse(
+                message=f"Retrieved {len(notes)} note entries",
+                notes=notes,
+            )
+        except Exception as e:
+            logger.exception("Unexpected error while retrieving notes")
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
+
+    async def perform_note_action(self, request: Request, body: NotesActionRequest) -> NotesActionResponse:
+        """Perform a note action (create/update/delete).
+
+        :param NotesActionRequest body: The note action request containing the action and note entry data
+        :return NotesActionResponse: Response indicating success or failure of the note action
+        """
+        try:
+            note_id = self.database_manager.perform_note_action(note_entry=body.note, action=body.action)
+            return NotesActionResponse(
+                message=f"Note entry {body.action.value}d successfully",
+                note_id=note_id,
+            )
+        except ValueError as e:
+            logger.exception("Note entry not found for action %s", body.action.value)
+            raise HTTPException(
+                status_code=ResponseCode.NOT_FOUND,
+                detail=str(e),
+            ) from e
+        except Exception as e:
+            logger.exception("Unexpected error while performing note action %s", body.action.value)
+            raise HTTPException(
+                status_code=ResponseCode.INTERNAL_SERVER_ERROR,
+                detail="Unexpected error",
+            ) from e
+
+    # Container routes
+    async def list_containers(self, request: Request) -> DockerContainerListResponse:
         """List all Docker containers.
 
-        :return ContainerListResponse: Response containing list of containers
+        :return DockerContainerListResponse: Response containing list of containers
         """
         try:
-            containers = self.container_handler.list_containers()
-            return ContainerListResponse(
+            containers = self.docker_container_handler.list_containers()
+            return DockerContainerListResponse(
                 message=f"Retrieved {len(containers)} containers",
                 containers=containers,
             )
@@ -281,36 +330,35 @@ class PiDashboardServer(TemplateServer):
                 detail="Unexpected error",
             ) from e
 
-    async def refresh_containers(self, request: Request) -> ContainerListResponse:
+    async def refresh_containers(self, request: Request) -> DockerContainerListResponse:
         """Refresh container list from Docker daemon.
 
-        :return ContainerListResponse: Response containing refreshed list of containers
+        :return DockerContainerListResponse: Response containing refreshed list of containers
         """
         try:
-            containers = self.container_handler.list_containers()
-            return ContainerListResponse(
+            containers = self.docker_container_handler.list_containers()
+            return DockerContainerListResponse(
                 message=f"Retrieved {len(containers)} containers",
                 containers=containers,
             )
         except Exception as e:
-            logger.exception("Unexpected error while listing containers")
+            logger.exception("Unexpected error while refreshing containers")
             raise HTTPException(
                 status_code=ResponseCode.INTERNAL_SERVER_ERROR,
                 detail="Unexpected error",
             ) from e
 
-    async def start_container(self, request: Request, container_id: str) -> ContainerActionResponse:
+    async def start_container(self, request: Request, container_id: str) -> DockerContainerActionResponse:
         """Start a Docker container.
 
         :param str container_id: The container ID to start
-        :return ContainerActionResponse: Response indicating success or failure
+        :return DockerContainerActionResponse: Response indicating success or failure
         """
         try:
-            container_name = self.container_handler.start_container(container_id=container_id)
-            return ContainerActionResponse(
+            container_name = self.docker_container_handler.start_container(container_id=container_id)
+            return DockerContainerActionResponse(
                 message=f"Container {container_name} started successfully",
                 container_id=container_id,
-                action="start",
             )
         except NotFound as e:
             logger.exception("Container not found: %s", container_id)
@@ -331,18 +379,17 @@ class PiDashboardServer(TemplateServer):
                 detail="Unexpected error",
             ) from e
 
-    async def stop_container(self, request: Request, container_id: str) -> ContainerActionResponse:
+    async def stop_container(self, request: Request, container_id: str) -> DockerContainerActionResponse:
         """Stop a Docker container.
 
         :param str container_id: The container ID to stop
-        :return ContainerActionResponse: Response indicating success or failure
+        :return DockerContainerActionResponse: Response indicating success or failure
         """
         try:
-            container_name = self.container_handler.stop_container(container_id=container_id, timeout=10)
-            return ContainerActionResponse(
+            container_name = self.docker_container_handler.stop_container(container_id=container_id, timeout=10)
+            return DockerContainerActionResponse(
                 message=f"Container {container_name} stopped successfully",
                 container_id=container_id,
-                action="stop",
             )
         except NotFound as e:
             logger.exception("Container not found: %s", container_id)
@@ -363,18 +410,17 @@ class PiDashboardServer(TemplateServer):
                 detail="Unexpected error",
             ) from e
 
-    async def restart_container(self, request: Request, container_id: str) -> ContainerActionResponse:
+    async def restart_container(self, request: Request, container_id: str) -> DockerContainerActionResponse:
         """Restart a Docker container.
 
         :param str container_id: The container ID to restart
-        :return ContainerActionResponse: Response indicating success or failure
+        :return DockerContainerActionResponse: Response indicating success or failure
         """
         try:
-            container_name = self.container_handler.restart_container(container_id=container_id, timeout=10)
-            return ContainerActionResponse(
+            container_name = self.docker_container_handler.restart_container(container_id=container_id, timeout=10)
+            return DockerContainerActionResponse(
                 message=f"Container {container_name} restarted successfully",
                 container_id=container_id,
-                action="restart",
             )
         except NotFound as e:
             logger.exception("Container not found: %s", container_id)
@@ -395,20 +441,19 @@ class PiDashboardServer(TemplateServer):
                 detail="Unexpected error",
             ) from e
 
-    async def update_container(self, request: Request, container_id: str) -> ContainerActionResponse:
+    async def update_container(self, request: Request, container_id: str) -> DockerContainerActionResponse:
         """Update a Docker container by pulling latest image and recreating it.
 
         :param str container_id: The container ID to update
-        :return ContainerActionResponse: Response indicating success or failure
+        :return DockerContainerActionResponse: Response indicating success or failure
         """
         try:
-            container_name, new_container_id = self.container_handler.update_container(
+            container_name, new_container_id = self.docker_container_handler.update_container(
                 container_id=container_id, timeout=10
             )
-            return ContainerActionResponse(
+            return DockerContainerActionResponse(
                 message=f"Container {container_name} updated successfully",
                 container_id=new_container_id,
-                action="update",
             )
         except NotFound as e:
             logger.exception("Container not found: %s", container_id)
@@ -434,16 +479,16 @@ class PiDashboardServer(TemplateServer):
         request: Request,
         container_id: str,
         lines: Annotated[int, Query(ge=1, le=1000)],
-    ) -> ContainerLogsResponse:
+    ) -> DockerContainerLogsResponse:
         """Get logs for a Docker container.
 
         :param str container_id: The container ID
         :param int lines: Number of log lines to retrieve (1-1000)
-        :return ContainerLogsResponse: Response containing log lines
+        :return DockerContainerLogsResponse: Response containing log lines
         """
         try:
-            log_lines = self.container_handler.get_container_logs(container_id=container_id, lines=lines)
-            return ContainerLogsResponse(
+            log_lines = self.docker_container_handler.get_container_logs(container_id=container_id, lines=lines)
+            return DockerContainerLogsResponse(
                 message=f"Retrieved {len(log_lines)} log lines for container {container_id}",
                 container_id=container_id,
                 logs=log_lines,
