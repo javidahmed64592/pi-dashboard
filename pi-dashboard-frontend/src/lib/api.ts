@@ -9,6 +9,9 @@ import type {
   GetSystemMetricsResponse,
   GetSystemMetricsHistoryRequest,
   GetSystemMetricsHistoryResponse,
+  NotesListResponse,
+  NotesActionRequest,
+  NotesActionResponse,
   GetContainersResponse,
   DockerContainerActionResponse,
   DockerContainerLogsResponse,
@@ -136,7 +139,26 @@ export const getSystemMetricsHistory = async (
     throw new Error(extractErrorMessage(error));
   }
 };
+// Notes API functions
+export const getNotes = async (): Promise<NotesListResponse> => {
+  try {
+    const response = await api.get<NotesListResponse>("/notes");
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
 
+export const performNoteAction = async (
+  request: NotesActionRequest
+): Promise<NotesActionResponse> => {
+  try {
+    const response = await api.post<NotesActionResponse>("/notes", request);
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+};
 // Container API functions
 export const getContainers = async (): Promise<GetContainersResponse> => {
   try {
