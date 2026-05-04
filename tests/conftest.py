@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pi_dashboard.database import DatabaseManager
+from pi_dashboard.db.database import DatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     DatabaseAction,

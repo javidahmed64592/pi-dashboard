@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from python_template_server.models import ResponseCode
 from python_template_server.template_server import TemplateServer
 
-from pi_dashboard.database import DatabaseManager
+from pi_dashboard.db.database import DatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     DockerContainerActionResponse,

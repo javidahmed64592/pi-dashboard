@@ -13,7 +13,7 @@ from fastapi.security import APIKeyHeader
 from fastapi.testclient import TestClient
 from python_template_server.models import ResponseCode
 
-from pi_dashboard.database import DatabaseManager
+from pi_dashboard.db.database import DatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
     DatabaseAction,

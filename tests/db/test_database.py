@@ -1,9 +1,9 @@
-"""Unit tests for the pi_dashboard.database module."""
+"""Unit tests for the pi_dashboard.db.database module."""
 
 import pytest
 from sqlalchemy.engine import Engine
 
-from pi_dashboard.database import DatabaseManager
+from pi_dashboard.db.database import DatabaseManager
 from pi_dashboard.models import DatabaseAction, NoteEntry
 
 
