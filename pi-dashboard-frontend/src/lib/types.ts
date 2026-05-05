@@ -33,20 +33,13 @@ export interface SystemInfo {
 }
 
 export interface SystemMetrics {
+  id: number | null;
   cpu_usage: number;
   memory_usage: number;
   disk_usage: number;
   uptime: number;
   temperature: number;
-}
-
-export interface SystemMetricsHistoryEntry {
-  metrics: SystemMetrics;
   timestamp: number;
-}
-
-export interface SystemMetricsHistory {
-  history: SystemMetricsHistoryEntry[];
 }
 
 // Note types
@@ -89,7 +82,7 @@ export interface GetSystemMetricsResponse extends BaseResponse {
 }
 
 export interface GetSystemMetricsHistoryResponse extends BaseResponse {
-  history: SystemMetricsHistory;
+  history: SystemMetrics[];
 }
 
 export interface NotesListResponse extends BaseResponse {

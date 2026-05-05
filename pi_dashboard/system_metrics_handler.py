@@ -13,7 +13,7 @@ from pathlib import Path
 
 from psutil import cpu_percent, disk_usage, virtual_memory
 
-from pi_dashboard.models import SystemInfo, SystemMetrics
+from pi_dashboard.models import SystemInfo, SystemMetrics, current_timestamp_int
 
 logger = logging.getLogger(__name__)
 
@@ -127,4 +127,5 @@ def get_system_metrics() -> SystemMetrics:
         disk_usage=disk_usage(get_host_root()).percent,
         uptime=read_uptime(),
         temperature=read_cpu_temperature(),
+        timestamp=current_timestamp_int(),
     )

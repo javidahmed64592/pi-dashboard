@@ -64,14 +64,17 @@ const mockSystemMetrics = {
   temperature: 42.5,
 };
 
-const mockMetricsHistory = {
-  history: [
-    {
-      metrics: mockSystemMetrics,
-      timestamp: 1640000000,
-    },
-  ],
-};
+const mockMetricsHistory = [
+  {
+    id: 1,
+    cpu_usage: 25.5,
+    memory_usage: 60.2,
+    disk_usage: 45.8,
+    uptime: 86400,
+    temperature: 42.5,
+    timestamp: 1640000000,
+  },
+];
 
 describe("SystemContext", () => {
   beforeEach(() => {
@@ -194,7 +197,7 @@ describe("SystemContext", () => {
       return (
         <div>
           <button onClick={() => refreshHistory(60)}>Refresh</button>
-          <div>{metricsHistory?.history.length || 0}</div>
+          <div>{metricsHistory?.length || 0}</div>
         </div>
       );
     };

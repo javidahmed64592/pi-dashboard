@@ -4,7 +4,7 @@ import logging
 
 from sqlmodel import Field, Session, SQLModel, col, select
 
-from pi_dashboard.db.database import BaseDatabaseManager
+from pi_dashboard.db.base_database_manager import BaseDatabaseManager
 from pi_dashboard.models import DatabaseAction, NoteEntry, current_timestamp_int
 
 logger = logging.getLogger(__name__)

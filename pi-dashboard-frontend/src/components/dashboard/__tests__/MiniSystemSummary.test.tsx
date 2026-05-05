@@ -22,11 +22,13 @@ describe("MiniSystemSummary", () => {
   };
 
   const mockCurrentMetrics = {
+    id: 1,
     cpu_usage: 25.5,
     memory_usage: 50.0,
     disk_usage: 50.0,
     uptime: 86400,
     temperature: 45.2,
+    timestamp: 1640000000,
   };
 
   beforeEach(() => {

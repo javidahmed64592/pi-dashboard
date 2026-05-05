@@ -14,6 +14,12 @@ class TestNotesDatabaseManager:
         """Test NotesDatabaseManager initialization creates the database directory and file."""
         assert isinstance(mock_notes_database_manager.engine, Engine)
 
+    def test_get_all_note_entries(self, mock_notes_database_manager: NotesDatabaseManager) -> None:
+        """Test retrieving all note entries."""
+        note_entries = mock_notes_database_manager.get_all_note_entries()
+        assert isinstance(note_entries, list)
+        assert all(isinstance(note, NoteEntry) for note in note_entries)
+
     def test_perform_note_action_create(
         self, mock_notes_database_manager: NotesDatabaseManager, mock_note_entry_2: NoteEntry
     ) -> None:
