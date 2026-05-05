@@ -5,7 +5,7 @@ import logging
 from python_template_server.db.base_database_manager import BaseDatabaseManager
 from sqlmodel import Field, Session, SQLModel, col, select
 
-from pi_dashboard.models import DatabaseAction, SystemMetrics, current_timestamp_int
+from pi_dashboard.models import DashboardDatabaseConfig, DatabaseAction, SystemMetrics, current_timestamp_int
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +53,15 @@ class SystemMetricsDB(SQLModel, table=True):
 class MetricsDatabaseManager(BaseDatabaseManager):
     """Manager class for metrics database operations."""
 
+    def __init__(self, db_config: DashboardDatabaseConfig) -> None:
+        """Initialize the NotesDatabaseManager with the given database configuration."""
+        self.db_config: DashboardDatabaseConfig
+        super().__init__(db_config)
+
     @property
     def db_url(self) -> str:
         """Get the database URL."""
-        return self.db_config.db_url(self.db_config.metrics_db_filename)
+        return self.db_config.db_url(self.db_config.metrics_db_filename)  # type: ignore[no-any-return]
 
     def is_stale(self, entry: SystemMetrics) -> bool:
         """Return True if the metrics entry is older than the specified metrics lifetime.
