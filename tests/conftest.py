@@ -9,8 +9,8 @@ import pytest
 from pi_dashboard.db import MetricsDatabaseManager, NotesDatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 from pi_dashboard.models import (
+    DashboardDatabaseConfig,
     DatabaseAction,
-    DatabaseConfig,
     MetricsConfig,
     NoteEntry,
     PiDashboardConfig,
@@ -22,10 +22,10 @@ from pi_dashboard.models import (
 
 # Pi Dashboard server configuration fixtures
 @pytest.fixture
-def mock_database_config(tmp_path: Path) -> DatabaseConfig:
-    """Provide a DatabaseConfig instance for testing."""
-    return DatabaseConfig(
-        db_directory=str(tmp_path / "data"),
+def mock_database_config(tmp_path: Path) -> DashboardDatabaseConfig:
+    """Provide a DashboardDatabaseConfig instance for testing."""
+    return DashboardDatabaseConfig(
+        db_directory=tmp_path / "data",
         metrics_db_filename="test_metrics.db",
         metrics_lifetime_days=7,
         notes_db_filename="test_notes.db",
@@ -40,7 +40,7 @@ def mock_metrics_config() -> MetricsConfig:
 
 @pytest.fixture
 def mock_pi_dashboard_config(
-    mock_database_config: DatabaseConfig, mock_metrics_config: MetricsConfig
+    mock_database_config: DashboardDatabaseConfig, mock_metrics_config: MetricsConfig
 ) -> PiDashboardConfig:
     """Provide a PiDashboardConfig instance for testing."""
     return PiDashboardConfig(db=mock_database_config, metrics=mock_metrics_config)
@@ -49,7 +49,7 @@ def mock_pi_dashboard_config(
 # Database fixtures
 @pytest.fixture
 def mock_metrics_database_manager(
-    mock_database_config: DatabaseConfig,
+    mock_database_config: DashboardDatabaseConfig,
     mock_system_metrics: SystemMetrics,
     mock_system_metrics_old: SystemMetrics,
 ) -> Generator[MetricsDatabaseManager]:
@@ -63,7 +63,7 @@ def mock_metrics_database_manager(
 
 @pytest.fixture
 def mock_notes_database_manager(
-    mock_database_config: DatabaseConfig, mock_note_entry_1: NoteEntry
+    mock_database_config: DashboardDatabaseConfig, mock_note_entry_1: NoteEntry
 ) -> Generator[NotesDatabaseManager]:
     """Provide a NotesDatabaseManager instance for testing."""
     db_manager = NotesDatabaseManager(db_config=mock_database_config)
@@ -102,7 +102,7 @@ def mock_system_metrics() -> SystemMetrics:
 
 
 @pytest.fixture
-def mock_system_metrics_old(mock_database_config: DatabaseConfig) -> SystemMetrics:
+def mock_system_metrics_old(mock_database_config: DashboardDatabaseConfig) -> SystemMetrics:
     """Provide an old SystemMetrics instance for testing."""
     return SystemMetrics(
         id=None,
