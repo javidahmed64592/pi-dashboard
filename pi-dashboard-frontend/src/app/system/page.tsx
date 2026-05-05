@@ -8,7 +8,7 @@ import TimeRangeSelector, {
 } from "@/components/system/TimeRangeSelector";
 import UptimeDisplay from "@/components/system/UptimeDisplay";
 import { useSystem } from "@/contexts/SystemContext";
-import type { SystemMetricsHistoryEntry } from "@/lib/types";
+import type { SystemMetrics } from "@/lib/types";
 
 interface ChartData {
   timestamp: string;
@@ -47,23 +47,20 @@ export default function SystemPage() {
 
   // Convert history to chart data
   const convertToChartData = (
-    history: SystemMetricsHistoryEntry[] | undefined,
-    metricKey: keyof SystemMetricsHistoryEntry["metrics"]
+    history: SystemMetrics[] | undefined | null,
+    metricKey: keyof Omit<SystemMetrics, "id" | "timestamp" | "uptime">
   ): ChartData[] => {
     if (!history || history.length === 0) return [];
     return history.map(entry => ({
       timestamp: formatTime(entry.timestamp),
-      value: Number(entry.metrics[metricKey].toFixed(1)),
+      value: Number(entry[metricKey].toFixed(1)),
     }));
   };
 
-  const cpuData = convertToChartData(metricsHistory?.history, "cpu_usage");
-  const tempData = convertToChartData(metricsHistory?.history, "temperature");
-  const memoryData = convertToChartData(
-    metricsHistory?.history,
-    "memory_usage"
-  );
-  const diskData = convertToChartData(metricsHistory?.history, "disk_usage");
+  const cpuData = convertToChartData(metricsHistory, "cpu_usage");
+  const tempData = convertToChartData(metricsHistory, "temperature");
+  const memoryData = convertToChartData(metricsHistory, "memory_usage");
+  const diskData = convertToChartData(metricsHistory, "disk_usage");
 
   const hasData = cpuData.length > 0;
 

@@ -13,18 +13,14 @@ import {
   getSystemMetrics,
   getSystemMetricsHistory,
 } from "@/lib/api";
-import type {
-  SystemInfo,
-  SystemMetrics,
-  SystemMetricsHistory,
-} from "@/lib/types";
+import type { SystemInfo, SystemMetrics } from "@/lib/types";
 
 import { useAuth } from "./AuthContext";
 
 interface SystemContextType {
   systemInfo: SystemInfo | null;
   currentMetrics: SystemMetrics | null;
-  metricsHistory: SystemMetricsHistory | null;
+  metricsHistory: SystemMetrics[] | null;
   isLoading: boolean;
   error: string | null;
   refreshHistory: (timeRangeSeconds: number) => Promise<void>;
@@ -38,8 +34,9 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
   const [currentMetrics, setCurrentMetrics] = useState<SystemMetrics | null>(
     null
   );
-  const [metricsHistory, setMetricsHistory] =
-    useState<SystemMetricsHistory | null>(null);
+  const [metricsHistory, setMetricsHistory] = useState<SystemMetrics[] | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
