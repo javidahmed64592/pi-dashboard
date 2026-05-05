@@ -7,9 +7,9 @@ import { render, screen } from "@testing-library/react";
 import MetricsGraph from "../MetricsGraph";
 
 const mockData = [
-  { timestamp: "01:00:00", value: 25.5 },
-  { timestamp: "01:00:05", value: 30.2 },
-  { timestamp: "01:00:10", value: 28.8 },
+  { timestamp: "01:00:00", timestampNum: 1640000000, value: 25.5 },
+  { timestamp: "01:00:05", timestampNum: 1640000005, value: 30.2 },
+  { timestamp: "01:00:10", timestampNum: 1640000010, value: 28.8 },
 ];
 
 describe("MetricsGraph", () => {
