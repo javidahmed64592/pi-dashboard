@@ -94,14 +94,14 @@ class PiDashboardServer(TemplateServer):
         while True:
             try:
                 # Cleanup old entries
-                self.metrics_database_manager.cleanup_old_metrics()
+                self.metrics_database_manager.cleanup_old_system_metrics()
 
                 # Collect current metrics
                 metrics = get_system_metrics()
 
                 # Add to history
-                self.metrics_database_manager.perform_metrics_action(
-                    metrics_entry=metrics, action=DatabaseAction.CREATE
+                self.metrics_database_manager.perform_system_metrics_action(
+                    system_metrics=metrics, action=DatabaseAction.CREATE
                 )
 
                 # Wait for next collection
@@ -254,7 +254,7 @@ class PiDashboardServer(TemplateServer):
         :return GetSystemMetricsHistoryResponse: The system metrics history response model
         """
         metrics_request = GetSystemMetricsHistoryRequest.model_validate(await request.json())
-        entries = self.metrics_database_manager.get_metric_entries_since(
+        entries = self.metrics_database_manager.get_system_metrics_entries_since(
             metrics_request.last_n_seconds, metrics_request.max_data_points
         )
         return GetSystemMetricsHistoryResponse(

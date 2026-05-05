@@ -55,8 +55,8 @@ def mock_metrics_database_manager(
 ) -> Generator[MetricsDatabaseManager]:
     """Provide a MetricsDatabaseManager instance for testing."""
     db_manager = MetricsDatabaseManager(db_config=mock_database_config)
-    db_manager.perform_metrics_action(metrics_entry=mock_system_metrics, action=DatabaseAction.CREATE)
-    db_manager.perform_metrics_action(metrics_entry=mock_system_metrics_old, action=DatabaseAction.CREATE)
+    db_manager.perform_system_metrics_action(system_metrics=mock_system_metrics, action=DatabaseAction.CREATE)
+    db_manager.perform_system_metrics_action(system_metrics=mock_system_metrics_old, action=DatabaseAction.CREATE)
     yield db_manager
     db_manager.engine.dispose()
 
