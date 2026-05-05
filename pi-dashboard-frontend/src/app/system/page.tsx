@@ -12,7 +12,13 @@ import type { SystemMetrics } from "@/lib/types";
 
 interface ChartData {
   timestamp: string;
-  value: number;
+  timestampNum: number;
+  value: number | null;
+}
+
+interface DataGap {
+  start: number;
+  end: number;
 }
 
 export default function SystemPage() {
@@ -45,22 +51,103 @@ export default function SystemPage() {
     });
   };
 
-  // Convert history to chart data
+  // Convert history to chart data with gaps filled
   const convertToChartData = (
     history: SystemMetrics[] | undefined | null,
-    metricKey: keyof Omit<SystemMetrics, "id" | "timestamp" | "uptime">
-  ): ChartData[] => {
-    if (!history || history.length === 0) return [];
-    return history.map(entry => ({
-      timestamp: formatTime(entry.timestamp),
-      value: Number(entry[metricKey].toFixed(1)),
-    }));
+    metricKey: keyof Omit<SystemMetrics, "id" | "timestamp" | "uptime">,
+    timeRange: number
+  ): { data: ChartData[]; gaps: DataGap[] } => {
+    if (!history || history.length === 0) {
+      return { data: [], gaps: [] };
+    }
+
+    const latestTimestamp = Math.max(...history.map(entry => entry.timestamp));
+    const startTime = latestTimestamp - timeRange;
+
+    // Filter to time range and sort by timestamp ascending
+    const points = history
+      .filter(entry => entry.timestamp >= startTime)
+      .sort((a, b) => a.timestamp - b.timestamp);
+
+    if (points.length === 0) {
+      return { data: [], gaps: [] };
+    }
+
+    const MIN_GAP_DURATION = 300; // 5 minutes in seconds
+    const gaps: DataGap[] = [];
+    const data: ChartData[] = [];
+
+    // Add anchor at start of time range so x-axis always spans the full range
+    data.push({
+      timestamp: formatTime(startTime),
+      timestampNum: startTime,
+      value: null,
+    });
+
+    // Check for initial gap (server wasn't running at start of the selected range)
+    const firstTimestamp = points[0]!.timestamp;
+    if (firstTimestamp - startTime >= MIN_GAP_DURATION) {
+      gaps.push({ start: startTime, end: firstTimestamp });
+    }
+
+    // Walk through actual data points, detecting gaps between consecutive entries
+    for (let i = 0; i < points.length; i++) {
+      const current = points[i]!;
+
+      if (i > 0) {
+        const prev = points[i - 1]!;
+        const gapDuration = current.timestamp - prev.timestamp;
+        if (gapDuration >= MIN_GAP_DURATION) {
+          // Insert a null to break the drawn line at the gap boundary
+          data.push({
+            timestamp: formatTime(prev.timestamp + 1),
+            timestampNum: prev.timestamp + 1,
+            value: null,
+          });
+          gaps.push({ start: prev.timestamp, end: current.timestamp });
+        }
+      }
+
+      data.push({
+        timestamp: formatTime(current.timestamp),
+        timestampNum: current.timestamp,
+        value: Number(current[metricKey].toFixed(1)),
+      });
+    }
+
+    return { data, gaps };
   };
 
-  const cpuData = convertToChartData(metricsHistory, "cpu_usage");
-  const tempData = convertToChartData(metricsHistory, "temperature");
-  const memoryData = convertToChartData(metricsHistory, "memory_usage");
-  const diskData = convertToChartData(metricsHistory, "disk_usage");
+  const cpuResult = convertToChartData(
+    metricsHistory,
+    "cpu_usage",
+    selectedRange
+  );
+  const tempResult = convertToChartData(
+    metricsHistory,
+    "temperature",
+    selectedRange
+  );
+  const memoryResult = convertToChartData(
+    metricsHistory,
+    "memory_usage",
+    selectedRange
+  );
+  const diskResult = convertToChartData(
+    metricsHistory,
+    "disk_usage",
+    selectedRange
+  );
+
+  const cpuData = cpuResult.data;
+  const tempData = tempResult.data;
+  const memoryData = memoryResult.data;
+  const diskData = diskResult.data;
+
+  const cpuGaps = cpuResult.gaps;
+  const tempGaps = tempResult.gaps;
+  const memoryGaps = memoryResult.gaps;
+  const diskGaps = diskResult.gaps;
 
   const hasData = cpuData.length > 0;
 
@@ -88,6 +175,7 @@ export default function SystemPage() {
           currentValue={currentMetrics?.cpu_usage}
           thresholds={{ low: 30, medium: 60 }}
           graphId="cpuLoad"
+          gaps={cpuGaps}
         />
 
         <MetricsGraph
@@ -106,6 +194,7 @@ export default function SystemPage() {
               : ""
           }
           graphId="cpuTemp"
+          gaps={tempGaps}
         />
 
         <MetricsGraph
@@ -119,6 +208,7 @@ export default function SystemPage() {
           currentValue={currentMetrics?.memory_usage}
           thresholds={{ low: 30, medium: 60 }}
           graphId="memory"
+          gaps={memoryGaps}
         />
 
         <MetricsGraph
@@ -132,6 +222,7 @@ export default function SystemPage() {
           currentValue={currentMetrics?.disk_usage}
           thresholds={{ low: 30, medium: 60 }}
           graphId="disk"
+          gaps={diskGaps}
         />
       </div>
     </div>

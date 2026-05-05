@@ -5,25 +5,18 @@ from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field
-from python_template_server.models import BaseResponse, TemplateServerConfig
+from python_template_server.models import BaseResponse, DatabaseConfig, TemplateServerConfig
 
 
 # Pi Dashboard server configuration
-class DatabaseConfig(BaseModel):
+class DashboardDatabaseConfig(DatabaseConfig):
     """Configuration for the database."""
 
-    db_directory: str = Field(
-        default="data", description="The directory where the SQLite database files will be stored."
-    )
     metrics_db_filename: str = Field(default="metrics.db", description="The filename for the metrics database.")
     metrics_lifetime_days: int = Field(
         default=7, ge=1, le=365, description="Number of days to keep metrics history in the database."
     )
     notes_db_filename: str = Field(default="notes.db", description="The filename for the notes database.")
-
-    def db_url(self, filename: str) -> str:
-        """Construct the database URL for SQLAlchemy."""
-        return f"sqlite:///{self.db_directory}/{filename}"
 
 
 class MetricsConfig(BaseModel):
@@ -37,7 +30,7 @@ class MetricsConfig(BaseModel):
 class PiDashboardConfig(TemplateServerConfig):
     """Configuration model for the Pi Dashboard server."""
 
-    db: DatabaseConfig = Field(default_factory=DatabaseConfig, description="Database configuration")
+    db: DashboardDatabaseConfig = Field(default_factory=DashboardDatabaseConfig, description="Database configuration")
     metrics: MetricsConfig = Field(default_factory=MetricsConfig, description="System metrics collection configuration")
 
 

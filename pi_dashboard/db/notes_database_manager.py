@@ -2,10 +2,10 @@
 
 import logging
 
+from python_template_server.db.base_database_manager import BaseDatabaseManager
 from sqlmodel import Field, Session, SQLModel, col, select
 
-from pi_dashboard.db.base_database_manager import BaseDatabaseManager
-from pi_dashboard.models import DatabaseAction, NoteEntry, current_timestamp_int
+from pi_dashboard.models import DashboardDatabaseConfig, DatabaseAction, NoteEntry, current_timestamp_int
 
 logger = logging.getLogger(__name__)
 
@@ -54,10 +54,15 @@ class NoteEntryDB(SQLModel, table=True):
 class NotesDatabaseManager(BaseDatabaseManager):
     """Manager class for notes database operations."""
 
+    def __init__(self, db_config: DashboardDatabaseConfig) -> None:
+        """Initialize the NotesDatabaseManager with the given database configuration."""
+        self.db_config: DashboardDatabaseConfig
+        super().__init__(db_config)
+
     @property
     def db_url(self) -> str:
         """Get the database URL."""
-        return self.db_config.db_url(self.db_config.notes_db_filename)
+        return self.db_config.db_url(self.db_config.notes_db_filename)  # type: ignore[no-any-return]
 
     def _get_all_note_entries(self, session: Session) -> list[NoteEntry]:
         """Retrieve all note entries from the database."""
