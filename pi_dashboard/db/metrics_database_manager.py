@@ -155,4 +155,5 @@ class MetricsDatabaseManager(BaseDatabaseManager):
                     self._delete_system_metrics_entry(session=session, metrics_db=metrics_db)
                     deleted_count += 1
 
-            logger.info("Deleted %d stale metrics entries", deleted_count)
+            if deleted_count > 0:
+                logger.info("Deleted %d stale metrics entries", deleted_count)
