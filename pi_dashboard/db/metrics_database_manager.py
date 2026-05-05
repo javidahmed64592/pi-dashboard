@@ -2,7 +2,7 @@
 
 import logging
 
-from python_template_server.db.base_database_manager import BaseDatabaseManager
+from python_template_server.db import BaseDatabaseManager
 from sqlmodel import Field, Session, SQLModel, col, select
 
 from pi_dashboard.models import DashboardDatabaseConfig, DatabaseAction, SystemMetrics, current_timestamp_int
@@ -54,7 +54,7 @@ class MetricsDatabaseManager(BaseDatabaseManager):
     """Manager class for metrics database operations."""
 
     def __init__(self, db_config: DashboardDatabaseConfig) -> None:
-        """Initialize the NotesDatabaseManager with the given database configuration."""
+        """Initialize the MetricsDatabaseManager with the given database configuration."""
         self.db_config: DashboardDatabaseConfig
         super().__init__(db_config)
 
