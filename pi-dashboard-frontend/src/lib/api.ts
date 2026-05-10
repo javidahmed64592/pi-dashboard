@@ -162,7 +162,7 @@ export const performNoteAction = async (
 // Container API functions
 export const getContainers = async (): Promise<GetContainersResponse> => {
   try {
-    const response = await api.get<GetContainersResponse>("/containers");
+    const response = await api.get<GetContainersResponse>("/containers/");
     return response.data;
   } catch (error) {
     throw new Error(extractErrorMessage(error));
