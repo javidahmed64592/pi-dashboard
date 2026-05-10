@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from slowapi import Limiter
 
 from pi_dashboard.db import MetricsDatabaseManager, NotesDatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
@@ -18,6 +19,8 @@ from pi_dashboard.models import (
     SystemMetrics,
     current_timestamp_int,
 )
+from pi_dashboard.routers import ContainerRouter, NotesRouter, SystemRouter
+from pi_dashboard.server import CONTAINER_ROUTER, NOTES_ROUTER, SYSTEM_ROUTER
 
 
 # Pi Dashboard server configuration fixtures
@@ -205,3 +208,66 @@ def mock_docker_container_handler(mock_docker_client: MagicMock) -> DockerContai
         patch("docker.from_env", return_value=mock_docker_client),
     ):
         return DockerContainerHandler()
+
+
+# Server fixtures
+@pytest.fixture(autouse=True)
+def mock_asyncio_sleep() -> Generator[None]:
+    """Patch asyncio.sleep to avoid actual delays in tests."""
+    with patch("asyncio.sleep"):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_limiter() -> Limiter:
+    """Provide a mock Limiter instance for testing."""
+    mock_limiter = MagicMock(spec=Limiter)
+    mock_limiter.limit.return_value = MagicMock(return_value=MagicMock())
+    return mock_limiter
+
+
+@pytest.fixture
+def mock_container_router(
+    mock_limiter: Limiter, mock_docker_container_handler: DockerContainerHandler
+) -> ContainerRouter:
+    """Provide a ContainerRouter instance for testing."""
+    CONTAINER_ROUTER.configure(
+        hashed_token="hashed_value",  # noqa: S106
+        limiter=mock_limiter,
+        rate_limit="10/minute",
+    )
+    CONTAINER_ROUTER.setup_routes()
+    CONTAINER_ROUTER.configure_router(container_handler=mock_docker_container_handler)
+    return CONTAINER_ROUTER
+
+
+@pytest.fixture
+def mock_notes_router(
+    mock_limiter: Limiter,
+    mock_notes_database_manager: NotesDatabaseManager,
+) -> NotesRouter:
+    """Provide a NotesRouter instance for testing."""
+    NOTES_ROUTER.configure(
+        hashed_token="hashed_value",  # noqa: S106
+        limiter=mock_limiter,
+        rate_limit="10/minute",
+    )
+    NOTES_ROUTER.setup_routes()
+    NOTES_ROUTER.configure_router(db=mock_notes_database_manager)
+    return NOTES_ROUTER
+
+
+@pytest.fixture
+def mock_system_router(
+    mock_limiter: Limiter,
+    mock_metrics_database_manager: MetricsDatabaseManager,
+) -> SystemRouter:
+    """Provide a SystemRouter instance for testing."""
+    SYSTEM_ROUTER.configure(
+        hashed_token="hashed_value",  # noqa: S106
+        limiter=mock_limiter,
+        rate_limit="10/minute",
+    )
+    SYSTEM_ROUTER.setup_routes()
+    SYSTEM_ROUTER.configure_router(db=mock_metrics_database_manager)
+    return SYSTEM_ROUTER
