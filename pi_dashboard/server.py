@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Annotated
 
@@ -53,35 +53,18 @@ class PiDashboardServer(TemplateServer):
         self.notes_database_manager = NotesDatabaseManager(db_config=self.config.db)
         self.docker_container_handler = DockerContainerHandler()
 
-    @staticmethod
-    def _start_task(task_method: Callable, task_name: str) -> asyncio.Task:
-        """Start an asynchronous task.
-
-        :param Callable task_method: The method to run as a task
-        :return asyncio.Task: The created asyncio task
-        """
-        logger.info("Starting task: %s", task_name)
-        return asyncio.create_task(task_method())
-
-    @staticmethod
-    def _stop_task(task: asyncio.Task, task_name: str) -> None:
-        """Stop an asynchronous task.
-
-        :param asyncio.Task task: The task to stop
-        """
-        logger.info("Stopping task: %s", task_name)
-        task.cancel()
-
     @asynccontextmanager
     async def lifespan(self, app: FastAPI) -> AsyncGenerator[None]:
         """Handle application lifespan events."""
         # Startup
-        metrics_task = PiDashboardServer._start_task(self._collect_metrics_periodically, "Metrics collection")
+        logger.info("Starting task: Metrics collection")
+        metrics_task = asyncio.create_task(self._collect_metrics_periodically())
         tasks = [metrics_task]
         yield
 
         # Shutdown
-        PiDashboardServer._stop_task(metrics_task, "Metrics collection")
+        logger.info("Stopping task: Metrics collection")
+        metrics_task.cancel()
 
         try:
             for task in tasks:
