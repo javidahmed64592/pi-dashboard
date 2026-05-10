@@ -54,10 +54,10 @@ class NoteEntryDB(SQLModel, table=True):
 class NotesDatabaseManager(BaseDatabaseManager):
     """Manager class for notes database operations."""
 
-    def __init__(self, db_config: DashboardDatabaseConfig) -> None:
+    def __init__(self) -> None:
         """Initialize the NotesDatabaseManager with the given database configuration."""
         self.db_config: DashboardDatabaseConfig
-        super().__init__(db_config)
+        super().__init__()
 
     @property
     def db_url(self) -> str:

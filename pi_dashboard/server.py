@@ -43,14 +43,16 @@ class PiDashboardServer(TemplateServer):
 
         :param PiDashboardConfig | None config: Optional pre-loaded configuration
         """
+        self.metrics_database_manager = MetricsDatabaseManager()
+        self.notes_database_manager = NotesDatabaseManager()
         self.config: PiDashboardConfig
         super().__init__(
             package_name="pi-dashboard",
             config=config,
         )
 
-        self.metrics_database_manager = MetricsDatabaseManager(db_config=self.config.db)
-        self.notes_database_manager = NotesDatabaseManager(db_config=self.config.db)
+        self.metrics_database_manager.configure(db_config=self.config.db)
+        self.notes_database_manager.configure(db_config=self.config.db)
         self.docker_container_handler = DockerContainerHandler()
 
     @asynccontextmanager

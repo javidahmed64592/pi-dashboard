@@ -54,7 +54,8 @@ def mock_metrics_database_manager(
     mock_system_metrics_old: SystemMetrics,
 ) -> Generator[MetricsDatabaseManager]:
     """Provide a MetricsDatabaseManager instance for testing."""
-    db_manager = MetricsDatabaseManager(db_config=mock_database_config)
+    db_manager = MetricsDatabaseManager()
+    db_manager.configure(db_config=mock_database_config)
     db_manager.perform_system_metrics_action(system_metrics=mock_system_metrics, action=DatabaseAction.CREATE)
     db_manager.perform_system_metrics_action(system_metrics=mock_system_metrics_old, action=DatabaseAction.CREATE)
     yield db_manager
@@ -66,7 +67,8 @@ def mock_notes_database_manager(
     mock_database_config: DashboardDatabaseConfig, mock_note_entry_1: NoteEntry
 ) -> Generator[NotesDatabaseManager]:
     """Provide a NotesDatabaseManager instance for testing."""
-    db_manager = NotesDatabaseManager(db_config=mock_database_config)
+    db_manager = NotesDatabaseManager()
+    db_manager.configure(db_config=mock_database_config)
     db_manager.perform_note_action(note_entry=mock_note_entry_1, action=DatabaseAction.CREATE)
     yield db_manager
     db_manager.engine.dispose()
