@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from slowapi import Limiter
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 
 from pi_dashboard.db import MetricsDatabaseManager, NotesDatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
@@ -59,6 +61,9 @@ def mock_metrics_database_manager(
     """Provide a MetricsDatabaseManager instance for testing."""
     db_manager = MetricsDatabaseManager()
     db_manager.configure(db_config=mock_database_config)
+    pooled_engine = db_manager.engine
+    db_manager.engine = create_engine(pooled_engine.url, poolclass=NullPool)
+    pooled_engine.dispose()
     db_manager.perform_system_metrics_action(system_metrics=mock_system_metrics, action=DatabaseAction.CREATE)
     db_manager.perform_system_metrics_action(system_metrics=mock_system_metrics_old, action=DatabaseAction.CREATE)
     yield db_manager
@@ -72,6 +77,9 @@ def mock_notes_database_manager(
     """Provide a NotesDatabaseManager instance for testing."""
     db_manager = NotesDatabaseManager()
     db_manager.configure(db_config=mock_database_config)
+    pooled_engine = db_manager.engine
+    db_manager.engine = create_engine(pooled_engine.url, poolclass=NullPool)
+    pooled_engine.dispose()
     db_manager.perform_note_action(note_entry=mock_note_entry_1, action=DatabaseAction.CREATE)
     yield db_manager
     db_manager.engine.dispose()
