@@ -22,7 +22,7 @@ def mock_package_metadata() -> Generator[MagicMock]:
         mock_pkg_metadata = MagicMock(spec=PackageMetadata)
         metadata_dict = {
             "Name": "pi-dashboard",
-            "Version": "0.1.0",
+            "Version": "1.0.0",
             "Summary": "A FastAPI-based Raspberry Pi dashboard.",
         }
         mock_pkg_metadata.__getitem__.side_effect = lambda key: metadata_dict[key]
