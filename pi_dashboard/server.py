@@ -6,18 +6,14 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from python_template_server.template_server import BaseRouter, TemplateServer
+from python_template_server.routers import BaseRouter
+from python_template_server.template_server import TemplateServer
 
 from pi_dashboard.db import MetricsDatabaseManager, NotesDatabaseManager
 from pi_dashboard.docker_container_handler import DockerContainerHandler
-from pi_dashboard.models import (
-    DatabaseAction,
-    PiDashboardConfig,
-)
+from pi_dashboard.models import DatabaseAction, PiDashboardConfig
 from pi_dashboard.routers import ContainerRouter, NotesRouter, SystemRouter
-from pi_dashboard.system_metrics_handler import (
-    get_system_metrics,
-)
+from pi_dashboard.system_metrics_handler import get_system_metrics
 
 logger = logging.getLogger(__name__)
 
