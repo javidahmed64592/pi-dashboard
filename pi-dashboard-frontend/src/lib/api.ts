@@ -142,7 +142,7 @@ export const getSystemMetricsHistory = async (
 // Notes API functions
 export const getNotes = async (): Promise<NotesListResponse> => {
   try {
-    const response = await api.get<NotesListResponse>("/notes");
+    const response = await api.get<NotesListResponse>("/notes/");
     return response.data;
   } catch (error) {
     throw new Error(extractErrorMessage(error));
@@ -153,7 +153,7 @@ export const performNoteAction = async (
   request: NotesActionRequest
 ): Promise<NotesActionResponse> => {
   try {
-    const response = await api.post<NotesActionResponse>("/notes", request);
+    const response = await api.post<NotesActionResponse>("/notes/", request);
     return response.data;
   } catch (error) {
     throw new Error(extractErrorMessage(error));
