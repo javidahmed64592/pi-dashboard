@@ -69,21 +69,12 @@ def mock_server(
 class TestPiDashboardServer:
     """Unit tests for the PiDashboardServer class."""
 
-    def test_init(
-        self,
-        mock_server: PiDashboardServer,
-        mock_container_router: ContainerRouter,
-        mock_notes_router: NotesRouter,
-        mock_system_router: SystemRouter,
-    ) -> None:
+    def test_init(self, mock_server: PiDashboardServer) -> None:
         """Test PiDashboardServer initialization."""
         assert isinstance(mock_server.config, PiDashboardConfig)
-        for route in [
-            *mock_container_router.router.routes,
-            *mock_notes_router.router.routes,
-            *mock_system_router.router.routes,
-        ]:
-            assert route in mock_server.app.routes
+        assert isinstance(mock_server.metrics_database_manager, MetricsDatabaseManager)
+        assert isinstance(mock_server.notes_database_manager, NotesDatabaseManager)
+        assert isinstance(mock_server.docker_container_handler, DockerContainerHandler)
 
     def test_validate_config(self, mock_server: PiDashboardServer, mock_pi_dashboard_config: PiDashboardConfig) -> None:
         """Test configuration validation."""
@@ -96,3 +87,15 @@ class TestPiDashboardServer:
         invalid_config = {"model": None}
         validated_config = mock_server.validate_config(invalid_config)
         assert isinstance(validated_config, PiDashboardConfig)
+
+    def test_routers_property(
+        self,
+        mock_server: PiDashboardServer,
+        mock_container_router: ContainerRouter,
+        mock_notes_router: NotesRouter,
+        mock_system_router: SystemRouter,
+    ) -> None:
+        """Test that the routers property returns the expected list of routers."""
+        assert mock_container_router in mock_server._routers
+        assert mock_notes_router in mock_server._routers
+        assert mock_system_router in mock_server._routers

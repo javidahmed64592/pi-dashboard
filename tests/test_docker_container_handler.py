@@ -117,10 +117,10 @@ class TestUpdateContainer:
         assert new_container_id == "new_container_short_id"
 
         # Verify the update process
-        mock_docker_container_handler.client.images.pull.assert_called_once_with("test/image:latest")
+        mock_docker_container_handler.client.images.pull.assert_called_once_with("test/image:latest")  # ty:ignore[unresolved-attribute]
         mock_container.stop.assert_called_once_with(timeout=10)
         mock_container.remove.assert_called_once()
-        mock_docker_container_handler.client.containers.run.assert_called_once()
+        mock_docker_container_handler.client.containers.run.assert_called_once()  # ty:ignore[unresolved-attribute]
 
 
 class TestGetContainerLogs:
