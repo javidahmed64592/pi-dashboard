@@ -155,7 +155,7 @@ class MetricsDatabaseManager(BaseDatabaseManager):
             stale_metrics = [m for m in all_metrics if self.is_stale(m)]
             deleted_count = 0
             for metrics in stale_metrics:
-                metrics_db = self._get_system_metrics_by_id(session=session, metrics_id=metrics.id)  # type: ignore[arg-type]
+                metrics_db = self._get_system_metrics_by_id(session=session, metrics_id=metrics.id)  # ty:ignore[invalid-argument-type]
                 if metrics_db:
                     self._delete_system_metrics_entry(session=session, metrics_db=metrics_db)
                     deleted_count += 1

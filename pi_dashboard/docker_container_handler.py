@@ -61,7 +61,7 @@ class DockerContainerHandler:
         """
         self._check_docker_available()
 
-        containers = self.client.containers.list(all=True)
+        containers = self.client.containers.list(all=True)  # ty:ignore[unresolved-attribute]
         docker_containers: list[DockerContainer] = []
 
         for container in containers:
@@ -88,7 +88,7 @@ class DockerContainerHandler:
         """
         self._check_docker_available()
 
-        container = self.client.containers.get(container_id)
+        container = self.client.containers.get(container_id)  # ty:ignore[unresolved-attribute]
         container.start()
         logger.info("Started container: %s (%s)", container.name, container_id)
         return str(container.name)
@@ -102,7 +102,7 @@ class DockerContainerHandler:
         """
         self._check_docker_available()
 
-        container = self.client.containers.get(container_id)
+        container = self.client.containers.get(container_id)  # ty:ignore[unresolved-attribute]
         container.stop(timeout=timeout)
         logger.info("Stopped container: %s (%s)", container.name, container_id)
         return str(container.name)
@@ -116,7 +116,7 @@ class DockerContainerHandler:
         """
         self._check_docker_available()
 
-        container = self.client.containers.get(container_id)
+        container = self.client.containers.get(container_id)  # ty:ignore[unresolved-attribute]
         container.restart(timeout=timeout)
         logger.info("Restarted container: %s (%s)", container.name, container_id)
         return str(container.name)
@@ -130,7 +130,7 @@ class DockerContainerHandler:
         """
         self._check_docker_available()
 
-        container = self.client.containers.get(container_id)
+        container = self.client.containers.get(container_id)  # ty:ignore[unresolved-attribute]
         container_name = container.name
 
         # Get image information
@@ -147,7 +147,7 @@ class DockerContainerHandler:
         host_config = container.attrs["HostConfig"]
 
         logger.info("Pulling latest image: %s", image_name)
-        self.client.images.pull(image_name)
+        self.client.images.pull(image_name)  # ty:ignore[unresolved-attribute]
 
         # Stop and remove old container
         logger.info("Stopping and removing container: %s", container_name)
@@ -157,7 +157,7 @@ class DockerContainerHandler:
         logger.info("Creating new container with updated image: %s", container_name)
 
         # Create new container with same configuration
-        new_container = self.client.containers.run(
+        new_container = self.client.containers.run(  # ty:ignore[unresolved-attribute]
             image=image_name,
             name=container_name,
             ports=host_config.get("PortBindings"),
@@ -180,7 +180,7 @@ class DockerContainerHandler:
         """
         self._check_docker_available()
 
-        container = self.client.containers.get(container_id)
+        container = self.client.containers.get(container_id)  # ty:ignore[unresolved-attribute]
         raw_logs: bytes = container.logs(tail=lines, timestamps=False, stream=False)
         decoded = raw_logs.decode("utf-8", errors="replace")
         return [line for line in decoded.splitlines() if line]
