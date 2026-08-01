@@ -31,7 +31,7 @@ def mock_package_metadata() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_server(
+def mock_server(  # noqa: PLR0917
     mock_pi_dashboard_config: PiDashboardConfig,
     mock_metrics_database_manager: MetricsDatabaseManager,
     mock_notes_database_manager: NotesDatabaseManager,

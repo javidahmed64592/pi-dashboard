@@ -15,7 +15,7 @@ describe("ContainerCard", () => {
     name: "pi-dashboard",
     image: "ghcr.io/user/pi-dashboard:latest",
     status: "running" as const,
-    port: "443",
+    port: "8000",
     ...mockHandlers,
   };
 
@@ -30,14 +30,14 @@ describe("ContainerCard", () => {
     expect(
       screen.getByText("ghcr.io/user/pi-dashboard:latest")
     ).toBeInTheDocument();
-    expect(screen.getByText("Port: 443")).toBeInTheDocument();
+    expect(screen.getByText("Port: 8000")).toBeInTheDocument();
   });
 
   it("renders external link icon when container has ports", () => {
     render(<ContainerCard {...defaultProps} />);
 
     const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("href", "https://localhost:443");
+    expect(link).toHaveAttribute("href", "http://localhost:8000");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
 
@@ -205,7 +205,7 @@ describe("ContainerCard", () => {
     render(<ContainerCard {...defaultProps} />);
 
     const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("href", "https://localhost:443");
+    expect(link).toHaveAttribute("href", "http://localhost:8000");
     expect(link.textContent).toContain("pi-dashboard");
   });
 
@@ -221,7 +221,7 @@ describe("ContainerCard", () => {
 
   it("displays primary port correctly", () => {
     render(<ContainerCard {...defaultProps} />);
-    expect(screen.getByText("Port: 443")).toBeInTheDocument();
+    expect(screen.getByText("Port: 8000")).toBeInTheDocument();
   });
 
   it("handles container with no ports", () => {

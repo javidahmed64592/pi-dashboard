@@ -6,15 +6,14 @@ services:
       dockerfile: Dockerfile
     container_name: pi-dashboard
     ports:
-      - "${PORT:-443}:${PORT:-443}"
+      - "127.0.0.1:${PORT:-8000}:${PORT:-8000}"
     environment:
       - HOST=${HOST:-0.0.0.0}
-      - PORT=${PORT:-443}
+      - PORT=${PORT:-8000}
       - API_TOKEN_HASH=${API_TOKEN_HASH:-}
       - HOST_ROOT=/host
     volumes:
       - ./.env:/app/.env
-      - ./certs:/app/certs
       - ./logs:/app/logs
       - ./data:/app/data
       - /proc:/host/proc:ro
@@ -24,14 +23,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
     healthcheck:
-      test:
-        [
+      test: [
           "CMD",
           "sh",
           "-c",
-          "python -c \"import urllib.request;
-            urllib.request.urlopen('https://localhost:$PORT/api/health',
-            context=__import__('ssl')._create_unverified_context()).read()\"",
+          'python -c "import urllib.request;
+          urllib.request.urlopen(''http://localhost:$PORT/api/health'',
+          context=__import__(''ssl'')._create_unverified_context()).read()"',
         ]
       interval: 30s
       timeout: 10s
