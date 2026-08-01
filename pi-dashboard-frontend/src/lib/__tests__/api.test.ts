@@ -155,7 +155,7 @@ describe("API Tests", () => {
         name: "pi-dashboard",
         image: "ghcr.io/user/pi-dashboard:latest",
         status: "running",
-        port: "443",
+        port: "8000",
       },
       {
         container_id: "def456",

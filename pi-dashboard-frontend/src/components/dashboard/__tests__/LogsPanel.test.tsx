@@ -29,7 +29,7 @@ describe("LogsPanel", () => {
     container_id: "abc123",
     logs: [
       "[INFO] Server started",
-      "[INFO] Listening on :443",
+      "[INFO] Listening on :8000",
       "[WARN] High memory usage",
     ],
   };
@@ -75,7 +75,7 @@ describe("LogsPanel", () => {
 
     await waitFor(() => {
       expect(screen.getByText("[INFO] Server started")).toBeInTheDocument();
-      expect(screen.getByText("[INFO] Listening on :443")).toBeInTheDocument();
+      expect(screen.getByText("[INFO] Listening on :8000")).toBeInTheDocument();
       expect(screen.getByText("[WARN] High memory usage")).toBeInTheDocument();
     });
 

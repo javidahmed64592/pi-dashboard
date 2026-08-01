@@ -4,9 +4,6 @@ from pi_dashboard.server import PiDashboardServer
 
 
 def run() -> None:
-    """Serve the FastAPI application using uvicorn.
-
-    :raise SystemExit: If configuration fails to load or SSL certificate files are missing
-    """
+    """Serve the FastAPI application using uvicorn."""
     server = PiDashboardServer()
     server.run()

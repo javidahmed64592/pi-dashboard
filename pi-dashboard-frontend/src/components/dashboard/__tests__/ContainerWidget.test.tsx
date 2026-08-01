@@ -43,7 +43,7 @@ describe("ContainerWidget", () => {
       name: "pi-dashboard",
       image: "ghcr.io/user/pi-dashboard:latest",
       status: "running",
-      port: "443",
+      port: "8000",
     },
     {
       container_id: "def456",
@@ -135,7 +135,7 @@ describe("ContainerWidget", () => {
         name: "container-a",
         image: "image-a:latest",
         status: "running",
-        port: "443",
+        port: "8000",
       },
     ];
 
@@ -156,7 +156,7 @@ describe("ContainerWidget", () => {
       .map(el => el.textContent);
 
     // Should be sorted: running first (by port), then exited
-    expect(containerNames[0]).toContain("container-a"); // Running, port 443
+    expect(containerNames[0]).toContain("container-a"); // Running, port 8000
     expect(containerNames[1]).toContain("container-b"); // Running, port 9000
     expect(containerNames[2]).toContain("container-c"); // Exited, port 8080
   });
@@ -405,7 +405,7 @@ describe("ContainerWidget", () => {
     expect(screen.getByText("plexinc/pms-docker:latest")).toBeInTheDocument();
 
     // Verify ports are displayed
-    expect(screen.getByText("Port: 443")).toBeInTheDocument();
+    expect(screen.getByText("Port: 8000")).toBeInTheDocument();
     expect(screen.getByText("Port: 8581")).toBeInTheDocument();
     expect(screen.getByText("Port: 32400")).toBeInTheDocument();
   });
