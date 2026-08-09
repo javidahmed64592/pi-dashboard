@@ -3,7 +3,6 @@ import { usePathname } from "next/navigation";
 import React from "react";
 
 import Navigation from "@/components/Navigation";
-import { AuthProvider } from "@/contexts/AuthContext";
 import { useHealthStatus } from "@/lib/api";
 
 // Mock Next.js Link component
@@ -43,11 +42,6 @@ jest.mock("../../contexts/SystemContext", () => ({
   useSystem: jest.fn(),
 }));
 
-// Helper function to render components with AuthProvider
-const renderWithAuth = (ui: React.ReactElement) => {
-  return render(<AuthProvider>{ui}</AuthProvider>);
-};
-
 const mockUseHealthStatus = useHealthStatus as jest.MockedFunction<
   typeof useHealthStatus
 >;
@@ -74,7 +68,7 @@ describe("Navigation", () => {
     Storage.prototype.getItem = jest.fn(() => "test-api-key");
   });
   it("renders the Pi Dashboard logo", () => {
-    renderWithAuth(<Navigation />);
+    render(<Navigation />);
     expect(screen.getByText("Pi Dashboard")).toBeInTheDocument();
   });
 
@@ -97,7 +91,7 @@ describe("Navigation", () => {
       refreshHistory: jest.fn(),
     });
 
-    renderWithAuth(<Navigation />);
+    render(<Navigation />);
     expect(screen.getByText("Pi Dashboard")).toBeInTheDocument();
     expect(screen.getByText("- raspberrypi")).toBeInTheDocument();
   });
@@ -112,20 +106,20 @@ describe("Navigation", () => {
       refreshHistory: jest.fn(),
     });
 
-    renderWithAuth(<Navigation />);
+    render(<Navigation />);
     expect(screen.getByText("Pi Dashboard")).toBeInTheDocument();
     expect(screen.queryByText(/- /)).not.toBeInTheDocument();
   });
 
   it("renders all navigation items", () => {
-    renderWithAuth(<Navigation />);
+    render(<Navigation />);
     // Check that navigation items exist (they appear in both desktop and mobile)
     expect(screen.getAllByText("Dashboard")).toHaveLength(2);
     expect(screen.getAllByText("System")).toHaveLength(2);
   });
 
   it("renders navigation links with correct hrefs", () => {
-    renderWithAuth(<Navigation />);
+    render(<Navigation />);
     // Get desktop navigation links - use exact match to exclude logo
     const dashboardLinks = screen.getAllByRole("link", {
       name: "Dashboard",
@@ -141,7 +135,7 @@ describe("Navigation", () => {
   it("applies active styling to current page", () => {
     mockUsePathname.mockReturnValue("/dashboard");
 
-    renderWithAuth(<Navigation />);
+    render(<Navigation />);
     const dashboardLinks = screen.getAllByRole("link", {
       name: "Dashboard",
     });
@@ -152,7 +146,7 @@ describe("Navigation", () => {
 
   describe("Mobile Navigation", () => {
     it("renders mobile menu button", () => {
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
       const menuButton = screen.getByRole("button", {
         name: /Open main menu/,
       });
@@ -160,7 +154,7 @@ describe("Navigation", () => {
     });
 
     it("toggles mobile menu when button is clicked", () => {
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
       const menuButton = screen.getByRole("button", {
         name: /Open main menu/,
       });
@@ -187,7 +181,7 @@ describe("Navigation", () => {
     });
 
     it("shows hamburger icon when menu is closed", () => {
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
       const hamburgerIcon = screen
         .getByRole("button", { name: /Open main menu/ })
         .querySelector('svg[class*="block"]');
@@ -195,7 +189,7 @@ describe("Navigation", () => {
     });
 
     it("shows close icon when menu is open", () => {
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
       const menuButton = screen.getByRole("button", {
         name: /Open main menu/,
       });
@@ -209,7 +203,7 @@ describe("Navigation", () => {
     });
 
     it("closes mobile menu when navigation link is clicked", () => {
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
       const menuButton = screen.getByRole("button", {
         name: /Open main menu/,
       });
@@ -239,7 +233,7 @@ describe("Navigation", () => {
     });
 
     it("renders all navigation items in mobile menu", () => {
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
       const menuButton = screen.getByRole("button", {
         name: /Open main menu/,
       });
@@ -254,7 +248,7 @@ describe("Navigation", () => {
     it("applies active styling to current page in mobile menu", () => {
       mockUsePathname.mockReturnValue("/dashboard");
 
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
       const menuButton = screen.getByRole("button", {
         name: /Open main menu/,
       });
@@ -276,7 +270,7 @@ describe("Navigation", () => {
     it("renders HealthIndicator in the navigation", () => {
       mockUseHealthStatus.mockReturnValue("online");
 
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
 
       // The HealthIndicator should render a circular indicator
       const indicators = screen
@@ -288,7 +282,7 @@ describe("Navigation", () => {
     it("displays online status indicator when server is online", () => {
       mockUseHealthStatus.mockReturnValue("online");
 
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
 
       const indicator = screen.getByTitle("Server: ONLINE");
       expect(indicator).toBeInTheDocument();
@@ -298,7 +292,7 @@ describe("Navigation", () => {
     it("displays offline status indicator when server is offline", () => {
       mockUseHealthStatus.mockReturnValue("offline");
 
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
 
       const indicator = screen.getByTitle("Server: OFFLINE");
       expect(indicator).toBeInTheDocument();
@@ -308,7 +302,7 @@ describe("Navigation", () => {
     it("displays checking status indicator when status is being checked", () => {
       mockUseHealthStatus.mockReturnValue("checking");
 
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
 
       const indicator = screen.getByTitle("Server: CHECKING");
       expect(indicator).toBeInTheDocument();
@@ -319,7 +313,7 @@ describe("Navigation", () => {
     it("positions HealthIndicator next to the logo", () => {
       mockUseHealthStatus.mockReturnValue("online");
 
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
 
       // Check that both the logo and health indicator are present
       expect(screen.getByText("Pi Dashboard")).toBeInTheDocument();
@@ -334,7 +328,7 @@ describe("Navigation", () => {
     it("includes tooltip with status information", () => {
       mockUseHealthStatus.mockReturnValue("online");
 
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
 
       const healthIndicator = screen.getByTitle("Server: ONLINE");
       expect(healthIndicator).toHaveAttribute("title", "Server: ONLINE");
@@ -343,7 +337,7 @@ describe("Navigation", () => {
     it("calls useHealthStatus hook when Navigation is rendered", () => {
       mockUseHealthStatus.mockReturnValue("online");
 
-      renderWithAuth(<Navigation />);
+      render(<Navigation />);
 
       expect(mockUseHealthStatus).toHaveBeenCalledTimes(1);
     });

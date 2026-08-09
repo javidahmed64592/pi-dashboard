@@ -6,18 +6,10 @@ import { render, screen, waitFor } from "@testing-library/react";
 
 import * as api from "@/lib/api";
 
-import { AuthProvider } from "../AuthContext";
 import { SystemProvider, useSystem } from "../SystemContext";
 
 // Mock the API module
 jest.mock("@/lib/api");
-
-// Mock auth utilities
-jest.mock("@/lib/auth", () => ({
-  getApiKey: () => "test-api-key",
-  saveApiKey: jest.fn(),
-  removeApiKey: jest.fn(),
-}));
 
 // Mock next/navigation
 jest.mock("next/navigation", () => ({
@@ -110,11 +102,9 @@ describe("SystemContext", () => {
     };
 
     render(
-      <AuthProvider>
-        <SystemProvider>
-          <TestComponent />
-        </SystemProvider>
-      </AuthProvider>
+      <SystemProvider>
+        <TestComponent />
+      </SystemProvider>
     );
 
     expect(screen.getByText("Loading...")).toBeInTheDocument();
@@ -149,11 +139,9 @@ describe("SystemContext", () => {
     };
 
     render(
-      <AuthProvider>
-        <SystemProvider>
-          <TestComponent />
-        </SystemProvider>
-      </AuthProvider>
+      <SystemProvider>
+        <TestComponent />
+      </SystemProvider>
     );
 
     await waitFor(() => {
@@ -203,11 +191,9 @@ describe("SystemContext", () => {
     };
 
     render(
-      <AuthProvider>
-        <SystemProvider>
-          <TestComponent />
-        </SystemProvider>
-      </AuthProvider>
+      <SystemProvider>
+        <TestComponent />
+      </SystemProvider>
     );
 
     const button = screen.getByText("Refresh");
@@ -241,11 +227,9 @@ describe("SystemContext", () => {
     };
 
     render(
-      <AuthProvider>
-        <SystemProvider>
-          <TestComponent />
-        </SystemProvider>
-      </AuthProvider>
+      <SystemProvider>
+        <TestComponent />
+      </SystemProvider>
     );
 
     await waitFor(() => {

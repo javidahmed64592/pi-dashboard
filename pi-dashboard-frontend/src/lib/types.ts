@@ -6,14 +6,6 @@ export interface BaseResponse {
   timestamp: string;
 }
 
-// Authentication types
-export interface AuthContextType {
-  apiKey: string | null;
-  isAuthenticated: boolean;
-  login: (apiKey: string) => Promise<void>;
-  logout: () => void;
-}
-
 // Database
 export enum DatabaseAction {
   CREATE = "create",
@@ -70,8 +62,6 @@ export interface DockerContainer {
 
 // Response types
 export interface HealthResponse extends BaseResponse {}
-
-export interface LoginResponse extends BaseResponse {}
 
 export interface GetSystemInfoResponse extends BaseResponse {
   info: SystemInfo;
