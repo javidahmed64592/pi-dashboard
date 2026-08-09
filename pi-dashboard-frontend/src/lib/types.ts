@@ -63,6 +63,10 @@ export interface DockerContainer {
 // Response types
 export interface HealthResponse extends BaseResponse {}
 
+export interface GetAuthEnabledResponse extends BaseResponse {
+  auth_enabled: boolean;
+}
+
 export interface GetSystemInfoResponse extends BaseResponse {
   info: SystemInfo;
 }

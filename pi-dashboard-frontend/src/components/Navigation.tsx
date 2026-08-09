@@ -1,16 +1,17 @@
 "use client";
 
-// import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import HealthIndicator from "@/components/HealthIndicator";
 import { useSystem } from "@/contexts/SystemContext";
+import { getAuthEnabled } from "@/lib/api";
 
 const Navigation = () => {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [authEnabled, setAuthEnabled] = useState(false);
   const { systemInfo } = useSystem();
 
   const navItems = [
@@ -30,6 +31,30 @@ const Navigation = () => {
       active: pathname === "/notes/",
     },
   ];
+
+  useEffect(() => {
+    const checkAuthEnabled = async () => {
+      try {
+        const response = await getAuthEnabled();
+        setAuthEnabled(response.auth_enabled);
+      } catch {
+        setAuthEnabled(false);
+      }
+    };
+
+    checkAuthEnabled();
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch("/api/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    await new Promise(r => setTimeout(r, 100));
+
+    window.location.replace("/");
+  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -94,6 +119,14 @@ const Navigation = () => {
                 </Link>
               );
             })}
+            {authEnabled && (
+              <button
+                onClick={handleLogout}
+                className="rounded-md px-4 py-2 text-sm font-medium text-text-secondary hover:bg-background-tertiary hover:text-text-primary transition-all duration-200"
+              >
+                Logout
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -167,6 +200,14 @@ const Navigation = () => {
                 </Link>
               );
             })}
+            {authEnabled && (
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-text-secondary hover:bg-background-tertiary hover:text-text-primary transition-all duration-200"
+              >
+                Logout
+              </button>
+            )}
           </div>
         </div>
       </div>

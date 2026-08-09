@@ -13,6 +13,7 @@ import type {
   GetContainersResponse,
   DockerContainerActionResponse,
   DockerContainerLogsResponse,
+  GetAuthEnabledResponse,
 } from "@/lib/types";
 
 // Determine the base URL based on environment
@@ -78,9 +79,9 @@ export const getHealth = async (): Promise<HealthResponse> => {
   }
 };
 
-export const logout = async (): Promise<boolean> => {
+export const getAuthEnabled = async (): Promise<GetAuthEnabledResponse> => {
   try {
-    const response = await api.get<boolean>("/logout");
+    const response = await api.get<GetAuthEnabledResponse>("/auth_enabled");
     return response.data;
   } catch (error) {
     throw new Error(extractErrorMessage(error));
