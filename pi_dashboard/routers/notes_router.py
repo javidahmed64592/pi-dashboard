@@ -27,7 +27,6 @@ class NotesRouter(BaseRouter):
             response_model=NotesListResponse,
             methods=["GET"],
             limited=True,
-            authentication_required=True,
         )
         self.add_route(
             endpoint="/",
@@ -35,7 +34,6 @@ class NotesRouter(BaseRouter):
             response_model=NotesActionResponse,
             methods=["POST"],
             limited=True,
-            authentication_required=True,
         )
 
     async def get_notes(self, request: Request) -> NotesListResponse:

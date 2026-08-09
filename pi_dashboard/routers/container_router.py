@@ -29,7 +29,6 @@ class ContainerRouter(BaseRouter):
             response_model=DockerContainerListResponse,
             methods=["GET"],
             limited=True,
-            authentication_required=True,
         )
         self.add_route(
             endpoint="/refresh",
@@ -37,7 +36,6 @@ class ContainerRouter(BaseRouter):
             response_model=DockerContainerListResponse,
             methods=["POST"],
             limited=True,
-            authentication_required=True,
         )
         self.add_route(
             endpoint="/{container_id}/start",
@@ -45,7 +43,6 @@ class ContainerRouter(BaseRouter):
             response_model=DockerContainerActionResponse,
             methods=["POST"],
             limited=True,
-            authentication_required=True,
         )
         self.add_route(
             endpoint="/{container_id}/stop",
@@ -53,7 +50,6 @@ class ContainerRouter(BaseRouter):
             response_model=DockerContainerActionResponse,
             methods=["POST"],
             limited=True,
-            authentication_required=True,
         )
         self.add_route(
             endpoint="/{container_id}/restart",
@@ -61,7 +57,6 @@ class ContainerRouter(BaseRouter):
             response_model=DockerContainerActionResponse,
             methods=["POST"],
             limited=True,
-            authentication_required=True,
         )
         self.add_route(
             endpoint="/{container_id}/update",
@@ -69,7 +64,6 @@ class ContainerRouter(BaseRouter):
             response_model=DockerContainerActionResponse,
             methods=["POST"],
             limited=True,
-            authentication_required=True,
         )
         self.add_route(
             endpoint="/{container_id}/logs",
@@ -77,7 +71,6 @@ class ContainerRouter(BaseRouter):
             response_model=DockerContainerLogsResponse,
             methods=["GET"],
             limited=True,
-            authentication_required=True,
         )
 
     async def list_containers(self, request: Request) -> DockerContainerListResponse:

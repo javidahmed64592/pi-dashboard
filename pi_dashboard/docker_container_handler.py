@@ -3,7 +3,7 @@
 import logging
 
 import docker
-from docker.errors import APIError
+from docker.errors import APIError, ImageNotFound
 
 from pi_dashboard.models import DockerContainer
 
@@ -65,7 +65,15 @@ class DockerContainerHandler:
         docker_containers: list[DockerContainer] = []
 
         for container in containers:
-            image_name = container.image.tags[0] if container.image.tags else container.image.id[:12]
+            # Try to get image info, but handle case where image has been deleted
+            try:
+                image_name = container.image.tags[0] if container.image.tags else container.image.id[:12]
+            except ImageNotFound:
+                # Image was deleted - use the image ID from container attributes
+                image_id = container.attrs.get("Image", "unknown")
+                image_name = image_id[:12] if len(image_id) > 12 else image_id  # noqa: PLR2004
+                logger.warning("Image not found for container %s, using ID: %s", container.name, image_name)
+
             primary_port = DockerContainerHandler._extract_primary_port(container.ports)
 
             docker_containers.append(

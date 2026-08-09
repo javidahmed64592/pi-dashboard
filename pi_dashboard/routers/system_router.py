@@ -28,7 +28,6 @@ class SystemRouter(BaseRouter):
             response_model=GetSystemInfoResponse,
             methods=["GET"],
             limited=True,
-            authentication_required=True,
         )
         self.add_route(
             endpoint="/metrics",
@@ -36,7 +35,6 @@ class SystemRouter(BaseRouter):
             response_model=GetSystemMetricsResponse,
             methods=["GET"],
             limited=False,
-            authentication_required=True,
         )
         self.add_route(
             endpoint="/metrics/history",
@@ -44,7 +42,6 @@ class SystemRouter(BaseRouter):
             response_model=GetSystemMetricsHistoryResponse,
             methods=["POST"],
             limited=False,
-            authentication_required=True,
         )
 
     async def get_system_info(self, request: Request) -> GetSystemInfoResponse:
