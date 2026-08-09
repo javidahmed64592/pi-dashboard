@@ -59,7 +59,7 @@ addopts = [
     "term-missing",
 ]
 env = [
-    "API_TOKEN_HASH=token",
+    "NGINX_PROXY_URL=",
 ]
 
 [tool.coverage.run]
