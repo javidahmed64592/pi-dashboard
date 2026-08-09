@@ -240,7 +240,6 @@ def mock_container_router(
 ) -> ContainerRouter:
     """Provide a ContainerRouter instance for testing."""
     CONTAINER_ROUTER.configure(
-        hashed_token="hashed_value",  # noqa: S106
         limiter=mock_limiter,
         rate_limit="10/minute",
     )
@@ -256,7 +255,6 @@ def mock_notes_router(
 ) -> NotesRouter:
     """Provide a NotesRouter instance for testing."""
     NOTES_ROUTER.configure(
-        hashed_token="hashed_value",  # noqa: S106
         limiter=mock_limiter,
         rate_limit="10/minute",
     )
@@ -272,7 +270,6 @@ def mock_system_router(
 ) -> SystemRouter:
     """Provide a SystemRouter instance for testing."""
     SYSTEM_ROUTER.configure(
-        hashed_token="hashed_value",  # noqa: S106
         limiter=mock_limiter,
         rate_limit="10/minute",
     )

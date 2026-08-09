@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
-import { AuthProvider } from "@/contexts/AuthContext";
 import { SystemProvider } from "@/contexts/SystemContext";
 
 export const metadata: Metadata = {
@@ -40,17 +39,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
-          <SystemProvider>
-            <div className="h-screen flex flex-col bg-background">
-              <Navigation />
-              <main className="flex-1 overflow-hidden px-4 pt-4 pb-16">
-                {children}
-              </main>
-              <Footer />
-            </div>
-          </SystemProvider>
-        </AuthProvider>
+        <SystemProvider>
+          <div className="h-screen flex flex-col bg-background">
+            <Navigation />
+            <main className="flex-1 overflow-hidden px-4 pt-4 pb-16">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </SystemProvider>
       </body>
     </html>
   );

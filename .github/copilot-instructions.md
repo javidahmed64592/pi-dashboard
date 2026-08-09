@@ -21,18 +21,9 @@ Developers extend `TemplateServer` to create application-specific servers (see `
 - Validated using Pydantic models in `models.py` (TemplateServerConfig hierarchy)
 - Subclasses override `validate_config()` to provide custom config models
 - Logging configured automatically on `logging_setup.py` import with rotating file handler
-- Environment variables stored in `.env` (API_TOKEN_HASH only, never commit)
+- Environment variables stored in `.env`
 - CORS configuration: Enable cross-origin requests via `config.cors` settings
 - Static files: Served from `static/` directory using FastAPI's `StaticFiles` mounting with custom 404 handler
-
-### Authentication Architecture
-
-- **Token Generation**: `uv run generate-new-token` creates secure token + SHA-256 hash
-- **Hash Storage**: Only hash stored in `.env` (API_TOKEN_HASH), raw token shown once
-- **Token Loading**: `load_hashed_token()` loads hash from .env on server startup, stored in `TemplateServer.hashed_token`
-- **Verification Flow**: Request → `_verify_api_key()` dependency → `verify_token()` → hash comparison
-- **Health Endpoint**: `/api/health` does NOT require authentication, reports unhealthy if token not configured
-- Header: `X-API-Key` (defined in `constants.API_KEY_HEADER_NAME`)
 
 ### CORS Middleware
 
@@ -72,7 +63,6 @@ Developers extend `TemplateServer` to create application-specific servers (see `
 ```powershell
 # Setup (first time)
 uv sync                          # Install dependencies
-uv run generate-new-token        # Generate API key, save hash to .env
 
 # Development
 uv run python-template-server    # Start server (http://localhost:8000/api)
@@ -98,7 +88,6 @@ docker compose down              # Stop and remove containers
 
 - **Stage 1 (builder)**: Uses `uv` to build wheel, copies required files
 - **Stage 2 (runtime)**: Installs wheel, copies runtime files (.here, configs, LICENSE, README.md) from wheel to /app
-- **Startup Script**: `/app/start.sh` generates token if missing, starts server
 - **Config Selection**: Uses `config.json` for all environments
 - **Build Args**: `PORT=8000` (exposes port)
 - **Health Check**: Curls `/api/health` with unverified SSL context (no auth required)
@@ -116,7 +105,6 @@ docker compose down              # Stop and remove containers
 
 ### Security Patterns
 
-- **Never log secrets**: Print tokens via `print()`, not `logger` (see `generate_new_token()`)
 - **Path validation**: Use Pydantic validators
 - **Security headers**: HSTS, CSP, X-Frame-Options via `SecurityHeadersMiddleware`
 
@@ -125,7 +113,6 @@ docker compose down              # Stop and remove containers
 - **Prefix**: All routes under `/api` (API_PREFIX constant)
 - **Authentication**: Applied via `dependencies=[Security(self._verify_api_key)]` in route registration
 - **Response Models**: All endpoints return `BaseResponse` subclasses with code/message/timestamp
-- **Health Status**: `/health` includes `status` field (HEALTHY/DEGRADED/UNHEALTHY), reports unhealthy if no token configured
 
 ### Logging Format
 
@@ -170,18 +157,12 @@ All PRs must pass:
 
 - `template_server.py` - Base TemplateServer class with middleware/auth setup
 - `main.py` - ExampleServer implementation showing how to extend TemplateServer
-- `authentication_handler.py` - Token generation, hashing, verification
 - `logging_setup.py` - Logging configuration (executed on import)
 - `models.py` - All Pydantic models (config + responses)
 - `constants.py` - Project constants, logging config
 - `docker-compose.yml` - Container stack
 
-### Environment Variables
-
-- `API_TOKEN_HASH` - SHA-256 hash of API token (only var required)
-
 ### Configuration Files
 
 - `configuration/config.json` - Configuration (used for all environments)
-- `.env` - API token hash (auto-created by generate-new-token)
 - **Docker**: Startup script uses config.json for all environments

@@ -1,9 +1,9 @@
 """Unit tests for the pi_dashboard.docker_container_handler module."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 import pytest
-from docker.errors import APIError
+from docker.errors import APIError, ImageNotFound
 
 from pi_dashboard.docker_container_handler import DockerContainerHandler
 
@@ -64,6 +64,35 @@ class TestListContainers:
         assert container.image == "test/image:latest"
         assert container.status == "running"
         assert container.port == "443"
+
+    def test_list_containers_with_deleted_image(
+        self, mock_docker_container_handler: DockerContainerHandler, mock_docker_client: MagicMock
+    ) -> None:
+        """Test listing containers when the image has been deleted."""
+        # Create a mock container with an image that raises ImageNotFound
+        container = MagicMock()
+        container.short_id = "container_short_id"
+        container.name = "test-container-deleted-image"
+        container.status = "running"
+        container.ports = {"80/tcp": [{"HostIp": "0.0.0.0", "HostPort": "8080"}]}  # noqa: S104
+        container.attrs = {"Image": "sha256:36dc4d37740d30a06fd53e1f1a858417369d45cec30aaa60908cf108a954c9db"}
+
+        # Mock the image property to raise ImageNotFound
+        type(container).image = PropertyMock(side_effect=ImageNotFound("No such image"))
+
+        # Set up the mock client to return this container
+        mock_docker_client.containers.list.return_value = [container]
+
+        # List containers should handle the exception gracefully
+        containers = mock_docker_container_handler.list_containers()
+
+        assert len(containers) == 1
+        container_result = containers[0]
+        assert container_result.container_id == "container_short_id"
+        assert container_result.name == "test-container-deleted-image"
+        assert container_result.image == "sha256:36dc4"  # First 12 chars of the image ID
+        assert container_result.status == "running"
+        assert container_result.port == "8080"
 
 
 class TestStartContainer:
