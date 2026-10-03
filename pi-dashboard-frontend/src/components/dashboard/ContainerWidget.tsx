@@ -195,11 +195,7 @@ export default function ContainerWidget({ onViewLogs }: ContainerWidgetProps) {
               image={container.image}
               status={
                 container.status as
-                  | "running"
-                  | "exited"
-                  | "created"
-                  | "restarting"
-                  | "paused"
+                  "running" | "exited" | "created" | "restarting" | "paused"
               }
               port={container.port}
               onViewLogs={() =>

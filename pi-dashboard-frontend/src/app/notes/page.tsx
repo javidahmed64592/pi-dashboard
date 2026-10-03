@@ -22,11 +22,6 @@ export default function NotesPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Load notes on mount
-  useEffect(() => {
-    loadNotes();
-  }, []);
-
   const loadNotes = async () => {
     try {
       setIsLoading(true);
@@ -39,6 +34,11 @@ export default function NotesPage() {
       setIsLoading(false);
     }
   };
+
+  // Load notes on mount
+  useEffect(() => {
+    loadNotes();
+  }, []);
 
   // Sort and filter notes based on current sort settings and search query
   const filteredAndSortedNotes = useMemo(() => {
