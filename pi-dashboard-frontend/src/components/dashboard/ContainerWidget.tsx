@@ -57,7 +57,9 @@ export default function ContainerWidget({ onViewLogs }: ContainerWidgetProps) {
   };
 
   useEffect(() => {
-    loadContainers();
+    void (async () => {
+      await loadContainers();
+    })();
     // Refresh containers every 30 seconds
     const interval = setInterval(loadContainers, 30000);
     return () => clearInterval(interval);

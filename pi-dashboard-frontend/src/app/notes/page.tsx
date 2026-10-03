@@ -37,7 +37,9 @@ export default function NotesPage() {
 
   // Load notes on mount
   useEffect(() => {
-    loadNotes();
+    void (async () => {
+      await loadNotes();
+    })();
   }, []);
 
   // Sort and filter notes based on current sort settings and search query

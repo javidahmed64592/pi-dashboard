@@ -39,9 +39,8 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch system info
   useEffect(() => {
-    setIsLoading(true);
-
     const fetchSystemInfo = async () => {
+      setIsLoading(true);
       try {
         const response = await getSystemInfo();
         setSystemInfo(response.info);
@@ -55,7 +54,7 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    fetchSystemInfo();
+    void fetchSystemInfo();
   }, []);
 
   // Poll current metrics every 5 seconds
