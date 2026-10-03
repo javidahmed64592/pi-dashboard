@@ -45,12 +45,7 @@ export interface NoteEntry {
 
 // Container types
 export type DockerContainerStatus =
-  | "running"
-  | "stopped"
-  | "restarting"
-  | "exited"
-  | "paused"
-  | "dead";
+  "running" | "stopped" | "restarting" | "exited" | "paused" | "dead";
 
 export interface DockerContainer {
   container_id: string;

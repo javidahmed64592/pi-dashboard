@@ -49,14 +49,18 @@ export default function LogsPanel({ source }: LogsPanelProps) {
 
   // Clear logs when source changes
   useEffect(() => {
-    setLogs([]);
-    setError(null);
+    void (async () => {
+      setLogs([]);
+      setError(null);
+    })();
   }, [source]);
 
   // Fetch on source or lines change
   useEffect(() => {
     if (!source) return;
-    fetchLogs(source, lines);
+    void (async () => {
+      await fetchLogs(source, lines);
+    })();
   }, [source, lines, fetchLogs]);
 
   // Auto-refresh
